@@ -63,26 +63,4 @@ class Connect
         SessionManager::config();
         return;
     }
-
-    /**
-     * Set Language
-     * @param ?string $local;
-     * @return void
-     */
-    public static function setLocal(?string $local = null): void
-    {
-        Local::set($local);
-        return;
-    }
-
-    /**
-     * Load Language
-     * @param ?string $slug;
-     * @return void
-     */
-    public static function local(?string $slug = null): void
-    {
-        Local::load($slug);
-        return;
-    }
 }

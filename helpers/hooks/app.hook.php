@@ -10,6 +10,8 @@
 
 declare(strict_types=1);
 
+use Laika\Core\App\Route\Resource;
+
 ####################################################################
 /*------------------------- APP FILTERS --------------------------*/
 ####################################################################
@@ -59,4 +61,14 @@ add_hook('app.local', function(string $property, ...$args): string {
     }
     // Return if Class Exists
     return sprintf(LANG::$$property ?? 'Local Property Does Not Exists!', ...$args);
+});
+
+// Load App Asset
+add_hook('app.asset', function(string $file): string {
+    if(parse_url($file, PHP_URL_HOST)){
+        return $file;
+    }
+    $file = trim($file, '/');
+    $slug = trim(Resource::$app, '/');
+    return do_hook('app.host') . "{$slug}/{$file}";
 });

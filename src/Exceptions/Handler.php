@@ -15,6 +15,7 @@ namespace Laika\Core\Exceptions;
 
 use Laika\Core\Helper\Directory;
 use Laika\Core\Http\Response;
+use Laika\Core\Helper\Config;
 use Throwable;
 
 class Handler
@@ -23,7 +24,7 @@ class Handler
 
     public function __construct()
     {
-        $this->debug = option_as_bool('debug');
+        $this->debug = (bool) Config::get('env', 'debug', false);
     }
 
     /**

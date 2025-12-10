@@ -14,15 +14,9 @@ declare(strict_types=1);
 namespace Laika\Core\App\Route;
 
 use Laika\Core\Helper\Directory;
-use Laika\Core\App\Router;
 
 class Url
 {
-    /**
-     * @var string $resourceSlug
-     */
-    private static string $resourceSlug = '/resource';
-
     /**
      * Normalize Uri
      * @param string $uri Uri to Normalize
@@ -106,58 +100,6 @@ class Url
         // Load Routes
         $routes = Directory::files(APP_PATH . '/lf-routes', 'php');
         array_map(function ($route) { require_once $route; }, $routes);
-        // Register Resource Route
-        self::RegisterResource();
         return;
-    }
-
-    /**
-     * Get Resource Slug Name
-     * @return string
-     */
-    public static function ResourceSlug(?string $name = null): string
-    {
-        if ($name !== null) {
-            self::$resourceSlug = '/'.trim($name, '/');
-        }
-        return self::$resourceSlug;
-    }
-
-    /**
-     * Register Resource
-     * @return void
-     */
-    private static function RegisterResource(): void
-    {
-        Router::get(self::$resourceSlug.'/{name:.+}', function($name) {
-            // Trim leading/trailing slashes
-            $name = trim($name, '/');
-
-            // Supported Content Types
-            $types = [
-                'css'   =>  'text/css',
-                'js'    =>  'application/javascript',
-                'png'   =>  'image/png',
-                'jpg'   =>  'image/jpeg',
-                'jpeg'  =>  'image/jpeg',
-                'gif'   =>  'image/gif',
-                'svg'   =>  'image/svg+xml',
-                'webp'  =>  'image/webp',
-                'ico'   =>  'image/x-icon',
-            ];
-
-            // Get Asset File Path
-            $file = realpath(APP_PATH."/lf-templates/{$name}") ?: APP_PATH . "/lf-assets/{$name}";
-            if(!is_file($file)){
-                http_response_code(404);
-                return;
-            }
-
-            // Read File
-            $ext = pathinfo($file, PATHINFO_EXTENSION);
-            if (array_key_exists(strtolower($ext), $types)) header("Content-Type: {$types[$ext]}");
-            readfile($file);
-            return;
-        })->name('resource');
     }
 }
