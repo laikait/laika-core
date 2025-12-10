@@ -69,6 +69,5 @@ add_hook('app.asset', function(string $file): string {
         return $file;
     }
     $file = trim($file, '/');
-    $slug = trim(Asset::$app, '/');
-    return do_hook('app.host') . "{$slug}/{$file}";
+    return named('app.src', ['name' => $file], true);
 });

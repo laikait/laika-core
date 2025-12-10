@@ -82,7 +82,7 @@ class Asset
             if (array_key_exists(strtolower($ext), $types)) header("Content-Type: {$types[$ext]}");
             readfile($file);
             return;
-        })->name('app-src');
+        })->name('app.src');
     }
 
     /**
@@ -112,6 +112,6 @@ class Asset
             if (array_key_exists(strtolower($ext), $types)) header("Content-Type: {$types[$ext]}");
             readfile($file);
             return;
-        })->name('template-src');
+        })->name('template.src');
     }
 }

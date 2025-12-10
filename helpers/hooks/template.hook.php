@@ -22,8 +22,7 @@ add_hook('template.asset', function(string $file): string {
         return $file;
     }
     $file = trim($file, '/');
-    $slug = trim(Asset::$template, '/');
-    return do_hook('app.host') . "{$slug}/{$file}";
+    return named('template.src', ['name' => $file], true);
 });
 
 // Set Template Default JS Vars
