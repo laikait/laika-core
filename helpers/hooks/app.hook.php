@@ -10,7 +10,7 @@
 
 declare(strict_types=1);
 
-use Laika\Core\App\Route\Resource;
+use Laika\Core\App\Route\Asset;
 
 ####################################################################
 /*------------------------- APP FILTERS --------------------------*/
@@ -69,6 +69,6 @@ add_hook('app.asset', function(string $file): string {
         return $file;
     }
     $file = trim($file, '/');
-    $slug = trim(Resource::$app, '/');
+    $slug = trim(Asset::$app, '/');
     return do_hook('app.host') . "{$slug}/{$file}";
 });

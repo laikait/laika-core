@@ -15,7 +15,7 @@ namespace Laika\Core\App\Route;
 
 use Laika\Core\App\Router;
 
-class Resource
+class Asset
 {
     /**
      * @var string $appSrc

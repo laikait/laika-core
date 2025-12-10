@@ -11,7 +11,7 @@
 declare(strict_types=1);
 
 use Laika\Core\Http\Response;
-use Laika\Core\App\Route\Resource;
+use Laika\Core\App\Route\Asset;
 
 #####################################################################
 /*----------------------- TEMPLATE FILTERS ------------------------*/
@@ -22,7 +22,7 @@ add_hook('template.asset', function(string $file): string {
         return $file;
     }
     $file = trim($file, '/');
-    $slug = trim(Resource::$template, '/');
+    $slug = trim(Asset::$template, '/');
     return do_hook('app.host') . "{$slug}/{$file}";
 });
 

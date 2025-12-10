@@ -41,8 +41,8 @@ class Dispatcher
 
         // Add Additional Headers if Not Resource Route
         if (
-            !str_starts_with($res['route'] ?? '', Resource::$app) &&
-            !str_starts_with($res['route'] ?? '', Resource::$template)
+            !str_starts_with($res['route'] ?? '', Asset::$app) &&
+            !str_starts_with($res['route'] ?? '', Asset::$template)
             ) {
                 // Register Additional Headers
                 self::RegisterAdditionalHeaders();
@@ -214,8 +214,8 @@ class Dispatcher
         Url::LoadRoutes();
 
         // Load App & Template Routes
-        Resource::registerAppResource();
-        Resource::registerTemplateResource();
+        Asset::registerAppResource();
+        Asset::registerTemplateResource();
         return;
     }
 
