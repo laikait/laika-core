@@ -11,19 +11,18 @@
 declare(strict_types=1);
 
 use Laika\Core\Http\Response;
-use Laika\Core\App\Route\Url;
+use Laika\Core\App\Route\Asset;
 
 #####################################################################
 /*----------------------- TEMPLATE FILTERS ------------------------*/
 #####################################################################
-// Load Asset
+// Load Template Asset
 add_hook('template.asset', function(string $file): string {
     if(parse_url($file, PHP_URL_HOST)){
         return $file;
     }
     $file = trim($file, '/');
-    $slug = trim(Url::ResourceSlug(), '/');
-    return do_hook('app.host') . "{$slug}/{$file}";
+    return named('template.src', ['name' => $file], true);
 });
 
 // Set Template Default JS Vars

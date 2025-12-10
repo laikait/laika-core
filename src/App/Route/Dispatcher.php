@@ -16,9 +16,9 @@ namespace Laika\Core\App\Route;
 use Laika\Core\Exceptions\Handler as ErrorHandler;
 use Laika\Core\Helper\Url as UriHelper;
 use Laika\Core\Helper\Directory;
+use Laika\Core\Helper\Connect;
 use Laika\Core\Http\Response;
 use Laika\Core\Helper\Config;
-use Laika\Core\Helper\Local;
 use Laika\Core\Helper\Token;
 use Laika\Core\App\Env;
 use RuntimeException;
@@ -31,20 +31,30 @@ class Dispatcher
         self::PreDispatcher();
 
         // Get Request Url
-        $uri = new UriHelper();
-        $requestUrl = Url::normalize($uri->path());
-
+        $requestUrl = Url::normalize(UriHelper::instance()->path());
+        
         // Get If Request Uri Matched With Router List
         $res = Url::matchRequestRoute($requestUrl);
 
         // Get Parameters
         $params = $res['params'];
 
+        // Add Additional Headers if Not Resource Route
+        if (
+            !str_starts_with($res['route'] ?? '', Asset::$app) &&
+            !str_starts_with($res['route'] ?? '', Asset::$template)
+            ) {
+                // Register Additional Headers
+                self::RegisterAdditionalHeaders();
+                // Register DB, Session, Timezone 
+                self::RegisterInitiators();
+        }
+
         // Execute Fallback For Invalid Route
         if ($res['route'] === null) {
 
             // 404 Response
-            http_response_code(404);
+            Response::instance()->code(404);
 
             $fallbacks = Handler::getFallbacks();
 
@@ -67,10 +77,6 @@ class Dispatcher
             return;
         }
 
-        // Add Additional Headers if Not Resource Route
-        if (!str_starts_with($res['route'] ?? '', Url::ResourceSlug())) {
-            self::RegisterAdditionalHeaders();
-        }
         // Get Matched Route Info
         $routes = Handler::getRoutes(Url::method());
         $route = $routes[$res['route']];
@@ -113,7 +119,7 @@ class Dispatcher
         // Set Headers
         $token = new Token();
         Response::instance()->setHeader([
-            "Request-Time"  =>  do_hook('config.app', 'start.time', time()),
+            "Request-Time"  =>  do_hook('config.env', 'start.time', time()),
             "App-Name"      =>  do_hook('config.app', 'name', 'Laika Framework'),
             "Authorization" =>  $token->generate([
                 'uid'       =>  mt_rand(100001, 999999),
@@ -179,10 +185,10 @@ class Dispatcher
         // Create Directory if Not Exists
         Directory::make($hooks_path);
 
-        // Load Each Hook File
-        $files = Directory::files($hooks_path, '.hook.php');
-        foreach ($files as $path) {
-            require $path;
+        // Load Hook Files
+        $hook_files = Directory::files($hooks_path, '.hook.php');
+        foreach ($hook_files as $hook_file) {
+            require $hook_file;
         }
     }
 
@@ -194,16 +200,50 @@ class Dispatcher
     {
         // Register Error Handler
         ErrorHandler::register();
+
         // Create Secret Key
         self::CreateSecretKey();
+
         // Create Required Directories
         self::CreateDirectories();
+
         // Register Header
         Response::instance()->register();
-        // Load Hooks
-        self::LoadHookFiles();
-        // Set App Info Environment
-        Env::set('app|info', do_hook('config.app'));
+
+        // Load Routes
+        Url::LoadRoutes();
+
+        // Load App & Template Routes
+        Asset::registerAppResource();
+        Asset::registerTemplateResource();
         return;
+    }
+
+    /**
+     * Start Database, Session, Local, Timezone & Load Hook Files
+     * @return void
+     */
+    public static function RegisterInitiators(): void
+    {
+        /**
+         * Start Database
+         */
+        Connect::db();
+        /**
+         * Start Session
+         */
+        Connect::session();
+        /**
+         * Start Time Zone
+         */
+        Connect::timezone();
+        /**
+         * Load Hooks
+         */
+        self::LoadHookFiles();
+        /**
+         * Set App Info Environment
+         */
+        Env::set('app|info', do_hook('config.app'));
     }
 }
