@@ -39,11 +39,11 @@ class Dispatcher
         // Get Parameters
         $params = $res['params'];
 
+        // Check URL is for Web
+        $isWebUrl = !str_starts_with($res['route'] ?? '', Asset::$app) && !str_starts_with($res['route'] ?? '', Asset::$template);
+        
         // Add Additional Headers if Not Resource Route
-        if (
-            !str_starts_with($res['route'] ?? '', Asset::$app) &&
-            !str_starts_with($res['route'] ?? '', Asset::$template)
-            ) {
+        if ($isWebUrl) {
                 // Register Additional Headers
                 self::RegisterAdditionalHeaders();
                 // Register DB, Session, Timezone 
@@ -90,22 +90,25 @@ class Dispatcher
 
         // Run Middlewares -> Controller
         try {
-            $response = Invoke::middleware($middlewares, $route['controller'], $params);
+            $response = $isWebUrl ? Invoke::middleware($middlewares, $route['controller'], $params) :
+                            Invoke::middleware([], $route['controller'], $params);
         } catch (\Throwable $e) {
             report_bug($e);
         }
 
-        // Run Afterware
-        $afterwares = array_merge(
-            $route['afterwares']['global'],
-            $route['afterwares']['group'],
-            $route['afterwares']['route']
-        );
+        if ($isWebUrl) {
+            // Run Afterware
+            $afterwares = array_merge(
+                $route['afterwares']['global'],
+                $route['afterwares']['group'],
+                $route['afterwares']['route']
+            );
 
-        try {
-            echo empty($afterwares) ? $response : Invoke::afterware($afterwares, $response, $params);
-        } catch (\Throwable $e) {
-            report_bug($e);
+            try {
+                echo empty($afterwares) ? $response : Invoke::afterware($afterwares, $response, $params);
+            } catch (\Throwable $e) {
+                report_bug($e);
+            }
         }
         return;
     }
