@@ -32,7 +32,7 @@ class {{NAME}} extends Model
     public string $uuid = 'uuid';
 
     /**
-     * Make Table if Doesnot Exists
+     * Make Table if Doesn't Exists
      * @return void
      */
     protected function migrate()
