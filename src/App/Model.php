@@ -15,61 +15,40 @@ use Laika\Model\Model as BaseModel;
 
 abstract class Model extends BaseModel
 {
-    // Status Table Name
-    public string $status_table;
-
     // List
     private array $list = [];
 
     /**
      * Get Limit
      * @param int|string $page Page Number
-     * @param array<string,int|string|null> $where Example: ['id'=>1, 'status'=>'active']
-     * @return array<int,array>
+     * @param array $where Example: ['id'=>1, 'status'=>'active']
+     * @return array
      */
-    public function limit(int|string $page = 1, array $where = []): array
+    public function getLimit(int|string $page = 1, array $where = []): array
     {
         $limit = (int) option('data.limit', 20);
-        return $this->db
-            ->table($this->table)
+        return $this
             ->where($where)
             ->limit($limit)
             ->offset($page)
             ->get();
     }
 
-
-    // Get Statuses
-    /**
-     * @param string $column Optional Parameter. Default is null.
-     * @return array<string,string>
-     */
-    public function statuses(?string $column = null): array
-    {
-        $statuses = [];
-        $column = $column ?: 'status';
-        $data = $this->db->table($this->status_table)->select($column)->get();
-        foreach ($data as $val) {
-            $statuses[strtolower($val[$column])] = ucwords($val[$column]);
-        }
-        return $statuses;
-    }
-
     /**
      * Get Selected Column
      * @param string $columns Example 'id,title'
-     * @param array<string,int|string|null> $where Example ['id'=>1].
+     * @param array $where Example ['id'=>1].
      */
     public function getColumns(string $columns, array $where = []): array
     {
-        return $this->db->table($this->table)->select($columns)->where($where)->get();
+        return $this->select($columns)->where($where)->get();
     }
 
     /**
      * Get List
      * @param string $column1 Optional Parameter
      * @param string $column2 Required Parameter
-     * @param array<int|string,int|string|null> $where Optiona Argument. Example ['id'=>1].
+     * @param array $where Optiona Argument. Example ['id'=>1].
      */
     public function list(string $column1, string $column2, array $where = []): array
     {
