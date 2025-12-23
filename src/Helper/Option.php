@@ -13,7 +13,7 @@ declare(strict_types=1);
 
 namespace Laika\Core\Helper;
 
-use Laika\App\Model\Options;
+use Laika\Core\App\Options;
 
 class Option
 {
@@ -27,7 +27,7 @@ class Option
     {
         try {
             $model = new Options();
-            $option = $model->first([$model->name => $name]);
+            $option = $model->first([$model->key => $name]);
             $default = $option[$model->value] ?? $default;
         } catch (\Throwable $th) {}
         return $default;
@@ -42,18 +42,18 @@ class Option
     public static function set(string $name, string $value, bool $default = false): bool
     {
         $model = new Options();
-        $default_option = $default ? 'yes' : 'no';
+        $default = $default ? 'yes' : 'no';
 
         // Check Option Name Doesn't Exists
-        if (empty($model->first([$model->name => $name]))) {
+        if (empty($model->first([$model->key => $name]))) {
             return (bool) $model->insert([
-                $model->name => $name,
+                $model->key => $name,
                 $model->value => $value,
-                $model->default => $default_option
+                $model->default => $default
             ]);
         }
 
         // Update Value
-        return (bool) $model->update([$model->name => $name], [$model->value => $value]);
+        return (bool) $model->update([$model->key => $name], [$model->value => $value]);
     }
 }

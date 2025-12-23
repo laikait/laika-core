@@ -14,8 +14,8 @@ declare(strict_types=1);
 namespace Laika\Core\Helper;
 
 use Laika\Core\Exceptions\HttpException;
-use Laika\Model\ConnectionManager;
 use Laika\Session\SessionManager;
+use Laika\Model\Connection;
 
 class Connect
 {
@@ -31,7 +31,7 @@ class Connect
         if (!empty($configs)) {
             foreach ($configs as $name => $config) {
                 try {
-                    ConnectionManager::add($config, $name);
+                    Connection::add($config, $name);
                 } catch (\Throwable $th) {
                     throw new HttpException(500, "'{$name}' Database Error: {$th->getMessage()}", $th->getCode());
                 }
@@ -57,7 +57,7 @@ class Connect
     public static function session(): void
     {
         if (option_as_bool('dbsession', false)) {
-            SessionManager::config(ConnectionManager::get());
+            SessionManager::config(Connection::get());
             return;
         }
         SessionManager::config();
