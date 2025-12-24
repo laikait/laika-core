@@ -15,10 +15,8 @@ namespace Laika\Core\Console\Commands;
 
 use Laika\Core\Console\Command;
 use Laika\Core\Helper\Config;
-use Laika\App\Model\Options;
-use Laika\Model\Blueprint;
-use Laika\Model\Schema;
-use Laika\Model\DB;
+use Laika\Core\App\Options;
+use Laika\Model\Connection;
 use Exception;
 
 class Migrate extends Command
@@ -27,17 +25,17 @@ class Migrate extends Command
      * Default Options Keys
      * @return array<string,string>
      */
-    private function defaulKeys(): array
+    private function defaulOptions(): array
     {
         return [
-            'app.name'      =>  'CBM Framework',
+            'app.name'      =>  'Laika Framework',
             'time.zone'     =>  'Europe/London',
             'time.format'   =>  'Y-M-d H:i:s',
             'dbsession'     =>  'yes',
             'debug'         =>  'yes',
             'app.path'      =>  realpath(APP_PATH ?? __DIR__ . '/../../../../../../'),
-            'admin.icon'    =>  'favicon.ico',
-            'admin.logo'    =>  'logo.png',
+            'app.icon'      =>  'favicon.ico',
+            'app.logo'      =>  'logo.png',
             'csrf.lifetime' =>  '300',
         ];
     }
@@ -49,25 +47,38 @@ class Migrate extends Command
      */
     public function run(array $params): void
     {
+        $defaul_name = $params[0] ?? 'default';
+        // Check DB Config Available
+        $configs = Config::get('database');
+        if (empty($configs) || !isset($configs[$defaul_name])) {
+            $this->error("Database [{$defaul_name}] Config Not Found!");
+            return;
+        }
+        // Connect DB
+        foreach ($configs as $name => $config) {
+            Connection::add($config, $name);
+        }
+
+        // Create Table
         try {
-            // Make Table
-            $model = new Options();
+            $model = new Options($defaul_name);
             $model->migrate();
 
-            // Insert Default Data
-            $db = DB::getInstance();
-
             // Check Option Table Doesn't Exists
-            if (!empty($model->all())) {
-                throw new Exception("Database Table '{$model->table}' Already Exists. Please Remove Old Table First");
+            if (empty($model->get())) {
+                $rows = [];
+                foreach ($this->defaulOptions() as $key => $val) {
+                    $rows[] = [$model->key => $key, $model->value => $val, $model->default => 'yes'];
+                }
+                // Insert Options
+                $model->insert($rows);
             }
 
-            $rows = [];
-            foreach ($this->defaulKeys() as $key => $val) {
-                $rows[] = [$model->name => $key, $model->value => $val, $model->default => 'yes'];
+            // Migrate All Available Models
+            $models = call_user_func([new \Laika\Core\App\Infra(), 'getModels']);
+            foreach ($models as $model) {
+                call_user_func([new $model, 'migrate']);
             }
-            // Insert Options
-            $model->insertMany($rows);
 
             // Create Secret Config File if Not Exist
             if (!Config::has('secret')) {

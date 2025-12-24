@@ -32,7 +32,7 @@ class Pop extends Command
     {
         // Check Parameters
         if (count($params) < 1) {
-            $this->error("USAGE: laika pop:view <name>");
+            $this->error("USAGE: php laika pop:view <name>");
             return;
         }
 

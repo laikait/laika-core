@@ -25,6 +25,9 @@ class Rename extends Command
     // App Middleware New Path
     protected string $new_path = APP_PATH . '/lf-app/Middleware';
 
+    // Accepted Regular Expresion
+    private string $exp = '/^[a-zA-Z_\/][a-zA-Z0-9_\/]+$/';
+
     /**
      * @param array $params
      * @return void
@@ -33,7 +36,7 @@ class Rename extends Command
     {
         // Check Parameters
         if (count($params) < 2) {
-            $this->error("Usage: laika rename:middleware <old_name> <new_name>");
+            $this->error("Usage: php laika rename:middleware <old_name> <new_name>");
             return;
         }
 
@@ -42,13 +45,13 @@ class Rename extends Command
         $new = $params[1];
 
         // Check Old Middleware Name is Valid
-        if (!preg_match('/^[a-zA-Z_\/]+$/', $old)) {
+        if (!preg_match($this->exp, $old)) {
             // Invalid Middleware Name
             $this->error("Invalid Old Middleware Name: '{$old}'");
             return;
         }
         // Check New Middleware Name is Valid
-        if (!preg_match('/^[a-zA-Z_\/]+$/', $new)) {
+        if (!preg_match($this->exp, $new)) {
             // Invalid Middleware Name
             $this->error("Invalid New Middleware Name: '{$old}'");
             return;

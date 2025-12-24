@@ -22,7 +22,7 @@ class Pop extends Command
     protected string $path = APP_PATH . '/lf-app/Controller';
 
     // Accepted Regular Expresion
-    private string $exp = '/^[a-zA-Z_\/]+$/';
+    private string $exp = '/^[a-zA-Z_\/][a-zA-Z0-9_\/]+$/';
 
     /**
      * @param array $params
@@ -31,7 +31,7 @@ class Pop extends Command
     {
         // Check Parameters
         if (count($params) < 1) {
-            $this->error("USAGE: laika pop:controller <name>");
+            $this->error("USAGE: php laika pop:controller <name>");
             return;
         }
 

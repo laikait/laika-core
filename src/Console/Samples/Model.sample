@@ -32,22 +32,18 @@ class {{NAME}} extends Model
     public string $uuid = 'uuid';
 
     /**
-     * Make Table if Doesn't Exists
+     * Create {{TABLE_NAME}} if Doesn't Exists
      * @return void
      */
-    protected function migrate()
+    public function migrate()
     {
-        // Make Table
-        Schema::create($this->table, function (Blueprint $e) {
-            $e->id($this->id)
-                ->string($this->uuid, 50)
-                ->text('table_data', true)
-                ->enum('is_default', ['yes', 'no'], 'no')
-                ->index($this->uuid, 50);
-                ->index('is_default', 2);
-        });
-
-        // Return
+        // Maigrate Table
+        (string) Schema::table($this->table)
+                ->create(function (Blueprint $e) {
+                    $e->column($this->id)->int()->auto();
+                    $e->column('sample')->varchar();
+                    $e->column('status')->enum(['active', 'inactive'], 'inactive');
+                });
         return;
     }
 }

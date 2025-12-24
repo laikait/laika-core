@@ -34,7 +34,7 @@ class Make extends Command
     {
         // Check Parameters
         if (count($params) < 1) {
-            $this->error("USAGE: laika make:view <name>");
+            $this->error("USAGE: php laika make:view <name>");
             return;
         }
 

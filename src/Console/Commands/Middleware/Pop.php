@@ -21,6 +21,9 @@ class Pop extends Command
     // App Middleware Path
     protected string $path = APP_PATH . '/lf-app/Middleware';
 
+    // Accepted Regular Expresion
+    private string $exp = '/^[a-zA-Z_\/][a-zA-Z0-9_\/]+$/';
+
     /**
      * @param array $params
      * @return void
@@ -29,12 +32,12 @@ class Pop extends Command
     {
         // Check Parameters
         if (count($params) < 1) {
-            $this->error("USAGE: laika pop:middleware <name>");
+            $this->error("USAGE: php laika pop:middleware <name>");
             return;
         }
 
         // Check Middleware Name is Valid
-        if (!preg_match('/^[a-zA-Z_\/]+$/', $params[0])) {
+        if (!preg_match($this->exp, $params[0])) {
             // Invalid Middleware Name
             $this->error("Invalid Middleware Name: '{$params[0]}'");
             return;
