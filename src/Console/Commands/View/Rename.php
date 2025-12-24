@@ -38,7 +38,7 @@ class Rename extends Command
     {
         // Check Parameters
         if (count($params) < 2) {
-            $this->error("Usage: laika rename:view <old_name> <new_name>");
+            $this->error("Usage: php laika rename:view <old_name> <new_name>");
             return;
         }
 

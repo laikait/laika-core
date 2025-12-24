@@ -28,7 +28,7 @@ class Generate extends Command
     {
         $byte = $params[0] ?? 32;
         if (!is_numeric($byte) || ((int) $byte < 1)) {
-            $this->error("USAGE: laika generate:secret <byte_number::optional>");
+            $this->error("USAGE: php laika generate:secret <byte_number::optional>");
             return;
         }
 

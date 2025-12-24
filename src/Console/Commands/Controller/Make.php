@@ -22,14 +22,8 @@ class Make extends Command
     // App Controller Path
     protected string $path = APP_PATH . '/lf-app/Controller';
 
-    // App View Path
-    protected string $view_path = APP_PATH . '/lf-templates';
-
     // Accepted Regular Expresion
     private string $exp = '/^[a-zA-Z_\/][a-zA-Z0-9_\/]+$/';
-
-    // Accepted Regular Expresion
-    private string $view_exp = '/^[a-zA-Z0-9_\-\/]+$/';
 
     /**
      * @param array $params
@@ -39,33 +33,21 @@ class Make extends Command
     {
         // Check Parameters
         if (count($params) < 1) {
-            $this->error("USAGE: laika make:controller <name> <view::optional>");
+            $this->error("USAGE: php laika make:controller <name>");
             return;
         }
 
-        // View Name
-        $view = $params[1] ?? 'default';
-
         // Get Controller & View Parts
-        $controller_parts   =   $this->parts($params[0]);
-        $view_parts         =   $this->parts($view, false);
+        $parts = $this->parts($params[0]);
 
         // Check Controller Name is Valid
         if (!preg_match($this->exp, $params[0])) {
-            // Invalid Controller Name
             $this->error("Invalid Controller Name: '{$params[0]}'");
             return;
         }
 
-        // Check View Name is Valid
-        if (!preg_match($this->view_exp, $view)) {
-            $this->error("Invalid View Name: '{$view}'");
-            return;
-        }
-
         // Set Controller & View Path
-        $this->path         .=  $controller_parts['path'];
-        $this->view_path    .=  $view_parts['path'];
+        $this->path .= $parts['path'];
 
         // Create Controller Directory if Not Exist
         if (!Directory::exists($this->path)) {
@@ -77,21 +59,10 @@ class Make extends Command
             }
         }
 
-        // Create View Directory if Not Exist
-        if (!Directory::exists($this->view_path)) {
-            try {
-                Directory::make($this->view_path);
-            } catch (\Throwable $th) {
-                $this->error($th->getMessage());
-                return;
-            }
-        }
-
-        $controller_file    =   "{$this->path}/{$controller_parts['name']}.php";
-        $view_file          =   "{$this->view_path}/{$view_parts['name']}.tpl.php";
+        $file = "{$this->path}/{$parts['name']}.php";
 
         // Check Controller Already Exist
-        if (is_file($controller_file)) {
+        if (is_file($file)) {
             $this->error("Controller Already Exist: '{$params[0]}'");
             return;
         }
@@ -100,34 +71,14 @@ class Make extends Command
         $content = file_get_contents(__DIR__ . '/../../Samples/Controller.sample');
 
         // Replace Placeholders
-        $content = str_replace([
-            '{{NAMESPACE}}',
-            '{{NAME}}',
-            '{{VIEW}}'
-        ], [
-            $controller_parts['namespace'],
-            $controller_parts['name'],
-            trim($view, '/')
-        ], $content);
+        $content = str_replace(['{{NAMESPACE}}', '{{NAME}}'], [$parts['namespace'], $parts['name']], $content);
 
-        if (file_put_contents($controller_file, $content) === false) {
-            $this->error("Failed to Create Controller: {$controller_file}");
+        if (file_put_contents($file, $content) === false) {
+            $this->error("Failed to Create Controller: {$file}");
             return;
         }
 
-        if (!is_file($view_file)) {
-            // Get Sample View Content
-            $content = file_get_contents(__DIR__ . '/../../Samples/View.sample');
-            // Replace Placeholders
-            $content = str_replace('{{NAME}}', $view, $content);
-
-            if (file_put_contents($view_file, $content) === false) {
-                $this->error("Failed to Create View: {$view}");
-                return;
-            }
-        }
-
-        $this->info("Controller Created Successfully: '{$params[0]}' With View: '{$view}'");
+        $this->info("Controller Created Successfully: '{$params[0]}'");
         return;
     }
 }

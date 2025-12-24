@@ -12,6 +12,7 @@
 declare(strict_types=1);
 
 namespace Laika\Core\Console;
+use Laika\Model\Connection;
 
 class Kernel
 {

@@ -27,7 +27,7 @@ class Option
     {
         try {
             $model = new Options();
-            $option = $model->first([$model->key => $name]);
+            $option = $model->where([$model->key => $name])->first();
             $default = $option[$model->value] ?? $default;
         } catch (\Throwable $th) {}
         return $default;

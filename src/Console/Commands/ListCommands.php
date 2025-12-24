@@ -34,7 +34,7 @@ class ListCommands extends Command
         // TEMPLATE CONTROLLERS
         echo <<<CONTROLLERS
         ## CONTROLLERS
-            Make    :   php laika make:controller <name> <view_name::optional>
+            Make    :   php laika make:controller <name>
             Rename  :   php laika rename:controller <old_name> <new_name>
             Delete  :   php laika pop:controller <name>
             List    :   php laika list:controller <sub_path::optional>\n\n

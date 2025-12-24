@@ -26,7 +26,7 @@ class Rename extends Command
     protected string $new_path = APP_PATH . '/lf-app/Controller';
 
     // Accepted Regular Expresion
-    private string $exp = '/^[a-zA-Z_\/]+$/';
+    private string $exp = '/^[a-zA-Z_\/][a-zA-Z0-9_\/]+$/';
 
     /**
      * @param array $params
@@ -36,7 +36,7 @@ class Rename extends Command
     {
         // Check Parameters
         if (count($params) < 2) {
-            $this->error("USAGE: laika rename:controller <old_name> <new_name>");
+            $this->error("USAGE: php laika rename:controller <old_name> <new_name>");
             return;
         }
 
@@ -117,7 +117,7 @@ class Rename extends Command
             return;
         }
 
-        $this->info("Controller Renamed Successfully: '{$old}'->'{$new}'");
+        $this->info("Controller Renamed Successfully: '{$old}' -> '{$new}'");
         return;
     }
 }
