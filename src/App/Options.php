@@ -43,14 +43,14 @@ class Options Extends Model
     public function migrate()
     {
         // Maigrate Table
-        (string) Schema::table($this->table, $this->connection)
+        Schema::table($this->table, $this->connection)
                 ->create(function (Blueprint $e) {
                     $e->column($this->id)->int()->auto();
                     $e->column($this->key)->varchar()->unique();
                     $e->column($this->value)->text();
                     $e->column($this->default)->enum(['yes', 'no'], 'no');
                     $e->engine()->charset()->collate();
-                });
+                })->execute();
         return;
     }
 }
