@@ -38,12 +38,12 @@ class {{NAME}} extends Model
     public function migrate()
     {
         // Maigrate Table
-        (string) Schema::table($this->table)
+        Schema::table($this->table)
                 ->create(function (Blueprint $e) {
                     $e->column($this->id)->int()->auto();
                     $e->column('sample')->varchar();
                     $e->column('status')->enum(['active', 'inactive'], 'inactive');
-                });
+                })->execute();
         return;
     }
 }
