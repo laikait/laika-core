@@ -11,7 +11,6 @@
 declare(strict_types=1);
 
 use Laika\Core\Http\Response;
-use Laika\Core\App\Route\Asset;
 
 #####################################################################
 /*----------------------- TEMPLATE FILTERS ------------------------*/
@@ -27,9 +26,9 @@ add_hook('template.asset', function(string $file): string {
 
 // Set Template Default JS Vars
 add_hook('template.scripts', function(): string{
-    $authorizarion = Response::instance()->get('authorization');
+    $authorizarion = call_user_func([new Response, 'get'], 'authorization');
     $appuri = trim(do_hook('app.host'), '/');
-    $timeformat = option('time.format', 'Y-M-d H:i:s');
+    $timeformat = do_hook('option', 'time.format', 'Y-M-d H:i:s');
     return <<<HTML
         <script>
                 let token = '{$authorizarion}';

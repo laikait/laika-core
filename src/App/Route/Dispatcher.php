@@ -31,7 +31,7 @@ class Dispatcher
         self::PreDispatcher();
 
         // Get Request Url
-        $requestUrl = Url::normalize(UriHelper::instance()->path());
+        $requestUrl = Url::normalize(call_user_func([new UriHelper, 'path']));
         
         // Get If Request Uri Matched With Router List
         $res = Url::matchRequestRoute($requestUrl);
@@ -40,7 +40,7 @@ class Dispatcher
         $params = $res['params'];
 
         // Check URL is for Web
-        $isWebUrl = !str_starts_with($res['route'] ?? '', Asset::$app) && !str_starts_with($res['route'] ?? '', Asset::$template);
+        $isWebUrl = !\str_starts_with($res['route'] ?? '', Asset::$app) && !\str_starts_with($res['route'] ?? '', Asset::$template);
         
         // Add Additional Headers if Not Resource Route
         if ($isWebUrl) {
@@ -54,16 +54,16 @@ class Dispatcher
         if ($res['route'] === null) {
 
             // 404 Response
-            Response::instance()->code(404);
+            \call_user_func([new Response, 'code'], 404);
 
             $fallbacks = Handler::getFallbacks();
 
-            foreach (array_reverse($fallbacks) as $key => $callable){
-                if (str_starts_with(Url::normalizeFallbackKey($requestUrl), $key)) {
+            foreach (\array_reverse($fallbacks) as $key => $callable){
+                if (\str_starts_with(Url::normalizeFallbackKey($requestUrl), $key)) {
                     try {
                         echo Invoke::controller($callable, $params);
                     } catch (\Throwable $e) {
-                        report_bug($e);
+                        \report_bug($e);
                     }
                     return;
                 }
@@ -72,7 +72,7 @@ class Dispatcher
             try {
                 echo _404::show();
             } catch (\Throwable $e) {
-                report_bug($e);
+                \report_bug($e);
             }
             return;
         }
@@ -82,7 +82,7 @@ class Dispatcher
         $route = $routes[$res['route']];
 
         // Collect before middlewares in order
-        $middlewares = array_merge(
+        $middlewares = \array_merge(
             $route['middlewares']['global'],
             $route['middlewares']['group'],
             $route['middlewares']['route']
@@ -93,7 +93,7 @@ class Dispatcher
             $response = $isWebUrl ? Invoke::middleware($middlewares, $route['controller'], $params) :
                             Invoke::middleware([], $route['controller'], $params);
         } catch (\Throwable $e) {
-            report_bug($e);
+            \report_bug($e);
         }
 
         if ($isWebUrl) {
@@ -107,7 +107,7 @@ class Dispatcher
             try {
                 echo empty($afterwares) ? $response : Invoke::afterware($afterwares, $response, $params);
             } catch (\Throwable $e) {
-                report_bug($e);
+                \report_bug($e);
             }
         }
         return;
@@ -121,14 +121,15 @@ class Dispatcher
     {
         // Set Headers
         $token = new Token();
-        Response::instance()->setHeader([
-            "Request-Time"  =>  do_hook('config.env', 'start.time', time()),
-            "App-Name"      =>  do_hook('config.app', 'name', 'Laika Framework'),
+        $headers = [
+            "Request-Time"  =>  \do_hook('config.env', 'start.time', time()),
+            "App-Name"      =>  \do_hook('config.app', 'name', 'Laika Framework'),
             "Authorization" =>  $token->generate([
-                'uid'       =>  mt_rand(100001, 999999),
-                'requestor' =>  UriHelper::instance()->base()
+                'uid'       =>  \mt_rand(100001, 999999),
+                'requestor' =>  \call_user_func([new UriHelper, 'base'])
             ])
-        ]);
+        ];
+        \call_user_func([new Response, 'setHeader'], $headers);
         return;
     }
 
@@ -146,8 +147,8 @@ class Dispatcher
         ];
 
         foreach ($dirs as $dir) {
-            if (!is_dir($dir)) {
-                if (!mkdir($dir, 0755, true)) {
+            if (!\is_dir($dir)) {
+                if (!\mkdir($dir, 0755, true)) {
                     throw new RuntimeException("Failed to Create Directory: {$dir}");
                 }
             }
@@ -211,7 +212,7 @@ class Dispatcher
         self::CreateDirectories();
 
         // Register Header
-        Response::instance()->register();
+        \call_user_func([new Response, 'register'],);
 
         // Load Routes
         Url::LoadRoutes();

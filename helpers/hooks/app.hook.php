@@ -10,43 +10,71 @@
 
 declare(strict_types=1);
 
-use Laika\Core\App\Route\Asset;
+// use Laika\Core\App\Route\Asset;
+use Laika\Core\Helper\Config;
+use Laika\Core\Helper\Option;
+use Laika\Core\Helper\Url;
 
 ####################################################################
 /*------------------------- APP FILTERS --------------------------*/
 ####################################################################
-// App Host
+/**
+ * Get App DB Option
+ * @param string $key DB Option lkey Name
+ * @param mixed $default Option Default Value
+ * @return string
+ */
+add_hook('option', function(string $key, mixed $default = null){
+    return Option::get($key, Config::get('env', $key, $default));
+}, 1000);
+
+/**
+ * Get App DB Option as Bool
+ * @param string $key DB Option lkey Name
+ * @return bool
+ */
+add_hook('option.bool', function(string $key){
+    $value = do_hook('option', $key, false);
+    return is_bool($value) ? $value : (bool) preg_match('/^(yes|enable|true|on|1)$/i', $value);
+}, 1000);
+
+/**
+ * Get Host Path
+ * @return string Example: http://example.com/ or http://example.com/path/
+ */
 add_hook('app.host', function(): string
 {
-    return rtrim(host(), '/') . '/';
-});
+    $host = do_hook('option', 'app.host', call_user_func([new Url, 'base']));
+    return rtrim($host, '/') . '/';
+}, 1000);
 
-// App Name
+/**
+ * Get App Name
+ * @return string
+ */
 add_hook('app.name', function(){
-    return option('app.name', do_hook('config.app', 'name', 'Laika Framework!'));
-});
+    return do_hook('option', 'app.name', do_hook('config.app', 'name', 'Laika Framework'));
+}, 1000);
 
 /**
  * App Logo
- * @param ?string $option_key opt_ken column value in Database options Table
+ * @param ?string $key Option Table lkey column. Example: admin.logo app.logo
  * @return string
  */
-add_hook('app.logo', function(?string $option_key = null): string {
-    $name = option($option_key ?? '') ?: null;
-    $logo = $name ?: 'logo.png';
-    return do_hook('app.host') . "resource/img/{$logo}";
-});
+add_hook('app.logo', function(?string $key = null): string {
+    $name = do_hook('option', $key ?: 'app.logo', 'logo.png');
+    return named('app.src', ['name'=>"/img/{$name}"], true);
+}, 1000);
 
 /**
  * App Icon
- * @param ?string $option_key opt_ken column value in Database options Table
+ * @param ?string $key opt_ken column value in Database options Table
  * @return string
  */
-add_hook('app.icon', function(?string $option_key = null): string {
-    $name = option($option_key) ?: null;
-    $icon = $name ?: 'favicon.ico';
-    return do_hook('app.host') . "resource/img/{$icon}";
-});
+add_hook('app.icon', function(?string $key = null): string {
+    $name = do_hook('option', $key ?: 'app.icon', 'favicon.ico');
+    return named('app.src', ['name'=>"/img/{$name}"], true);
+}, 1000);
 
 /**
  * Local Language
@@ -60,8 +88,11 @@ add_hook('app.local', function(string $property, ...$args): string {
         throw new RuntimeException("'LANG' Class Doesn't Exists!");
     }
     // Return if Class Exists
-    return sprintf(LANG::$$property ?? 'Local Property Does Not Exists!', ...$args);
-});
+    if (!LANG::$$property) {
+        throw new InvalidArgumentException("Invalid Language Property: [$property]");
+    }
+    return sprintf(LANG::$$property, ...$args);
+}, 1000);
 
 // Load App Asset
 add_hook('app.asset', function(string $file): string {

@@ -58,17 +58,18 @@ class Template
         // Run Template Engine
         $engine = new Engine($this->templateDirectory);
         $this->twig = new Environment($engine, [
-            'debug' =>  option_as_bool('debug'),
+            'debug' =>  \do_hook('option.bool', 'debug'),
             'cache' =>  $this->cacheDirectory
         ]);
 
-        // Assign Template Default Vars & Filters
+        // Assign Template Default Vars
         $this->assign('app', Env::get('app|info'));
         $this->assign('local', Local::get());
+        // Assign Template Default Filters
         $this->addFilter('hook', 'do_hook');
         $this->addFilter('named', function(string $name, array $params = []){
-            return named($name, $params, true);
-        });
+                return named($name, $params, true);
+            });
 
         // Load Template Functions File
         $file = new File("{$this->templateDirectory}/functions.php");
@@ -114,9 +115,23 @@ class Template
         $this->vars = array_merge($this->vars, $key);
     }
 
-    public function addFilter(string $name, $callable): void
+    /**
+     * @param string $name Filter Name
+     * @param string|callable $callable Callable Filter
+     * @return void
+     */
+    public function addFilter(string $name, string|callable $callable): void
     {
         $this->twig->addFilter(new TwigFilter($name, $callable));
+    }
+
+    /**
+     * Get Assigned Vars
+     * @return array
+     */
+    public function getVars(): array
+    {
+        return $this->vars;
     }
 
     #################################################################################

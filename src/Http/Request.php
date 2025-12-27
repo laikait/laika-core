@@ -74,15 +74,15 @@ class Request
         $this->errors = [];
     }
 
-    /**
-     * Get Instance
-     * @return Request
-     */
-    public static function instance(): Request
-    {
-        self::$instance ??= new Request();
-        return self::$instance;
-    }
+    // /**
+    //  * Get Instance
+    //  * @return Request
+    //  */
+    // public static function instance(): Request
+    // {
+    //     self::$instance ??= new Request();
+    //     return self::$instance;
+    // }
 
     /**
      * Get Method

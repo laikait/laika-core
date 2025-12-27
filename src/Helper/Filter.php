@@ -47,10 +47,19 @@ class Filter
         foreach (self::$filters[$filter] as $callbacks) {
             foreach ($callbacks as $callback) {
                 $value = ($value === null && empty($args)) ? $callback() : $callback($value, ...$args);
-                // $value = $callback($value, ...$args);
             }
         }
 
         return $value;
+    }
+
+    /**
+     * Get Filter Callbacks
+     * @param string $filter Filter Name
+     * @return array
+     */
+    public static function filter_info(string $filter)
+    {
+        return self::$filters[$filter] ?? ["Filter [{$filter} Doesn't Exists!]"];
     }
 }

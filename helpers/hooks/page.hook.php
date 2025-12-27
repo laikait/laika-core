@@ -35,11 +35,11 @@ add_hook('page.number', function(): int {
 // Next Page Number
 add_hook('page.next', function()
 {
-    return Url::instance()->incrementQuery();
+    return call_user_func([new Url, 'incrementQuery']);
 });
 
 // Previous Page Number
 add_hook('page.previous', function()
 {
-    return Url::instance()->decrementQuery();
+    return call_user_func([new Url, 'decrementQuery']);
 });
