@@ -81,16 +81,6 @@ class Url
     ##############################################################################
 
     /**
-     * Singleton Instance
-     * @return Url
-     */
-    public static function instance(): Url
-    {
-        self::$instance ??= new Url();
-        return self::$instance;
-    }
-
-    /**
      * Get Current URL
      * * @return string
      */

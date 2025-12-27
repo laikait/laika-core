@@ -59,8 +59,8 @@ class CSRF
         $this->for = $for ? strtoupper($for) : 'APP';
         $this->key = $key ? strtolower($key) : 'token';
         $this->header = "X-Laika-Token";
-        $this->lifetime = (int) option('csrf.lifetime', 300); // Default Lifetime is 300
-        $this->time = (int) option('start.time', 300);
+        $this->lifetime = (int) \do_hook('option', 'csrf.lifetime', 300); // Default Lifetime is 300
+        $this->time = (int) config('env', 'start.time', 300);
         $this->generate();
     }
 
@@ -97,7 +97,7 @@ class CSRF
             !isset($csrf['created'], $csrf['token']) || // Check Token & Created Time Exists
             !$csrf['created'] || // Check CSRF Created Time is Valid
             !$csrf['token'] || // Check CSRF Token is Valid
-            ((int) option('start.time', 300) - $csrf['created'] > $this->lifetime) // Check Token is Not Expired
+            ((int) config('env', 'start.time', 300) - $csrf['created'] > $this->lifetime) // Check Token is Not Expired
         ) {
             return $this->reset();
         }
@@ -125,7 +125,7 @@ class CSRF
     public function reset(): string
     {
         $arr = [
-            'created'   =>  (int) option('start.time', 300),
+            'created'   =>  (int) config('env', 'start.time', 300),
             'token'     =>  bin2hex(random_bytes(32))
         ];
         Session::set($this->key, $arr, $this->for);

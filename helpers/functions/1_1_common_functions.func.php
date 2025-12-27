@@ -10,15 +10,14 @@
 
 declare(strict_types=1);
 
-use Laika\Core\Api\Response as ApiResponse;
-use Laika\Core\Exceptions\HttpException;
-use Laika\Core\Exceptions\Handler;
-use Laika\Core\Http\Response;
-use Laika\Core\Helper\Config;
-use Laika\Core\Helper\Filter;
-use Laika\Core\Helper\Option;
-use Laika\Core\App\Router;
 use Laika\Core\Helper\Url;
+use Laika\Core\App\Router;
+use Laika\Core\Helper\Filter;
+use Laika\Core\Helper\Config;
+use Laika\Core\Http\Response;
+use Laika\Core\Exceptions\Handler;
+use Laika\Core\Exceptions\HttpException;
+use Laika\Core\Api\Response as ApiResponse;
 
 // Dump Data & Die
 /**
@@ -72,7 +71,7 @@ function redirect(string|array $slug, ?array $params = null): void
 {
     // Redirect if $slug is an URL
     if (parse_url($slug, PHP_URL_HOST)) {
-        header('Location:'.$slug, true);
+        header('Location:' . $slug, true);
         die();
     }
     // Convert to String if Slug is Array
@@ -83,13 +82,13 @@ function redirect(string|array $slug, ?array $params = null): void
     $slug = trim($slug, '/');
 
     // Redirect
-    header('Location:' . Url::instance()->build($slug, $params ?: []), true);
+    header('Location:' . call_user_func([new Url, 'build'], $slug, $params ?: []), true);
     die();
 }
 
-// Add Filter
 /**
- * @param string $filter Required Argument.
+ * Add Hook
+ * @param string $filter Filter Name.
  * @param callable $callback Required Argument.
  * @param int $priority Optional Argument. Default is 10
  * @return void
@@ -99,9 +98,9 @@ function add_hook(string $filter, callable $callback, int $priority = 10): void
     Filter::add_filter($filter, $callback, $priority);
 }
 
-// Apply Filter
 /**
- * @param string $filter Required Argument.
+ * Do Hook
+ * @param string $filter Filter Name.
  * @param mixed $value Optional Argument. Default is Null.
  * @param mixed ...$args Optional Arguments.
  * @return mixed
@@ -111,35 +110,14 @@ function do_hook(string $filter, mixed $value = null, mixed ...$args): mixed
     return Filter::apply_filter($filter, $value, ...$args);
 }
 
-// Get option Value
 /**
- * @param string $key Required Argument. Options Key Name
- * @param mixed $default Optional Argument. Default will return if no value found
- * @return mixed
+ * Get Filter Info
+ * @param string $filter Filter Name.
+ * @return Array
 */
-function option(string $key, mixed $default = null): mixed
+function hook_info(string $filter): mixed
 {
-    return Option::get($key, Config::get('env', $key, $default));
-}
-
-/**
- * Match Option Value Types as Boolean
- * @param string $key Option Key
- * @return bool
- */
-function option_as_bool(string $key): bool
-{
-    $value = option($key, false);
-    return is_bool($value) ? $value : (bool) preg_match('/^(yes|enable|true|on|1)$/i', $value);
-}
-
-/**
- * Host Path
- * @return string Return Host Path. Example: http://example.com or http://example.com/path if app hosted in path
- */
-function host(): string
-{
-    return option('app.host') ?: Url::instance()->base();
+    return Filter::filter_info($filter);
 }
 
 /**
@@ -150,7 +128,7 @@ function named(string $name, array $params = [], bool $url = false): string
 {
     $path = trim(Router::url($name, $params), '/');
     if ($url) {
-        return trim(host(), '/') . "/{$path}";
+        return trim(do_hook('app.host'), '/') . "/{$path}";
     }
     return $path;
 }
@@ -168,12 +146,13 @@ function showdate(int $unixtime): string
 /**
  * Throw Exception and Abort
  * @param int $code Error Code
- * @param string $message Error Message
+ * @param ?string $message Error Message
  * @return void
  */
-function abort(int $code, string $message = ''): void
+function abort(int $code, ?string $message = null): void
 {
-    throw new HttpException($code, $message ?: Response::instance()->codes()[$code]);
+    $message = $message ?: (call_user_func([new Response, 'codes'])[$code] ?? 'Unknown Error!');
+    throw new HttpException($code, $message);
 }
 
 /**

@@ -47,7 +47,7 @@ class Connect
     public static function timezone(): void
     {
         // Set Date Time
-        date_default_timezone_set(option('time.zone', 'Europe/London'));
+        date_default_timezone_set(\do_hook('time.zone', 'Europe/London'));
     }
 
     /**
@@ -56,7 +56,7 @@ class Connect
      */
     public static function session(): void
     {
-        if (option_as_bool('dbsession', false)) {
+        if (\do_hook('option.bool', 'dbsession', false)) {
             SessionManager::config(Connection::get());
             return;
         }

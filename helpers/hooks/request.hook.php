@@ -17,17 +17,17 @@ use Laika\Core\Http\Request;
 ######################################################################
 // Get Request Header
 add_hook('request.header', function(string $key): ?string {
-    return Request::instance()->header($key);
+    return call_user_func([new Request, 'header'], $key);
 });
 
 // Get Request Input Value
 add_hook('request.input', function(string $key, mixed $default = ''): mixed {
-    return Request::instance()->input($key, $default);
+    return call_user_func([new Request, 'input'], $key, $default);
 });
 
 // Get Request Values
 add_hook('request.all', function(): array {
-    return Request::instance()->all();
+    return call_user_func([new Request, 'all']);
 });
 
 // Check Method Request is Post/Get/Ajax
@@ -35,22 +35,22 @@ add_hook('request.is', function(string $method): bool {
     $method = strtolower($method);
     switch ($method) {
         case 'post':
-            return Request::instance()->isPost();
+            return call_user_func([new Request, 'isPost']);
             break;
         case 'get':
-            return Request::instance()->isGet();
+            return call_user_func([new Request, 'isGet']);
             break;
         case 'put':
-            return Request::instance()->isPut();
+            return call_user_func([new Request, 'isPut']);
             break;
         case 'patch':
-            return Request::instance()->isPatch();
+            return call_user_func([new Request, 'isPatch']);
             break;
         case 'delete':
-            return Request::instance()->isDelete();
+            return call_user_func([new Request, 'isDelete']);
             break;
         case 'ajax':
-            return Request::instance()->isAjax();
+            return call_user_func([new Request, 'isAjax']);
             break;
         default:
             return false;
@@ -63,6 +63,6 @@ add_hook('request.is', function(string $method): bool {
  * @return string
  */
 add_hook('request.error', function(string $key): string{
-    $errors = Request::instance()->errors();
+    $errors = call_user_func([new Request, 'errors']);
     return $errors[$key][0] ?? '';
 });

@@ -20,8 +20,8 @@ use Laika\Core\Helper\Date;
  * @param int $time Unix Timestamps
  * @return string
  */
-add_hook('showdate', function(int $time): string{
-    $date = new Date(format:option('time.format', 'Y-M-d H:i:s'));
+add_hook('date.display', function(int $time): string{
+    $date = Date::now(\do_hook('option', 'time.format', 'Y-M-d H:i:s'));
     $date->setTimestamp($time);
     return $date->format();
 });
