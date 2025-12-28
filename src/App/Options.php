@@ -48,7 +48,7 @@ class Options Extends Model
                     $e->column($this->id)->int()->auto();
                     $e->column($this->key)->varchar()->unique();
                     $e->column($this->value)->text();
-                    $e->column($this->default)->enum(['yes', 'no'], 'no');
+                    $e->column($this->default)->enum(['yes', 'no'])->default('no');
                     $e->engine()->charset()->collate();
                 })->execute();
         return;
