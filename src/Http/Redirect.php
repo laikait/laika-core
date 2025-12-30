@@ -38,7 +38,7 @@ class Redirect
      */
     public function __construct()
     {
-        $this->host = do_hook('app.host', Url::instance()->base());
+        $this->host = do_hook('app.host', call_user_func([new Url, 'base']));
     }
 
     /**

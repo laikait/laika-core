@@ -45,16 +45,6 @@ class Response
         ];
     }
 
-    // /**
-    //  * Get Instance
-    //  * @return Response
-    //  */
-    // public static function instance(): Response
-    // {
-    //     self::$instance ??= new Response();
-    //     return self::$instance;
-    // }
-
     /**
      * Set HTTP response code
      * @return int
