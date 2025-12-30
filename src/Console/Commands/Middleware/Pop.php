@@ -39,7 +39,7 @@ class Pop extends Command
         // Check Middleware Name is Valid
         if (!preg_match($this->exp, $params[0])) {
             // Invalid Middleware Name
-            $this->error("Invalid Middleware Name: '{$params[0]}'");
+            $this->error("Invalid Middleware Name: [{$params[0]}]");
             return;
         }
 
@@ -53,15 +53,15 @@ class Pop extends Command
 
         // Check Middleware Path is Valid
         if (!is_file($file)) {
-            $this->error("Invalid Middleware or Path: '{$params[0]}'");
+            $this->error("Invalid Middleware or Path: [{$params[0]}]");
             return;
         }
 
         if (!unlink($file)) {
-            $this->error("Failed to Remove Middleware: '{$file}'");
+            $this->error("Failed to Remove Middleware: [{$file}]");
             return;
         }
 
-        $this->info("Middleware Removed Successfully: '{$params[0]}'");
+        $this->info("Middleware [{$params[0]}] Removed Successfully!");
     }
 }

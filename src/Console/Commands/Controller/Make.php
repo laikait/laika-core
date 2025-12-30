@@ -42,7 +42,7 @@ class Make extends Command
 
         // Check Controller Name is Valid
         if (!preg_match($this->exp, $params[0])) {
-            $this->error("Invalid Controller Name: '{$params[0]}'");
+            $this->error("Invalid Controller Name: [{$params[0]}]");
             return;
         }
 
@@ -63,7 +63,7 @@ class Make extends Command
 
         // Check Controller Already Exist
         if (is_file($file)) {
-            $this->error("Controller Already Exist: '{$params[0]}'");
+            $this->error("Controller [{$params[0]}] Already Exist!");
             return;
         }
 
@@ -74,11 +74,11 @@ class Make extends Command
         $content = str_replace(['{{NAMESPACE}}', '{{NAME}}'], [$parts['namespace'], $parts['name']], $content);
 
         if (file_put_contents($file, $content) === false) {
-            $this->error("Failed to Create Controller: {$file}");
+            $this->error("Failed to Create Controller: [{$file}]!");
             return;
         }
 
-        $this->info("Controller Created Successfully: '{$params[0]}'");
+        $this->info("Controller [{$params[0]}] Created Successfully!");
         return;
     }
 }

@@ -44,7 +44,7 @@ class Make extends Command
 
         if (!preg_match($this->exp, $params[0])) {
             // Invalid Name
-            $this->error("Invalid Model Name: '{$params[0]}'");
+            $this->error("Invalid Model Name: [{$params[0]}]!");
             return;
         }
         $parts = $this->parts($params[0]);
@@ -59,7 +59,7 @@ class Make extends Command
         $file = "{$this->path}/{$parts['name']}.php";
 
         if (is_file($file)) {
-            $this->error("Model Already Exist: {$file}");
+            $this->error("Model [{$params[0]}] Already Exist!");
             return;
         }
 
@@ -80,11 +80,11 @@ class Make extends Command
         ], $content);
 
         if (file_put_contents($file, $content) === false) {
-            $this->error("Failed to Create Model: {$file}");
+            $this->error("Failed to Create Model: {$file}!");
             return;
         }
 
-        $this->info("Model Created Successfully: {$params[0]}");
+        $this->info("Model [{$params[0]}] Created Successfully!");
         return;
     }
 }

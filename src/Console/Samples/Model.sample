@@ -42,7 +42,7 @@ class {{NAME}} extends Model
                 ->create(function (Blueprint $e) {
                     $e->column($this->id)->int()->auto();
                     $e->column('sample')->varchar();
-                    $e->column('status')->enum(['active', 'inactive'], 'inactive');
+                    $e->column('status')->enum(['active', 'inactive'])->default('inactive');
                 })->execute();
         return;
     }

@@ -31,40 +31,13 @@ class Lists extends Command
      */
     public function run(array $params): void
     {
-        // Path
-        $path = trim($params[0] ?? '', '/');
-
-        // Check View Name is Valid
-        if ($path && !preg_match($this->exp, $path)) {
-            // Invalid View Name
-            $this->error("Invalid View Path: '{$path}'");
-            return;
-        }
-
-        // Get Path if Given
-        if ($path) {
-            $this->path .= "/{$path}";
-        }
-
-        // Check Path Exist
-        if (!Directory::exists($this->path)) {
-            $this->error("View Path Not Found: '{$this->path}'");
-            return;
-        }
-
-        $paths = Directory::scanRecursive($this->path, true, 'php');
-        $items = [];
-        foreach ($paths as $file) {
-            if (is_file($file)) {
-                $items[] = 'Laika\\App\\Middleware\\' . str_replace(["{$this->path}/", '.php', '/'], ['', '', '\\'], $file);
-            }
-        }
+        $middlewares = call_user_func([new \Laika\Core\App\Infra(), 'getMiddlewares']);
 
         // Header
-        $headers = ['#', 'Templates'];
+        $headers = ['#', 'Models'];
 
         // Find max width for "File Path" column
-        $maxLength = max(array_map('strlen', $items));
+        $maxLength = max(array_map('strlen', $middlewares) ?: [30]);
         $col2Width = max(strlen($headers[1]), $maxLength);
 
         // Table width
@@ -75,12 +48,11 @@ class Lists extends Command
         printf("| %-3s | %-{$col2Width}s |\n", $headers[0], $headers[1]);
         echo $line;
 
-        $count = 1;
+        $count = 0;
         // Print Rows
-        foreach ($items as $item) {
-            $item = str_replace(["{$this->path}/", '.tpl.php'], [''], $item);
-            printf("| %-3d | %-{$col2Width}s |\n", $count, $item);
+        foreach ($middlewares as $item) {
             $count++;
+            printf("| %-3d | %-{$col2Width}s |\n", $count, $item);
         }
 
         echo $line;

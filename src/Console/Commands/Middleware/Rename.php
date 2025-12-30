@@ -47,13 +47,13 @@ class Rename extends Command
         // Check Old Middleware Name is Valid
         if (!preg_match($this->exp, $old)) {
             // Invalid Middleware Name
-            $this->error("Invalid Old Middleware Name: '{$old}'");
+            $this->error("Invalid Old Middleware Name: [{$old}]!");
             return;
         }
         // Check New Middleware Name is Valid
         if (!preg_match($this->exp, $new)) {
             // Invalid Middleware Name
-            $this->error("Invalid New Middleware Name: '{$old}'");
+            $this->error("Invalid New Middleware Name: [{$new}]!");
             return;
         }
 
@@ -72,27 +72,27 @@ class Rename extends Command
         $old_file = "{$this->old_path}/{$old_parts['name']}.php";
         $new_file = "{$this->new_path}/{$new_parts['name']}.php";
 
-        // Check Old Middleware Path is Valid
+        // Check Old Middleware is Valid
         if (!is_file($old_file)) {
-            $this->error("Invalid Middleware Name or Path: '$old'");
+            $this->error("Old Middleware [{$old}] Doesn't Exists!");
             return;
         }
 
-        // Check New Path Exist
+        // Check New Middleware is Valid
+        if (is_file($new_file)) {
+            $this->error("New Middleware [{$new}] Doesn't Exists!");
+            return;
+        }
+
+        // Create Directory if Doesn't Exists
         if (!Directory::exists($this->new_path)) {
             Directory::make($this->new_path);
-        }
-
-        // Check New Middleware Path is Valid
-        if (is_file($new_file)) {
-            $this->error("New Middleware Already Exist: '$old'");
-            return;
         }
 
         // Get Contents
         $content = file_get_contents($old_file);
         if ($content === false) {
-            $this->error("Failed to Read Middleware: '{$old}'");
+            $this->error("Failed to Read Middleware: [{$old}]");
             return;
         }
 
@@ -106,17 +106,17 @@ class Rename extends Command
 
         // Create New Middleware File
         if (file_put_contents($new_file, $content) === false) {
-            $this->error("Failed to Create Middleware: {$new}");
+            $this->error("Failed to Create Middleware: [{$new}]");
             return;
         }
 
         // Remove Old Middleware File
 
         if (!unlink($old_file)) {
-            $this->error("Failed to Remove Middleware: '{$old_file}'");
+            $this->error("Failed to Remove Middleware: [$old_file]!");
             return;
         }
 
-        $this->info("Middleware Renamed Successfully: '{$old}'->'{$new}'");
+        $this->info("Middleware [{$old}] Renamed to [{$new}] Successfully!");
     }
 }

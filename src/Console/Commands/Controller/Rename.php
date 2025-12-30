@@ -47,13 +47,13 @@ class Rename extends Command
         // Check Old Controller Name is Valid
         if (!preg_match($this->exp, $old)) {
             // Invalid Controller Name
-            $this->error("Invalid Old Controller Name: '{$old}'");
+            $this->error("Invalid Old Controller Name: [{$old}]");
             return;
         }
         // Check New Controller Name is Valid
         if (!preg_match($this->exp, $new)) {
             // Invalid Controller Name
-            $this->error("Invalid New Controller Name: '{$old}'");
+            $this->error("Invalid New Controller Name: [{$new}]!");
             return;
         }
 
@@ -72,27 +72,27 @@ class Rename extends Command
         $old_file = "{$this->old_path}/{$old_parts['name']}.php";
         $new_file = "{$this->new_path}/{$new_parts['name']}.php";
 
-        // Check Old Controller Path is Valid
+        // Check Old Controller is Valid
         if (!is_file($old_file)) {
-            $this->error("Invalid Controller Name or Path: '$old'");
+            $this->error("Old Controller [{$old}] Doesn't Exists!");
             return;
         }
 
-        // Check New Path Exist
+        // Check New Controller is Valid
+        if (is_file($new_file)) {
+            $this->error("New Controller [{$new}] Already Exist!");
+            return;
+        }
+
+        // Create Directory if Doesn't Exists
         if (!Directory::exists($this->new_path)) {
             Directory::make($this->new_path);
-        }
-
-        // Check New Controller Path is Valid
-        if (is_file($new_file)) {
-            $this->error("New Controller Already Exist: '$old'");
-            return;
         }
 
         // Get Contents
         $content = file_get_contents($old_file);
         if ($content === false) {
-            $this->error("Failed to Read Controller: '{$old}'");
+            $this->error("Failed to Read Controller: [{$old}]!");
             return;
         }
 
@@ -106,18 +106,18 @@ class Rename extends Command
 
         // Create New Controller File
         if (file_put_contents($new_file, $content) === false) {
-            $this->error("Failed to Create Controller: {$new}");
+            $this->error("Failed to Create Controller: [$new]!");
             return;
         }
 
         // Remove Old Controller File
 
         if (!unlink($old_file)) {
-            $this->error("Failed to Remove Controller: '{$old_file}'");
+            $this->error("Failed to Remove Controller: [$old_file]!");
             return;
         }
 
-        $this->info("Controller Renamed Successfully: '{$old}' -> '{$new}'");
+        $this->info("Controller [{$old}] Renamed to [{$new}] Successfully!");
         return;
     }
 }
