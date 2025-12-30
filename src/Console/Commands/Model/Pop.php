@@ -37,7 +37,7 @@ class Pop extends Command
 
         if (!preg_match($this->exp, $params[0])) {
             // Invalid Name
-            $this->error("Invalid Model Name: {$params[0]}");
+            $this->error("Invalid Model Name: {$params[0]}!");
             return;
         }
 
@@ -51,16 +51,16 @@ class Pop extends Command
         $file = "{$this->path}/{$parts['name']}.php";
 
         if (!is_file($file)) {
-            $this->error("Model Doesn't Exist: {$file}");
+            $this->error("Model [{$params[0]}] Doesn't Exist!");
             return;
         }
 
         if (!unlink($file)) {
-            $this->error("Failed to Remove Model: {$file}");
+            $this->error("Failed to Remove Model: [{$file}]!");
             return;
         }
 
-        $this->info("Model Created Successfully: {$params[0]}");
+        $this->info("Model [{$params[0]}] Created Successfully!");
         return;
     }
 }

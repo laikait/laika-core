@@ -18,9 +18,6 @@ use Laika\Core\Console\Command;
 // Make Model Class
 class Lists extends Command
 {
-    // App Model Path
-    protected string $path = APP_PATH . '/lf-app/Model';
-
     /**
      * @param array $params
      * @return void
@@ -28,10 +25,6 @@ class Lists extends Command
     public function run(array $params): void
     {
         $models = call_user_func([new \Laika\Core\App\Infra(), 'getModels']);
-        // if (empty($models)) {
-        //     $this->info("No Models Found!");
-        //     return;
-        // }
 
         // Header
         $headers = ['#', 'Models'];

@@ -39,7 +39,7 @@ class Make extends Command
 
         if (!preg_match($this->exp, $params[0])) {
             // Invalid Name
-            $this->error("Invalid Middleware Name: '{$params[0]}'");
+            $this->error("Invalid Middleware Name: [{$params[0]}]!");
             return;
         }
 
@@ -57,7 +57,7 @@ class Make extends Command
         $file = "{$this->path}/{$parts['name']}.php";
 
         if (is_file($file)) {
-            $this->error("Middleware Already Exist: {$file}");
+            $this->error("Middleware [{$file}] Already Exist!");
             return;
         }
 
@@ -68,10 +68,10 @@ class Make extends Command
         $content = str_replace(['{{NAMESPACE}}','{{NAME}}'], [$parts['namespace'],$parts['name']], $content);
 
         if (file_put_contents($file, $content) === false) {
-            $this->error("Failed to Create Middleware: {$file}");
+            $this->error("Failed to Create Middleware: [{$file}]!");
             return;
         }
 
-        $this->info("Middleware Created Successfully: {$params[0]}");
+        $this->info("Middleware [{$params[0]}] Created Successfully!");
     }
 }

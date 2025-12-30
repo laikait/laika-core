@@ -47,13 +47,13 @@ class Rename extends Command
         // Check Old Model Name is Valid
         if (!preg_match($this->exp, $old)) {
             // Invalid Model Name
-            $this->error("Invalid Old Model Name: '{$old}'");
+            $this->error("Invalid Old Model Name: [{$old}]!");
             return;
         }
         // Check New Model Name is Valid
         if (!preg_match($this->exp, $new)) {
             // Invalid Model Name
-            $this->error("Invalid New Model Name: '{$old}'");
+            $this->error("Invalid New Model Name: '{$new}'");
             return;
         }
 
@@ -72,9 +72,15 @@ class Rename extends Command
         $old_file = "{$this->old_path}/{$old_parts['name']}.php";
         $new_file = "{$this->new_path}/{$new_parts['name']}.php";
 
-        // Check Old Model Path is Valid
+        // Check Old Model is Valid
         if (!is_file($old_file)) {
-            $this->error("Invalid Model Name or Path: '$old'");
+            $this->error("Model [$old] Doesn't Exists!");
+            return;
+        }
+
+        // Check New Model is Valid
+        if (is_file($new_file)) {
+            $this->error("New Model [{$old}] Already Exist!");
             return;
         }
 
@@ -83,16 +89,10 @@ class Rename extends Command
             Directory::make($this->new_path);
         }
 
-        // Check New Model Path is Valid
-        if (is_file($new_file)) {
-            $this->error("New Model Already Exist: '$old'");
-            return;
-        }
-
         // Get Contents
         $content = file_get_contents($old_file);
         if ($content === false) {
-            $this->error("Failed to Read Model: '{$old}'");
+            $this->error("Failed to Read Model: [{$old}]");
             return;
         }
 
@@ -106,17 +106,17 @@ class Rename extends Command
 
         // Create New Model File
         if (file_put_contents($new_file, $content) === false) {
-            $this->error("Failed to Create Model: {$new}");
+            $this->error("Failed to Create Model: [{$new}]!");
             return;
         }
 
         // Remove Old Model File
         if (!unlink($old_file)) {
-            $this->error("Failed to Remove Model: '{$old_file}'");
+            $this->error("Failed to Remove Model: [{$old_file}]!");
             return;
         }
 
-        $this->info("Model Renamed Successfully: '{$old}'->'{$new}'");
+        $this->info("Model [$old] Renamed to [{$new}] Successfully!");
         return;
     }
 }

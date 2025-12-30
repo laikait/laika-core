@@ -38,7 +38,7 @@ class Pop extends Command
         // Check Controller Name is Valid
         if (!preg_match($this->exp, $params[0])) {
             // Invalid Controller Name
-            $this->error("Invalid Controller Name: '{$params[0]}'");
+            $this->error("Invalid Controller Name: [{$params[0]}]!");
             return;
         }
 
@@ -52,16 +52,16 @@ class Pop extends Command
 
         // Check Controller Path is Valid
         if (!is_file($file)) {
-            $this->error("Invalid Controller or Path: '{$params[0]}'");
+            $this->error("Controller [{$params[0]}] Doesn't Exists!");
             return;
         }
 
         if (!unlink($file)) {
-            $this->error("Failed to Remove Controller: '{$file}'");
+            $this->error("Failed to Remove Controller: [{$file}]!");
             return;
         }
 
-        $this->info("Controller Removed Successfully: '{$params[0]}'");
+        $this->info("Controller [{$params[0]}] Removed Successfully!");
         return;
     }
 }
