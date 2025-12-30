@@ -20,11 +20,6 @@ use Laika\Session\Session;
 class CSRF
 {
     /**
-     * @var CSRF $instance CSRF Singleton Instance
-     */
-    private static CSRF $instance;
-
-    /**
      * @var int $lifetime CSRF Token Lifetime
      */
     protected int $lifetime;
@@ -62,27 +57,6 @@ class CSRF
         $this->lifetime = (int) \do_hook('option', 'csrf.lifetime', 300); // Default Lifetime is 300
         $this->time = (int) config('env', 'start.time', 300);
         $this->generate();
-    }
-
-    /**
-     * Singleton Instance
-     * @param ?int $totalResults Default is null
-     * @param ?string $for Default is null. In null 'APP' will be placed as argument
-     * @param ?string $key Default is null. In null 'token' will be placed as argument
-     * @return CSRF
-     */
-    public static function instance(?string $for = null, ?string $key = null): CSRF
-    {
-        self::$instance ??= new self($for, $key);
-        // Set Session For
-        if ($for) {
-            self::$instance->for = strtoupper($for);
-        }
-        // Set Request Key
-        if ($key) {
-            self::$instance->key = strtolower($key);
-        }
-        return self::$instance;
     }
 
     /**
@@ -148,7 +122,7 @@ class CSRF
     public function validate(): bool
     {
         // If CSRF Request Key Missing or Blank, Return false
-        $request_token = (string) Request::instance()->input($this->key);
+        $request_token = (string) call_user_func([new Request, 'input'], $this->key);
         if (!$request_token) {
             return false;
         }
@@ -167,6 +141,6 @@ class CSRF
      */
     private function header(string $value): void
     {
-        Response::instance()->setHeader([$this->header => $value]);
+        call_user_func([new Response, 'setHeader'], [$this->header => $value]);
     }
 }
