@@ -13,18 +13,20 @@ declare(strict_types=1);
 
 namespace Laika\Core\Helper;
 
-use Laika\Model\ConnectionManager;
+use Laika\Model\Connection;
+use Laika\Model\Blueprint;
 use Laika\Session\Session;
 use Laika\Model\Schema;
-use PDO;
+use Laika\Model\Model;
+// use PDO;
 
 class Auth
 {
     // Session For
-    private string $for;
+    private string $type;
 
-    // PDO Object
-    private PDO $pdo;
+    // Model Object
+    private Model $model;
 
     // DB Table Name
     private string $table;
@@ -46,25 +48,22 @@ class Auth
 
     /**
      * Initiate Auth Session
-     * @param string $for. Auth Running For. Example: ADMIN/CLIENT. Default is APP
+     * @param string $type. Auth Type. Example: ADMIN/CLIENT. Default is 'APP'
      */
-    public function __construct(string $for = 'APP')
+    public function __construct(string $type = 'APP')
     {
-        $this->for = strtolower($for);
-        $this->pdo = ConnectionManager::get();
-        $this->table = "{$this->for}sessions";
-        $this->event = Session::get($this->cookie, $this->for);
-        $this->time = (int) option('start.time', time());
-        // Create Table if Does Not Exists
-        Schema::setConnection();
-        Schema::create($this->table, function($e){
-            $e->string('event', 64)
-                ->mediumText('data')
-                ->integer('expire')
-                ->integer('created')
-                ->primary('event')
-                ->index('expire');
-        });
+        $this->type = strtolower($type);
+        $this->table = "{$this->type}_sessions";
+        $this->model = new Model();
+        $this->event = Session::get($this->cookie, $this->type);
+        $this->time = (int) do_hook('config.env', 'start.time', time());
+
+        Schema::table($this->table)->create(function(Blueprint $table){
+            $table->column('event')->varchar()->length(64)->index();
+            $table->column('data')->mediumtext();
+            $table->column('expire')->int();
+            $table->column('created')->int();
+        })->execute();
 
     }
 
@@ -91,19 +90,19 @@ class Auth
         $this->event = $this->generateEventKey();
         // Set Expire Time
         $expire = $this->time + $this->ttl;
-        // Make SQL
-        $sql = "INSERT INTO {$this->table} (event, data, expire, created) VALUES (:event, :data, :expire, :created)";
-        $stmt = $this->pdo->prepare($sql);
-
-        $stmt->execute([
-            ':event'    =>  $this->event,
-            ':data'     =>  json_encode($user),
-            ':expire'   =>  $expire,
-            ':created'  =>  $this->time,
-        ]);
+        
+        // Create User Session
+        $this->model
+            ->table($this->table)
+            ->insert([
+                'event'    =>  $this->event,
+                'data'     =>  json_encode($user),
+                'expire'   =>  $expire,
+                'created'  =>  $this->time,
+            ]);
 
         // Set Session
-        Session::set($this->cookie, $this->event, $this->for);
+        Session::set($this->cookie, $this->event, $this->type);
 
         return $this->event;
     }
@@ -117,23 +116,25 @@ class Auth
     {
         // Clear Session if Event Mssing
         if (empty($this->event)) {
-            Session::pop($this->cookie, $this->for);
+            Session::pop($this->cookie, $this->type);
             return null;
         }
 
-        // Get DB Data
-        $stmt = $this->pdo->prepare("SELECT data, expire FROM {$this->table} WHERE event = :event AND expire > :expire LIMIT 1");
-        $stmt->execute([':event' => $this->event, ':expire' => $this->time]);
+        // Get Session User
+        $row = $this->model
+                ->table($this->table)
+                ->where(['event' => $this->event, 'expire' => $this->time])
+                ->first();
 
-        $row = $stmt->fetch(PDO::FETCH_ASSOC);
-
-        if (!$row) {
-            Session::pop($this->cookie, $this->for);
+        // Remove Session Key if Empty
+        if (empty($row)) {
+            Session::pop($this->cookie, $this->type);
             return null;
         }
 
         $this->user = json_decode($row['data'], true);
 
+        // Regenerate Cookie if Session Expired
         if (($row['expire'] - $this->time) < ($this->ttl / 2)) {
             self::regenerate();
         }
@@ -157,9 +158,12 @@ class Auth
      */
     public function destroy(): void
     {
-        $stmt = $this->pdo->prepare("DELETE FROM {$this->table} WHERE event = :event");
-        $stmt->execute([':event' => $this->event]);
-        Session::pop($this->cookie, $this->for);
+        // Remove Event & Session Cookie
+        $this->model
+            ->table($this->table)
+            ->where(['event' => $this->event])
+            ->delete();
+        Session::pop($this->cookie, $this->type);
     }
 
     /**
@@ -170,9 +174,10 @@ class Auth
     {
         $uid = bin2hex(random_bytes(32));
         // Check Already Exist & Return
-        $stmt = $this->pdo->prepare("SELECT event FROM {$this->table} WHERE event = :event LIMIT 1");
-        $stmt->execute([':event' => $this->event]);
-        $row = $stmt->fetch(PDO::FETCH_ASSOC);
-        return !$row ? $uid : $this->generateEventKey();
+        $row = $this->model
+                    ->table($this->table)
+                    ->where(['event' => $this->event])
+                    ->get();
+        return empty($row) ? $uid : $this->generateEventKey();
     }
 }
