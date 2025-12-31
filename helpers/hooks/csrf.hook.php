@@ -21,6 +21,5 @@ use Laika\Core\Helper\CSRF;
  * @return string
  */
 add_hook('csrf.field', function (?string $for = null): string{
-    $obj = CSRF::instance(for:$for);
-    return $obj->field();
+    return call_user_func([new CSRF(for:$for), 'field']);
 });
