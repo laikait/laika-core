@@ -19,25 +19,28 @@ use Laika\Model\Schema;
 use Laika\Model\Model;
 // use PDO;
 
-class Auth
+class Auth extends Model
 {
     // Session For
     private string $type;
 
-    // Model Object
-    private Model $model;
-
     // DB Table Name
-    private string $table;
+    public string $table;
+
+    // Table ID Column
+    public string $id;
+
+    // Table UUID Column
+    public string $uuid;
 
     // Cookie Name
-    private string $cookie = '__AUTH_TOKEN';
+    private string $cookie;
 
     // Cookie Expire After TTL
-    private int $ttl = 1800; // 1800 Seconds or 30 Minutes
+    private int $ttl;
 
     // User Data
-    private ?array $user = null;
+    private ?array $user;
 
     // Event ID
     private ?string $event;
@@ -48,20 +51,29 @@ class Auth
     /**
      * Initiate Auth Session
      * @param string $type. Auth Type. Example: ADMIN/CLIENT. Default is 'APP'
+     * @param string $connection. Database Connection Name
      */
-    public function __construct(string $type = 'APP')
+    public function __construct(string $type = 'APP', string $connection = 'default')
     {
         $this->type = strtolower($type);
-        $this->table = "{$this->type}_sessions";
-        $this->model = new Model();
-        $this->event = Session::get($this->cookie, $this->type);
-        $this->time = (int) do_hook('config.env', 'start.time', time());
+        $this->table = "sessions_{$this->type}";
+        $this->id = "event";
+        $this->uuid = "uuid";
+        $this->cookie = strtoupper($type) . "_AUTH_TOKEN";
+        $this->ttl = 1800;
+        $this->user = null;
 
-        Schema::table($this->table)->create(function(Blueprint $table){
-            $table->column('event')->varchar()->length(64)->index();
+        // Set Model Connection
+        parent::__construct($connection);
+        // $this->model = new Model();
+        $this->event = Session::get($this->cookie, $this->type);
+        $this->time = time();
+
+        Schema::table($this->table, $connection)->create(function(Blueprint $table){
+            $table->column($this->id)->varchar()->length(64)->index();
             $table->column('data')->mediumtext();
-            $table->column('expire')->int();
-            $table->column('created')->int();
+            $table->column('expire')->int()->index();
+            $table->column('created')->int()->index();
         })->execute();
 
     }
@@ -91,14 +103,12 @@ class Auth
         $expire = $this->time + $this->ttl;
         
         // Create User Session
-        $this->model
-            ->table($this->table)
-            ->insert([
-                'event'    =>  $this->event,
-                'data'     =>  json_encode($user),
-                'expire'   =>  $expire,
-                'created'  =>  $this->time,
-            ]);
+        $this->insert([
+            $this->id   =>  $this->event,
+            'data'      =>  json_encode($user),
+            'expire'    =>  $expire,
+            'created'   =>  $this->time,
+        ]);
 
         // Set Session
         Session::set($this->cookie, $this->event, $this->type);
@@ -120,10 +130,7 @@ class Auth
         }
 
         // Get Session User
-        $row = $this->model
-                ->table($this->table)
-                ->where(['event' => $this->event, 'expire' => $this->time])
-                ->first();
+        $row = $this->where([$this->id => $this->event, 'expire' => $this->time])->first();
 
         // Remove Session Key if Empty
         if (empty($row)) {
@@ -158,10 +165,7 @@ class Auth
     public function destroy(): void
     {
         // Remove Event & Session Cookie
-        $this->model
-            ->table($this->table)
-            ->where(['event' => $this->event])
-            ->delete();
+        $this->where([$this->id => $this->event])->delete();
         Session::pop($this->cookie, $this->type);
     }
 
@@ -173,10 +177,7 @@ class Auth
     {
         $uid = bin2hex(random_bytes(32));
         // Check Already Exist & Return
-        $row = $this->model
-                    ->table($this->table)
-                    ->where(['event' => $this->event])
-                    ->get();
+        $row = $this->where(['event' => $this->event])->get();
         return empty($row) ? $uid : $this->generateEventKey();
     }
 }
