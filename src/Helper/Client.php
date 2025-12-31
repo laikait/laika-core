@@ -197,7 +197,7 @@ class Client
             'browser'   => $this->browser(),
             'device'    => $this->deviceType(),
             'language'  => $this->language(),
-            'userAgent' => $this->userAgent(),
+            'agent'     => $this->userAgent(),
             'isBot'     => $this->isBot()
         ];
     }
