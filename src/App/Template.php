@@ -63,7 +63,7 @@ class Template
         ]);
 
         // Assign Template Default Vars
-        $this->assign('app', Env::get('app|info'));
+        $this->assign('app', Env::get('app'));
         $this->assign('local', Local::get());
         // Assign Template Default Filters
         $this->addFilter('hook', 'do_hook');

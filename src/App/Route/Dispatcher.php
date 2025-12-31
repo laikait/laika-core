@@ -19,6 +19,7 @@ use Laika\Core\Helper\Directory;
 use Laika\Core\Helper\Connect;
 use Laika\Core\Http\Response;
 use Laika\Core\Helper\Config;
+use Laika\Core\Helper\Client;
 use Laika\Core\Helper\Token;
 use Laika\Core\App\Env;
 use RuntimeException;
@@ -249,5 +250,6 @@ class Dispatcher
          * Set App Info Environment
          */
         Env::set('app|info', do_hook('config.app'));
+        Env::set('app|client', call_user_func([new Client, 'all']));
     }
 }

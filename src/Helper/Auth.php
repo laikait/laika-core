@@ -13,7 +13,6 @@ declare(strict_types=1);
 
 namespace Laika\Core\Helper;
 
-use Laika\Model\Connection;
 use Laika\Model\Blueprint;
 use Laika\Session\Session;
 use Laika\Model\Schema;
