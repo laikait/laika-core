@@ -27,10 +27,10 @@ add_hook('request.input', function(string $key, mixed $default = ''): mixed {
 
 // Get Request Values
 add_hook('request.all', function(): array {
-    return call_user_func([new Request, 'all']);
+    return call_user_func([new Request, 'inputs']);
 });
 
-// Check Method Request is Post/Get/Ajax
+// Check Method Request is Post/Get/Put/Patch/Delete/Ajax
 add_hook('request.is', function(string $method): bool {
     $method = strtolower($method);
     switch ($method) {

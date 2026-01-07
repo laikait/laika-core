@@ -32,17 +32,17 @@ class {{NAME}} extends Model
     public string $uuid = 'uuid';
 
     /**
-     * Create {{TABLE_NAME}} if Doesn't Exists
-     * @return void
+     * Migrate Table
+     * @return mixed
      */
-    public function migrate()
+    public function migrate(): mixed
     {
         // Maigrate Table
         Schema::table($this->table)
-                ->create(function (Blueprint $e) {
-                    $e->column($this->id)->int()->auto();
-                    $e->column('sample')->varchar();
-                    $e->column('status')->enum(['active', 'inactive'])->default('inactive');
+                ->create(function (Blueprint $t) {
+                    $t->column($this->id)->int()->auto();
+                    $t->column('sample')->varchar();
+                    $t->column('status')->enum(['active', 'inactive'])->default('inactive');
                 })->execute();
         return;
     }

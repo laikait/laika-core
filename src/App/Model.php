@@ -26,7 +26,7 @@ abstract class Model extends BaseModel
      */
     public function getLimit(int|string $page = 1, array $where = []): array
     {
-        $limit = (int) option('data.limit', 20);
+        $limit = (int) \do_hook('option', 'data.limit', 20);
         return $this
             ->where($where)
             ->limit($limit)

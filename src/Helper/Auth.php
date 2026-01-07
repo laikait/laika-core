@@ -65,7 +65,8 @@ class Auth extends Model
 
         // Set Model Connection
         parent::__construct($connection);
-        // $this->model = new Model();
+
+        // Get Existing Event
         $this->event = Session::get($this->cookie, $this->type);
         $this->time = time();
 
@@ -128,9 +129,9 @@ class Auth extends Model
             Session::pop($this->cookie, $this->type);
             return null;
         }
-
+        
         // Get Session User
-        $row = $this->where([$this->id => $this->event, 'expire' => $this->time])->first();
+        $row = $this->where([$this->id => $this->event], '=', 'AND')->where(['expire' => $this->time], '>')->first();
 
         // Remove Session Key if Empty
         if (empty($row)) {

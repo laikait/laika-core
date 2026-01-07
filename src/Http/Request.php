@@ -178,7 +178,7 @@ class Request
      * Get All Request Key & Values
      * @return array
      */
-    public function all(): array
+    public function inputs(): array
     {
         return array_merge($this->json, $this->post, $this->get);
     }
@@ -268,7 +268,7 @@ class Request
      */
     public function validate(array $rules, array $customMessages = []): array
     {
-        $this->errors = Validator::make($this->all(), $rules, $customMessages);
+        $this->errors = Validator::make($this->inputs(), $rules, $customMessages);
         return $this->errors;
     }
 

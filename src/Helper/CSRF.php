@@ -68,15 +68,15 @@ class CSRF
         $csrf = Session::get($this->key, $this->for);
         // Generate CSRF Token if Not Exists
         if (
-            !isset($csrf['created'], $csrf['token']) || // Check Token & Created Time Exists
+            !isset($csrf['created'], $csrf['hash']) || // Check Token & Created Time Exists
             !$csrf['created'] || // Check CSRF Created Time is Valid
-            !$csrf['token'] || // Check CSRF Token is Valid
+            !$csrf['hash'] || // Check CSRF Token is Valid
             ((int) config('env', 'start.time', 300) - $csrf['created'] > $this->lifetime) // Check Token is Not Expired
         ) {
             return $this->reset();
         }
-        $this->header($csrf['token']);
-        return $csrf['token'];
+        $this->header($csrf['hash']);
+        return $csrf['hash'];
     }
 
     /**
@@ -86,10 +86,10 @@ class CSRF
     public function get(): string
     {
         $csrf = Session::get($this->key, $this->for);
-        if (!isset($csrf['token']) || !$csrf['token']) {
+        if (!isset($csrf['hash']) || !$csrf['hash']) {
             return $this->reset();
         }
-        return $csrf['token'];
+        return $csrf['hash'];
     }
 
     /**
@@ -100,11 +100,11 @@ class CSRF
     {
         $arr = [
             'created'   =>  (int) config('env', 'start.time', 300),
-            'token'     =>  bin2hex(random_bytes(32))
+            'hash'     =>  bin2hex(random_bytes(32))
         ];
         Session::set($this->key, $arr, $this->for);
-        $this->header($arr['token']);
-        return $arr['token'];
+        $this->header($arr['hash']);
+        return $arr['hash'];
     }
 
     /**
