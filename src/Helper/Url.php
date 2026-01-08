@@ -132,7 +132,7 @@ class Url
      * @param string|null $default - Optional Argument as String
      * @return ?string
      */
-    public function suery(string $key, ?string $default = null): ?string
+    public function query(string $key, ?string $default = null): ?string
     {
         return $this->queries()[$key] ?? $default;
     }
