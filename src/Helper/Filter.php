@@ -58,7 +58,7 @@ class Filter
      * @param ?string $filter Filter Name
      * @return array
      */
-    public static function filter_info(string $filter)
+    public static function filter_info(?string $filter = null)
     {
         if (!$filter) {
             return self::$filters;

@@ -115,7 +115,7 @@ function do_hook(string $filter, mixed $value = null, mixed ...$args): mixed
  * @param ?string $hook Hook Name. Default is null.
  * @return Array
 */
-function hooks(?string $hook): mixed
+function hooks(?string $hook = null): mixed
 {
     return Filter::filter_info($hook);
 }
