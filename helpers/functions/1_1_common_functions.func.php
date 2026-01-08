@@ -112,12 +112,12 @@ function do_hook(string $filter, mixed $value = null, mixed ...$args): mixed
 
 /**
  * Get Filter Info
- * @param string $filter Filter Name.
+ * @param ?string $hook Hook Name. Default is null.
  * @return Array
 */
-function hooks(string $filter): mixed
+function hooks(?string $hook): mixed
 {
-    return Filter::filter_info($filter);
+    return Filter::filter_info($hook);
 }
 
 /**

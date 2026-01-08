@@ -28,7 +28,7 @@ class Filter
     public static function add_filter(string $filter, callable $callback, int $priority = 10): void
     {
         self::$filters[$filter][$priority][] = $callback;
-        ksort(self::$filters[$filter]);
+        \ksort(self::$filters[$filter]);
     }
 
     /**
@@ -55,11 +55,14 @@ class Filter
 
     /**
      * Get Filter Callbacks
-     * @param string $filter Filter Name
+     * @param ?string $filter Filter Name
      * @return array
      */
     public static function filter_info(string $filter)
     {
-        return self::$filters[$filter] ?? ["Filter [{$filter} Doesn't Exists!]"];
+        if (!$filter) {
+            return self::$filters;
+        }
+        return self::$filters[$filter] ?? throw new \InvalidArgumentException("Filter [{$filter} Doesn't Exists!]");
     }
 }
