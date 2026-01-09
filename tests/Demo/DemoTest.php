@@ -21,7 +21,7 @@ final class DemoTest extends TestCase
 
     public function testDate(): void
     {
-        $date = new Date('2024-01-01');
+        $date = new Date('1 day');
         $this->assertNotNull($date->getTimeStamp(), "Failed to Initialize Date or Get Timestamp");
     }
 
