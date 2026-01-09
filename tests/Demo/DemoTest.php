@@ -27,6 +27,7 @@ final class DemoTest extends TestCase
 
     public function testFile(): void
     {
+        echo APP_PATH;
         $this->assertNotNull(is_file(__DIR__.'/DemoTest.php'));
     }
 
