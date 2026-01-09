@@ -122,15 +122,22 @@ function hooks(?string $hook = null): mixed
 
 /**
  * Get Named Route
+ * @param string $name Named Route Name. Example: 'client' or 'client?status=active'
+ * @param array $params Named Route Parameters. Example: ['id'=>1234]
+ * @param bool $url Return as Url or Slug. Default is false
  * @return string
  */
 function named(string $name, array $params = [], bool $url = false): string
 {
-    $path = trim(Router::url($name, $params), '/');
-    if ($url) {
-        return trim(do_hook('app.host'), '/') . "/{$path}";
-    }
-    return $path;
+    // Get Slug
+    $named = parse_url($name, PHP_URL_PATH);
+    // Get Query String
+    $qstring = parse_url($name, PHP_URL_QUERY);
+    // Make Named Path
+    $path = trim(Router::url($named, $params), '/');
+    $path = $qstring ? "{$path}?{$qstring}" : $path;
+    // Return Named Path/URL
+    return $url ? trim(do_hook('app.host'), '/') . "/{$path}" : $path;
 }
 
 /**
