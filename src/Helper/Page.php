@@ -40,7 +40,7 @@ class Page
     public function __construct(?int $totalElements = null)
     {
         $this->totalElements = (int) $totalElements < 1  ? 1 : (int) $totalElements;
-        $this->totalPages = (int) ceil($this->totalElements / (int) option('data.limit', 20));
+        $this->totalPages = (int) ceil($this->totalElements / (int) \do_hook('option', 'data.limit', 20));
     }
 
     /**
@@ -79,7 +79,7 @@ class Page
      */
     public function next(): string
     {
-        return Url::instance()->incrementQuery();
+        return call_user_func([new Url, 'incrementQuery']);
     }
 
     /**
@@ -88,6 +88,6 @@ class Page
      */
     public function previous()
     {
-        return Url::instance()->decrementQuery();
+        return call_user_func([new Url, 'decrementQuery']);
     }
 }

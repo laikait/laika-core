@@ -36,8 +36,8 @@ class Date
      */
     public function __construct(string $time = 'now', ?string $format = null, ?string $timezone = null)
     {
-        $this->timezone = $timezone ?: do_hook('option', 'time.zone', 'Europe/London');
         $this->format = $format ?: do_hook('option', 'time.format', 'Y-M-d H:i:s');
+        $this->timezone = $timezone ?: do_hook('option', 'time.zone', 'Europe/London');
         $this->dateTime = new DateTime($time, new DateTimeZone($this->timezone));
     }
 
