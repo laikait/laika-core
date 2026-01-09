@@ -27,7 +27,7 @@ final class DemoTest extends TestCase
 
     public function testFile(): void
     {
-        $this->assetnotNull(is_file(__DIR__.'/DemoTest.php'));
+        $this->assetNotNull(is_file(__DIR__.'/DemoTest.php'));
     }
 
     public function testRequest(): void
