@@ -25,6 +25,11 @@ final class DemoTest extends TestCase
         $this->assertIsInt($date->getTimeStamp(), "Failed to Initialize Date or Get Timestamp");
     }
 
+    public function testFile(): void
+    {
+        $this->assetnotNull(is_file(__DIR__.'/DemoTest.php'));
+    }
+
     public function testRequest(): void
     {
         $this->assertTrue(call_user_func([new Request, 'isGet']), "Failed to Detect GET Request");

@@ -21,10 +21,10 @@ use Laika\Core\Helper\Url;
 /**
  * Get App DB Option
  * @param string $key DB Option lkey Name
- * @param mixed $default Option Default Value
+ * @param string $default Option Default Value
  * @return string
  */
-add_hook('option', function(string $key, mixed $default = null){
+add_hook('option', function(string $key, string $default = ''){
     return Option::get($key, Config::get('env', $key, $default));
 }, 1000);
 
