@@ -36,8 +36,8 @@ class Date
      */
     public function __construct(string $time = 'now', ?string $format = null, ?string $timezone = null)
     {
-        $this->format = $format ?: do_hook('option', 'time.format', 'Y-M-d H:i:s');
-        $this->timezone = $timezone ?: do_hook('option', 'time.zone', 'Europe/London');
+        $this->timezone = $timezone ?: 'Europe/London';
+        $this->format = $format ?: 'Y-m-d H:i:s';
         $this->dateTime = new DateTime($time, new DateTimeZone($this->timezone));
     }
 
@@ -258,7 +258,7 @@ class Date
         ?string $outputFormat = null,
         ?string $timezone = null
     ): self {
-        $format = $format ?: do_hook('option', 'time.format', 'Y-M-d H:i:s');
+        $format = $format ?: 'Y-m-d H:i:s';
         $tz = new DateTimeZone($timezone);
         $dt = DateTime::createFromFormat($format, $time, $tz);
         $instance = new self('now', $outputFormat, $timezone);
