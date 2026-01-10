@@ -39,9 +39,6 @@ class Make extends Command
         // Table Name
         $table = $params[1] ?? 'table_name';
 
-        // Primary Key Name
-        $id = $params[2] ?? 'id';
-
         if (!preg_match($this->exp, $params[0])) {
             // Invalid Name
             $this->error("Invalid Model Name: [{$params[0]}]!");
@@ -70,13 +67,11 @@ class Make extends Command
         $content = str_replace([
             '{{NAMESPACE}}',
             '{{NAME}}',
-            '{{TABLE_NAME}}',
-            '{{PRIMARY_KEY}}'
+            '{{TABLE_NAME}}'
         ], [
             $parts['namespace'],
             $parts['name'],
-            $table,
-            $id
+            $table
         ], $content);
 
         if (file_put_contents($file, $content) === false) {

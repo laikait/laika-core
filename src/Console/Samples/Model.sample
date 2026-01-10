@@ -25,12 +25,6 @@ class {{NAME}} extends Model
     // Table Name
     public string $table = '{{TABLE_NAME}}';
 
-    // Primary Key Column Name
-    public string $id = '{{PRIMARY_KEY}}';
-
-    // UUID Column Name
-    public string $uuid = 'uuid';
-
     /**
      * Migrate Table
      * @return mixed
