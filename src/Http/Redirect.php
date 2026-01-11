@@ -29,7 +29,7 @@ class Redirect
      */
     public function back(string $named = '/', int $code = 302): void
     {
-        $this->send($_SERVER['HTTP_REFERER'] ?? named('/', url:true), $code);
+        $this->send($_SERVER['HTTP_REFERER'] ?? named($named, url:true), $code);
     }
 
     /**
