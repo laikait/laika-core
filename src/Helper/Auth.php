@@ -72,7 +72,7 @@ class Auth extends Model
 
         Schema::table($this->table, $connection)->create(function(Blueprint $table){
             $table->column($this->id)->varchar()->length(64)->index();
-            $table->column('data')->mediumtext();
+            $table->column('data')->blob();
             $table->column('expire')->int()->index();
             $table->column('created')->int()->index();
         })->execute();
