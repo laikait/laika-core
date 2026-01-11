@@ -23,10 +23,11 @@ class Redirect
 
     /**
      * Redirect Back to The Previous Link
+     * @param string $named Named Route if Rrequired. Default is '/'
      * @param int $code Response Code. Default is 302
      * @return void
      */
-    public function back(int $code = 302): void
+    public function back(string $named = '/', int $code = 302): void
     {
         $this->send($_SERVER['HTTP_REFERER'] ?? named('/', url:true), $code);
     }
