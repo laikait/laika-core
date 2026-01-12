@@ -31,13 +31,13 @@ class Pop extends Command
     public function run(array $params): void
     {
         // Check Parameters
-        if (count($params) < 1) {
+        if (\count($params) < 1) {
             $this->error("USAGE: php laika pop:middleware <name>");
             return;
         }
 
         // Check Middleware Name is Valid
-        if (!preg_match($this->exp, $params[0])) {
+        if (!\preg_match($this->exp, $params[0])) {
             // Invalid Middleware Name
             $this->error("Invalid Middleware Name: [{$params[0]}]");
             return;
@@ -52,12 +52,12 @@ class Pop extends Command
         $file = "{$this->path}/{$parts['name']}.php";
 
         // Check Middleware Path is Valid
-        if (!is_file($file)) {
+        if (!\is_file($file)) {
             $this->error("Invalid Middleware or Path: [{$params[0]}]");
             return;
         }
 
-        if (!unlink($file)) {
+        if (!\unlink($file)) {
             $this->error("Failed to Remove Middleware: [{$file}]");
             return;
         }

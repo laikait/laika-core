@@ -31,7 +31,7 @@ class Make extends Command
     public function run(array $params): void
     {
         // Check Parameters
-        if (count($params) < 1) {
+        if (\count($params) < 1) {
             $this->error("USAGE: php laika make:model <name> <table::optional> <id::optional>");
             return;
         }
@@ -39,7 +39,7 @@ class Make extends Command
         // Table Name
         $table = $params[1] ?? 'table_name';
 
-        if (!preg_match($this->exp, $params[0])) {
+        if (!\preg_match($this->exp, $params[0])) {
             // Invalid Name
             $this->error("Invalid Model Name: [{$params[0]}]!");
             return;
@@ -55,16 +55,16 @@ class Make extends Command
 
         $file = "{$this->path}/{$parts['name']}.php";
 
-        if (is_file($file)) {
+        if (\is_file($file)) {
             $this->error("Model [{$params[0]}] Already Exist!");
             return;
         }
 
         // Get Sample Content
-        $content = file_get_contents(__DIR__ . '/../../Samples/Model.sample');
+        $content = \file_get_contents(__DIR__ . '/../../Samples/Model.sample');
 
         // Replace Placeholders
-        $content = str_replace([
+        $content = \str_replace([
             '{{NAMESPACE}}',
             '{{NAME}}',
             '{{TABLE_NAME}}'
@@ -74,7 +74,7 @@ class Make extends Command
             $table
         ], $content);
 
-        if (file_put_contents($file, $content) === false) {
+        if (\file_put_contents($file, $content) === false) {
             $this->error("Failed to Create Model: {$file}!");
             return;
         }

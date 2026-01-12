@@ -29,15 +29,15 @@ class Zip
     ########################################################################
     public function __construct(string $path)
     {
-        $dir = dirname($path);
+        $dir = \dirname($path);
 
         // Check Valid File if File Exists
-        if (file_exists($path) && !is_file($path)) {
-            throw new InvalidArgumentException("Path '{$path}' is not a valid file!");
+        if (\file_exists($path) && !\is_file($path)) {
+            throw new InvalidArgumentException("Path [{$path}] is not a valid file!");
         }
 
-        if (!is_dir($dir) || !is_writable($dir)) {
-            throw new InvalidArgumentException("Directory '{$dir}' is not writable!");
+        if (!\is_dir($dir) || !\is_writable($dir)) {
+            throw new InvalidArgumentException("Directory [{$dir}] is not writable!");
         }
 
         $this->path = $path;
@@ -53,8 +53,8 @@ class Zip
         $baseDir = null;
 
         // If a directory was passed, expand to full file list
-        if (is_string($files) && is_dir($files)) {
-            $baseDir = realpath($files);
+        if (\is_string($files) && \is_dir($files)) {
+            $baseDir = \realpath($files);
             $files = $this->scanRecursive($files);
         }
 
@@ -66,11 +66,11 @@ class Zip
 
         foreach ($files as $file) {
             // Throw Exception if File Doesn't Exists
-            if (!file_exists($file)) {
+            if (!\file_exists($file)) {
                 throw new InvalidArgumentException("Invalid Path '{$file}' Detected!");
             }
 
-            $localName = $baseDir ? substr($file, strlen($baseDir) + 1) : basename($file);
+            $localName = $baseDir ? \substr($file, \strlen($baseDir) + 1) : \basename($file);
 
             // Add File in Archive
             $zip->addFile($file, $localName);
@@ -90,7 +90,7 @@ class Zip
     public function extract(string $to): bool
     {
         if (!Directory::make($to)) {
-            throw new InvalidArgumentException("Unable to create extract directory '{$to}'!");
+            throw new InvalidArgumentException("Unable to create extract directory [{$to}]!");
         }
 
         $zip = new ZipArchive();

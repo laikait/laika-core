@@ -58,7 +58,7 @@ class Template
         // Run Template Engine
         $engine = new Engine($this->templateDirectory);
         $this->twig = new Environment($engine, [
-            'debug' =>  \do_hook('option.bool', 'debug'),
+            'debug' =>  \do_hook('config.env', 'debug', true),
             'cache' =>  $this->cacheDirectory
         ]);
 
@@ -68,7 +68,7 @@ class Template
         // Assign Template Default Filters
         $this->addFilter('hook', 'do_hook');
         $this->addFilter('named', function(string $name, array $params = []){
-                return named($name, $params, true);
+                return \named($name, $params, true);
             });
 
         // Load Template Functions File
@@ -109,10 +109,10 @@ class Template
      */
     public function assign(string|array $key, mixed $value = null): void
     {
-        if (is_string($key)) {
+        if (\is_string($key)) {
             $key = [$key => $value];
         }
-        $this->vars = array_merge($this->vars, $key);
+        $this->vars = \array_merge($this->vars, $key);
     }
 
     /**
@@ -146,8 +146,8 @@ class Template
     private function ensureTemplatePath(?string $subdir = null): void
     {
         $subdir = $subdir ? trim($subdir, '/') : '';
-        $this->templateDirectory = is_dir($subdir) ? $subdir : APP_PATH . "/lf-templates/{$subdir}";
-        $this->templateDirectory = rtrim($this->templateDirectory, '/');
+        $this->templateDirectory = \is_dir($subdir) ? $subdir : APP_PATH . "/lf-templates/{$subdir}";
+        $this->templateDirectory = \rtrim($this->templateDirectory, '/');
         Directory::make($this->templateDirectory);
     }
 
@@ -158,9 +158,9 @@ class Template
      */
     private function ensureCachePath(?string $subdir = null): void
     {
-        $subdir = $subdir ? trim($subdir, '/') : '';
-        $this->cacheDirectory = is_dir($subdir) ? $subdir : APP_PATH . "/lf-cache/{$subdir}";
-        $this->cacheDirectory = rtrim($this->cacheDirectory, '/');
+        $subdir = $subdir ? \trim($subdir, '/') : '';
+        $this->cacheDirectory = \is_dir($subdir) ? $subdir : APP_PATH . "/lf-cache/{$subdir}";
+        $this->cacheDirectory = \rtrim($this->cacheDirectory, '/');
         Directory::make($this->cacheDirectory);
     }
 }

@@ -41,12 +41,12 @@ class Connect
     }
 
     /**
-     * Set Session
+     * Set DB Session
      * @return void
      */
     public static function session(): void
     {
-        if (\do_hook('option.bool', 'dbsession', false)) {
+        if (Connection::has('default')) {
             SessionManager::config(Connection::get());
             return;
         }

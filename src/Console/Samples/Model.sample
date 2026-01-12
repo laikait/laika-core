@@ -17,8 +17,8 @@ namespace Laika\App\Model{{NAMESPACE}};
 defined('APP_PATH') || http_response_code(403).die('403 Direct Access Denied!');
 
 use Laika\Model\Blueprint;
-use Laika\Core\App\Model;
 use Laika\Model\Schema;
+use Laika\Model\Model;
 
 class {{NAME}} extends Model
 {

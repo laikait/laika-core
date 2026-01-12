@@ -32,7 +32,7 @@ class Make extends Command
     public function run(array $params): void
     {
         // Check Parameters
-        if (count($params) < 1) {
+        if (\count($params) < 1) {
             $this->error("USAGE: php laika make:controller <name>");
             return;
         }
@@ -41,7 +41,7 @@ class Make extends Command
         $parts = $this->parts($params[0]);
 
         // Check Controller Name is Valid
-        if (!preg_match($this->exp, $params[0])) {
+        if (!\preg_match($this->exp, $params[0])) {
             $this->error("Invalid Controller Name: [{$params[0]}]");
             return;
         }
@@ -62,18 +62,18 @@ class Make extends Command
         $file = "{$this->path}/{$parts['name']}.php";
 
         // Check Controller Already Exist
-        if (is_file($file)) {
+        if (\is_file($file)) {
             $this->error("Controller [{$params[0]}] Already Exist!");
             return;
         }
 
         // Get Sample Controller Content
-        $content = file_get_contents(__DIR__ . '/../../Samples/Controller.sample');
+        $content = \file_get_contents(__DIR__ . '/../../Samples/Controller.sample');
 
         // Replace Placeholders
-        $content = str_replace(['{{NAMESPACE}}', '{{NAME}}'], [$parts['namespace'], $parts['name']], $content);
+        $content = \str_replace(['{{NAMESPACE}}', '{{NAME}}'], [$parts['namespace'], $parts['name']], $content);
 
-        if (file_put_contents($file, $content) === false) {
+        if (\file_put_contents($file, $content) === false) {
             $this->error("Failed to Create Controller: [{$file}]!");
             return;
         }

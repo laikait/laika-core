@@ -51,7 +51,7 @@ class RedisStorage
     public function __construct()
     {
         // Check Extension Loaded
-        if (!extension_loaded('redis')) {
+        if (!\extension_loaded('redis')) {
             throw new RuntimeException("Memcached Extension Not Loaded!");
         }
 
@@ -95,8 +95,8 @@ class RedisStorage
     {
         $key = $this->prefix . ':' . $key;
         return ($this->expire > 0)
-            ? $this->client->setex($key, $this->expire, serialize($value))
-            : $this->client->set($key, serialize($value));
+            ? $this->client->setex($key, $this->expire, \serialize($value))
+            : $this->client->set($key, \serialize($value));
     }
 
     /**
@@ -109,7 +109,7 @@ class RedisStorage
         $key = $this->prefix . ':' . $key;
 
         $value = $this->client->get($key);
-        return $value !== false ? unserialize($value) : null;
+        return $value !== false ? \unserialize($value) : null;
     }
 
     /**

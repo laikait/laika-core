@@ -28,8 +28,8 @@ class JsonStorage
     public function __construct(?string $path = null)
     {
         $this->path = $path ?: APP_PATH . '/lf-storage';
-        if (!realpath($this->path)) {
-            throw new RuntimeException("Invalid Json Storage '{$this->path}'");
+        if (!\realpath($this->path)) {
+            throw new RuntimeException("Invalid Json Storage {$this->path}");
         }
     }
 
@@ -40,18 +40,18 @@ class JsonStorage
      */
     public function set(string $name, array $array): bool
     {
-        $name = '/' . trim($name, '/');
+        $name = '/' . \trim($name, '/');
         $file = $this->path . $name . '.json';
         $old_contents = [];
-        if (is_file($file)) {
-            $str = file_get_contents($file);
-            if (is_string($str) && $str) {
-                $decoded = json_decode($str, true);
+        if (\is_file($file)) {
+            $str = \file_get_contents($file);
+            if (\is_string($str) && $str) {
+                $decoded = \json_decode($str, true);
                 $old_contents = $decoded ?: [];
             }
         }
-        $contents = array_merge($old_contents, $array);
-        return file_put_contents($file, json_encode($contents, JSON_PRETTY_PRINT | JSON_FORCE_OBJECT | JSON_NUMERIC_CHECK)) !== false;
+        $contents = \array_merge($old_contents, $array);
+        return \file_put_contents($file, \json_encode($contents, JSON_PRETTY_PRINT | JSON_FORCE_OBJECT | JSON_NUMERIC_CHECK)) !== false;
     }
 
     /**
@@ -62,12 +62,12 @@ class JsonStorage
      */
     public function get(string $name, ?string $key = null): int|null|string|array
     {
-        $name = '/' . trim($name, '/');
+        $name = '/' . \trim($name, '/');
         $file = $this->path . $name . '.json';
-        if (!is_file($file)) {
+        if (!\is_file($file)) {
             return null;
         }
-        $array = json_decode(file_get_contents($file), true);
+        $array = \json_decode(\file_get_contents($file), true);
         if ($key === null) {
             return $array;
         }
@@ -83,10 +83,10 @@ class JsonStorage
      */
     public function pop(string $name, string $key): bool
     {
-        $name = '/' . trim($name, '/');
+        $name = '/' . \trim($name, '/');
         $file = $this->path . $name . '.json';
         $arr = $this->get($name);
-        unlink($file);
+        \unlink($file);
         if (isset($arr[$key])) {
             unset($arr[$key]);
             $this->set($name, $arr);

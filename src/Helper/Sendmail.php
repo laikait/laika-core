@@ -37,7 +37,7 @@ class Sendmail
     public function __construct(?array $config = null)
     {
         // Set Config
-        $this->config = $config ?: do_hook('config.mail') ?: [];
+        $this->config = $config ?: \do_hook('config.mail') ?: [];
 
         // Check Driver is Set in Mail Config File
         if (!isset($this->config['driver'])) {
@@ -107,16 +107,16 @@ class Sendmail
     public function attach(string $filePath, ?string $name = null): self
     {
         // Normalize path to avoid issues on Windows vs Linux
-        $path = realpath($filePath);
+        $path = \realpath($filePath);
 
         // Check File is Valid
-        if ($path === false || !is_file($path)) {
-            throw new Exception("Invalid file path: {$filePath}", 404);
+        if ($path === false || !\is_file($path)) {
+            throw new Exception("Invalid file path: [{$filePath}]", 404);
         }
 
         // Check File is Readable
-        if (!is_readable($path)) {
-            throw new Exception("File is not readable: {$filePath}", 403);
+        if (!\is_readable($path)) {
+            throw new Exception("File is not readable: [{$filePath}]", 403);
         }
 
         $name = $name ?: '';
@@ -128,16 +128,16 @@ class Sendmail
     {
         foreach ($files as $file) {
             // Normalize path to avoid issues on Windows vs Linux
-            $path = realpath($file);
+            $path = \realpath($file);
 
             // Check File is Valid
             if ($path === false || !is_file($path)) {
-                throw new Exception("Invalid file path: {$file}", 404);
+                throw new Exception("Invalid file path: [{$file}]", 404);
             }
 
             // Check File is Readable
-            if (!is_readable($path)) {
-                throw new Exception("File is not readable: {$file}", 403);
+            if (!\is_readable($path)) {
+                throw new Exception("File is not readable: [{$file}]", 403);
             }
 
             $this->mailer->addAttachment($path);
@@ -152,10 +152,10 @@ class Sendmail
         }
 
         // Try to detect MIME if not provided
-        $mime = $mime ?: mime_content_type($name) ?: 'application/octet-stream';
+        $mime = $mime ?: \mime_content_type($name) ?: 'application/octet-stream';
 
         if (!$this->mailer->addStringAttachment($content, $name, 'base64', $mime)) {
-            throw new Exception("Failed to attach string content: {$name}", 500);
+            throw new Exception("Failed to Attach String Content: [{$name}]", 500);
         }
 
         return $this;
@@ -192,7 +192,7 @@ class Sendmail
             // Send Mail & Get Status
             $status = $this->mailer->send();
         } catch (Exception $e) {
-            report_bug($e);
+            \report_bug($e);
         } finally {
             // Clear Mailer Data
             $this->clear();
@@ -263,7 +263,7 @@ class Sendmail
 
     private function loadDriver(string $driver): self
     {
-        switch (strtolower($driver)) {
+        switch (\strtolower($driver)) {
             case 'smtp':
                 $this->useSmtp();
                 break;
@@ -277,7 +277,7 @@ class Sendmail
                 $this->useMail();
                 break;            
             default:
-                throw new Exception("Unsupported Mail Driver: '{$driver}'");
+                throw new Exception("Unsupported Mail Driver: [{$driver}]");
                 break;
         }
         return $this;
@@ -307,7 +307,7 @@ class Sendmail
         $this->mailer->Port     =   (int) ($this->config['port'] ?? 587);
         $this->mailer->SMTPKeepAlive = true;
         // Check SMTP Secure Type
-        $secure = strtolower($this->config['secure'] ?? '');
+        $secure = \strtolower($this->config['secure'] ?? '');
         $map = [
             'starttls' => PHPMailer::ENCRYPTION_STARTTLS,
             'tls'      => PHPMailer::ENCRYPTION_STARTTLS,
@@ -315,7 +315,7 @@ class Sendmail
             ''         => '',
         ];
 
-        if (!array_key_exists($secure, $map)) {
+        if (!\array_key_exists($secure, $map)) {
             throw new Exception("Invalid SMTP Secure Type: {$secure}");
         }
 
@@ -335,7 +335,7 @@ class Sendmail
     private function useSendmail(): self
     {
         // Windows Fallback
-        if (stripos(PHP_OS, 'WIN') === 0) {
+        if (\stripos(PHP_OS, 'WIN') === 0) {
             return $this->useMail();
         }
 
@@ -347,7 +347,7 @@ class Sendmail
     private function useQmail(): self
     {
         // Windows Fallback
-        if (stripos(PHP_OS, 'WIN') === 0) {
+        if (\stripos(PHP_OS, 'WIN') === 0) {
             return $this->useMail();
         }
 

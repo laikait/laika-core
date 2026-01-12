@@ -89,19 +89,19 @@ class Reflection
 
             if ($callable instanceof Closure) {
                 $type = 'Closure';
-            } elseif (is_array($callable)) {
+            } elseif (\is_array($callable)) {
                 [$classOrObject, $method] = $callable;
-                $className = is_object($classOrObject)
-                    ? get_class($classOrObject)
+                $className = \is_object($classOrObject)
+                    ? \get_class($classOrObject)
                     : (string) $classOrObject;
                 $type = 'Method';
                 $signature = "{$className}::{$method}";
-            } elseif (is_string($callable)) {
-                $type = function_exists($callable) ? 'Function' : 'StaticCallable';
+            } elseif (\is_string($callable)) {
+                $type = \function_exists($callable) ? 'Function' : 'StaticCallable';
                 $signature = $callable;
-            } elseif (is_object($callable)) {
+            } elseif (\is_object($callable)) {
                 $type = 'InvokableObject';
-                $signature = get_class($callable) . '::__invoke';
+                $signature = \get_class($callable) . '::__invoke';
             } else {
                 $type = 'Unknown';
             }
@@ -111,13 +111,13 @@ class Reflection
             foreach ($this->reflection->getParameters() as $param) {
                 $line = "- $" . $param->getName();
                 if ($param->isDefaultValueAvailable()) {
-                    $line .= " = " . var_export($param->getDefaultValue(), true);
+                    $line .= " = " . \var_export($param->getDefaultValue(), true);
                 }
                 $paramLines[] = $line;
             }
 
             $paramText = $paramLines
-                ? "  Parameters:\n    " . implode("\n    ", $paramLines)
+                ? "  Parameters:\n    " . \implode("\n    ", $paramLines)
                 : "  Parameters: (none)";
 
             return "{$type} Reflection {\n  Callable: {$signature}\n{$paramText}\n}";
@@ -136,13 +136,13 @@ class Reflection
     {
         if ($callable instanceof Closure) {
             return new ReflectionFunction($callable);
-        } elseif (is_array($callable)) {
+        } elseif (\is_array($callable)) {
             return new ReflectionMethod($callable[0], $callable[1]);
-        } elseif (is_string($callable) && strpos($callable, '::') !== false) {
-            return new ReflectionMethod(...explode('::', $callable, 2));
-        } elseif (is_string($callable)) {
+        } elseif (\is_string($callable) && \strpos($callable, '::') !== false) {
+            return new ReflectionMethod(...\explode('::', $callable, 2));
+        } elseif (\is_string($callable)) {
             return new ReflectionFunction($callable);
-        } elseif (is_object($callable) && method_exists($callable, '__invoke')) {
+        } elseif (\is_object($callable) && \method_exists($callable, '__invoke')) {
             return new ReflectionMethod($callable, '__invoke');
         }
         throw new RuntimeException('Invalid callable type for Reflection');

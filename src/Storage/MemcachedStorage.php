@@ -50,7 +50,7 @@ class MemcachedStorage
     public function __construct()
     {
         // Check Extension Loaded
-        if (!extension_loaded('memcached')) {
+        if (!\extension_loaded('memcached')) {
             throw new RuntimeException("Memcached Extension Not Loaded!");
         }
 

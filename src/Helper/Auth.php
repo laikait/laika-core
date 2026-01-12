@@ -55,11 +55,11 @@ class Auth extends Model
      */
     public function __construct(string $type = 'APP', string $connection = 'default')
     {
-        $this->type = strtolower($type);
+        $this->type = \strtolower($type);
         $this->table = "sessions_{$this->type}";
         $this->id = "event";
         $this->uuid = "uuid";
-        $this->cookie = strtoupper($type) . "_AUTH_TOKEN";
+        $this->cookie = \strtoupper($type) . "_AUTH_TOKEN";
         $this->ttl = 1800;
         $this->user = null;
 
@@ -68,7 +68,7 @@ class Auth extends Model
 
         // Get Existing Event
         $this->event = Session::get($this->cookie, $this->type);
-        $this->time = time();
+        $this->time = \time();
 
         Schema::table($this->table, $connection)->create(function(Blueprint $table){
             $table->column($this->id)->varchar()->length(64)->index();
@@ -106,7 +106,7 @@ class Auth extends Model
         // Create User Session
         $this->insert([
             $this->id   =>  $this->event,
-            'data'      =>  json_encode($user),
+            'data'      =>  \json_encode($user),
             'expire'    =>  $expire,
             'created'   =>  $this->time,
         ]);
@@ -139,7 +139,7 @@ class Auth extends Model
             return null;
         }
 
-        $this->user = json_decode($row['data'], true);
+        $this->user = \json_decode($row['data'], true);
 
         // Regenerate Cookie if Session Expired
         if (($row['expire'] - $this->time) < ($this->ttl / 2)) {
@@ -176,7 +176,7 @@ class Auth extends Model
      */
     private function generateEventKey(): string
     {
-        $uid = bin2hex(random_bytes(32));
+        $uid = \bin2hex(random_bytes(32));
         // Check Already Exist & Return
         $row = $this->where(['event' => $this->event])->get();
         return empty($row) ? $uid : $this->generateEventKey();

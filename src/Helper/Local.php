@@ -36,7 +36,7 @@ class Local
      */
     public static function set(?string $lang = null): void
     {
-        self::$lang = trim($lang ?: self::$lang);
+        self::$lang = \trim($lang ?: self::$lang);
     }
 
     /**
@@ -57,8 +57,8 @@ class Local
     {
         // Set New Path if Argument is Not Blank or Null
         if ($path) {
-            $path = str_replace('\\', '/', $path);
-            self::$path .= '/' . trim($path, '/');
+            $path = \str_replace('\\', '/', $path);
+            self::$path .= '/' . \trim($path, '/');
         }
         // Make Directory If Doesn't Exists
         Directory::make(self::$path);

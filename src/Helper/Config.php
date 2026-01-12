@@ -38,8 +38,8 @@ class Config
         $files = Directory::files($this->path, 'php');
 
         foreach ($files as $file) {
-            if (is_file($file)) {
-                $basename = strtolower(basename($file, '.php'));
+            if (\is_file($file)) {
+                $basename = \strtolower(\basename($file, '.php'));
                 $this->config[$basename] = require $file;
             }
         }

@@ -51,11 +51,11 @@ class CSRF
      */
     public function __construct(?string $for = null, ?string $key = null)
     {
-        $this->for = $for ? strtoupper($for) : 'APP';
-        $this->key = $key ? strtolower($key) : 'token';
+        $this->for = $for ? \strtoupper($for) : 'APP';
+        $this->key = $key ? \strtolower($key) : 'token';
         $this->header = "X-Laika-Token";
-        $this->lifetime = (int) \do_hook('option', 'csrf.lifetime', 300); // Default Lifetime is 300
-        $this->time = (int) config('env', 'start.time', 300);
+        $this->lifetime = (int) \do_hook('config.env', 'csrf.lifetime', 300); // Default Lifetime is 300
+        $this->time = (int) \do_hook('config.env', 'start.time', time());
         $this->generate();
     }
 
@@ -71,7 +71,7 @@ class CSRF
             !isset($csrf['created'], $csrf['hash']) || // Check Token & Created Time Exists
             !$csrf['created'] || // Check CSRF Created Time is Valid
             !$csrf['hash'] || // Check CSRF Token is Valid
-            ((int) config('env', 'start.time', 300) - $csrf['created'] > $this->lifetime) // Check Token is Not Expired
+            ((int) do_hook('config.env', 'start.time', time()) - $csrf['created'] > $this->lifetime) // Check Token is Not Expired
         ) {
             return $this->reset();
         }
@@ -99,8 +99,8 @@ class CSRF
     public function reset(): string
     {
         $arr = [
-            'created'   =>  (int) config('env', 'start.time', 300),
-            'hash'     =>  bin2hex(random_bytes(32))
+            'created' => (int) do_hook('config.env', 'start.time', time()),
+            'hash' => \bin2hex(random_bytes(32))
         ];
         Session::set($this->key, $arr, $this->for);
         $this->header($arr['hash']);
@@ -122,14 +122,14 @@ class CSRF
     public function validate(): bool
     {
         // If CSRF Request Key Missing or Blank, Return false
-        $request_token = (string) call_user_func([new Request, 'input'], $this->key);
+        $request_token = (string) \call_user_func([new Request, 'input'], $this->key);
         if (!$request_token) {
             return false;
         }
 
         $existing_token = $this->get();
         $this->reset();
-        return hash_equals($request_token, $existing_token);
+        return \hash_equals($request_token, $existing_token);
     }
 
     ##################################################################
@@ -141,6 +141,6 @@ class CSRF
      */
     private function header(string $value): void
     {
-        call_user_func([new Response, 'setHeader'], [$this->header => $value]);
+        \call_user_func([new Response, 'setHeader'], [$this->header => $value]);
     }
 }

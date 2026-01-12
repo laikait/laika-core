@@ -65,12 +65,12 @@ class Request
      */
     public function __construct()
     {
-        $this->get = $this->purify($_GET ?? []);
-        $this->post = $this->purify($_POST ?? []);
+        $this->get = purify($_GET ?? []);
+        $this->post = purify($_POST ?? []);
         $this->files = $_FILES ?? [];
-        $this->rawBody = file_get_contents('php://input');
-        $this->json = $this->purify($this->decode($this->rawBody));
-        $this->method = strtoupper($this->post['_method'] ?? $_SERVER['REQUEST_METHOD'] ?? 'GET');
+        $this->rawBody = \file_get_contents('php://input');
+        $this->json = \purify($this->decode($this->rawBody));
+        $this->method = \strtoupper($this->post['_method'] ?? $_SERVER['REQUEST_METHOD'] ?? 'GET');
         $this->errors = [];
     }
 
@@ -92,8 +92,8 @@ class Request
     {
         $headers = [];
         foreach ($_SERVER as $key => $value) {
-            if (str_starts_with($key, 'HTTP_')) {
-                $headers[strtolower(str_replace('_', '-', substr($key, 5)))] = $value;
+            if (\str_starts_with($key, 'HTTP_')) {
+                $headers[\strtolower(\str_replace('_', '-', \substr($key, 5)))] = $value;
             }
         }
         return $headers;
@@ -106,7 +106,7 @@ class Request
      */
     public function header(string $key): ?string
     {
-        return $this->headers()[strtolower($key)] ?? null;
+        return $this->headers()[\strtolower($key)] ?? null;
     }
 
     /**
@@ -160,7 +160,7 @@ class Request
      */
     public function isAjax(): bool
     {
-        return strtolower($this->header('X-Requested-With')) === 'xmlhttprequest';
+        return \strtolower($this->header('X-Requested-With')) === 'xmlhttprequest';
     }
 
     /**
@@ -180,7 +180,7 @@ class Request
      */
     public function inputs(): array
     {
-        return array_merge($this->json, $this->post, $this->get);
+        return \array_merge($this->json, $this->post, $this->get);
     }
 
     // Get Selected Key Values
@@ -200,7 +200,7 @@ class Request
      */
     public function has(string $key): bool
     {
-        return array_key_exists($key, $this->post) || array_key_exists($key, $this->get) || array_key_exists($key, $this->json);
+        return \array_key_exists($key, $this->post) || \array_key_exists($key, $this->get) || \array_key_exists($key, $this->json);
     }
 
     /**
@@ -288,24 +288,10 @@ class Request
     public function decode(string $rawBody): array
     {
         $contentType = $_SERVER['CONTENT_TYPE'] ?? '';
-        if (str_starts_with(strtolower($contentType), 'application/json')) {
-            $decoded = json_decode($rawBody, true);
-            return is_array($decoded) ? $decoded : [];
+        if (\str_starts_with(\strtolower($contentType), 'application/json')) {
+            $decoded = \json_decode($rawBody, true);
+            return \is_array($decoded) ? $decoded : [];
         }
         return [];
-    }
-
-    // Purify Arry Values
-    /**
-     * @param array $data Array Data to Purify
-     * @return array
-     */
-    public function purify(array $data): array
-    {
-        return array_map(function($val){
-            return is_array($val)
-                ? $this->purify($val)
-                : htmlspecialchars(trim($val), ENT_QUOTES, 'UTF-8');
-        }, $data);
     }
 }

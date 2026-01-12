@@ -30,7 +30,7 @@ class Migrate extends Command
         // Get Values
         $args = ['connection' => null, 'model'=>null];
         foreach ($params as $param) {
-            $parts = explode(':', $param);
+            $parts = \explode(':', $param);
             if (isset($parts[0])) {
                 $args[$parts[0]] = $parts[1] ?? null;
             }
@@ -54,7 +54,7 @@ class Migrate extends Command
             // Migrate All Available Models
             $models = $model ?
                     ["\\Laika\\App\\Model\\{$model}"] :
-                    call_user_func([new \Laika\Core\App\Infra(), 'getModels']);
+                    \call_user_func([new \Laika\Core\App\Infra(), 'getModels']);
 
             // Show Error if No Model Exists
             if (empty($models)) {
@@ -63,7 +63,7 @@ class Migrate extends Command
 
             // Migrate Models
             foreach ($models as $model) {
-                call_user_func([new $model, 'migrate']);
+                \call_user_func([new $model, 'migrate']);
             }
 
             // Create Secret Config File if Not Exist

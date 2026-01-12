@@ -32,10 +32,10 @@ class Page
      * Total Elements
      * @param ?int $totalElements Default is null
      */
-    public function __construct(?int $totalElements = null)
+    public function __construct(?int $totalElements = null, int|string $limit)
     {
         $this->totalElements = (int) $totalElements < 1  ? 1 : (int) $totalElements;
-        $this->totalPages = (int) ceil($this->totalElements / (int) \do_hook('option', 'data.limit', 20));
+        $this->totalPages = (int) \ceil($this->totalElements / (int) $limit);
     }
 
     /**
@@ -63,7 +63,7 @@ class Page
      */
     public function next(): string
     {
-        return call_user_func([new Url, 'incrementQuery']);
+        return \call_user_func([new Url, 'incrementQuery']);
     }
 
     /**
@@ -72,6 +72,6 @@ class Page
      */
     public function previous()
     {
-        return call_user_func([new Url, 'decrementQuery']);
+        return \call_user_func([new Url, 'decrementQuery']);
     }
 }

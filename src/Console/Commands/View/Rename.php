@@ -37,7 +37,7 @@ class Rename extends Command
     public function run(array $params): void
     {
         // Check Parameters
-        if (count($params) < 2) {
+        if (\count($params) < 2) {
             $this->error("Usage: php laika rename:view <old_name> <new_name>");
             return;
         }
@@ -47,13 +47,13 @@ class Rename extends Command
         $new = $params[1];
 
         // Check Old View Name is Valid
-        if (!preg_match($this->exp, $old)) {
+        if (!\preg_match($this->exp, $old)) {
             // Invalid View Name
             $this->error("Invalid Old View Name: '{$old}'");
             return;
         }
         // Check New View Name is Valid
-        if (!preg_match($this->exp, $new)) {
+        if (!\preg_match($this->exp, $new)) {
             // Invalid View Name
             $this->error("Invalid New View Name: '{$old}'");
             return;
@@ -71,7 +71,7 @@ class Rename extends Command
         $new_file = "{$this->new_path}/{$new_parts['name']}.tpl.php";
 
         // Check Old View Path is Valid
-        if (!is_file($old_file)) {
+        if (!\is_file($old_file)) {
             $this->error("Invalid View Name or Path: '$old'");
             return;
         }
@@ -82,26 +82,26 @@ class Rename extends Command
         }
 
         // Check New View Path is Valid
-        if (is_file($new_file)) {
+        if (\is_file($new_file)) {
             $this->error("New View Already Exist: '$old'");
             return;
         }
 
         // Get Contents
-        $content = file_get_contents($old_file);
+        $content = \file_get_contents($old_file);
         if ($content === false) {
             $this->error("Failed to Read View: '{$old}'");
             return;
         }
 
         // Create New View File
-        if (file_put_contents($new_file, $content) === false) {
+        if (\file_put_contents($new_file, $content) === false) {
             $this->error("Failed to Create View: {$new}");
             return;
         }
 
         // Remove Old View File
-        if (!unlink($old_file)) {
+        if (!\unlink($old_file)) {
             $this->error("Failed to Remove View: '{$old_file}'");
             return;
         }

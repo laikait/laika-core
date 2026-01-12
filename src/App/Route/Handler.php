@@ -97,7 +97,7 @@ class Handler
     ): void
     {
         // Capitalize Method
-        self::$lastMethod = strtoupper($method);
+        self::$lastMethod = \strtoupper($method);
         // Create Uri
         self::$lastUri = Url::normalize(self::$group . Url::normalize($uri));
         self::$onlyRoutes[self::$lastMethod][] = self::$lastUri;
@@ -136,8 +136,8 @@ class Handler
     {
         // push normalized prefix fragment onto stack (ensures leading slash, no trailing)
         self::$group = Url::normalize($prefix);
-        $gkey = trim($prefix, '/');
-        self::$groups = array_merge(self::$groups, [$gkey => $gkey]);
+        $gkey = \trim($prefix, '/');
+        self::$groups = \array_merge(self::$groups, [$gkey => $gkey]);
 
         self::$groupMiddlewares = (array) $middlewares;
         self::$groupAfterwares = (array) $afterwares;
@@ -171,7 +171,7 @@ class Handler
      */
     public static function globalMiddlewareRegister(string|array $middlewares): void
     {
-        self::$globalMiddlewares = array_merge(
+        self::$globalMiddlewares = \array_merge(
             self::$globalMiddlewares,
             (array) $middlewares
         );
@@ -185,7 +185,7 @@ class Handler
      */
     public static function globalAfterwareRegister(string|array $afterwares): void
     {
-        self::$globalAfterwares = array_merge(
+        self::$globalAfterwares = \array_merge(
             self::$globalAfterwares,
             (array) $afterwares
         );
@@ -199,7 +199,7 @@ class Handler
      */
     public static function middlewareRegister(string|array $middlewares): void
     {
-        self::$routes[self::$lastMethod][self::$lastUri]['middlewares']['route'] = array_merge(
+        self::$routes[self::$lastMethod][self::$lastUri]['middlewares']['route'] = \array_merge(
             self::$routes[self::$lastMethod][self::$lastUri]['middlewares']['route'],
             (array) $middlewares
         );
@@ -213,7 +213,7 @@ class Handler
      */
     public static function afterwareRegister(string|array $afterwares): void
     {
-        self::$routes[self::$lastMethod][self::$lastUri]['afterwares']['route'] = array_merge(
+        self::$routes[self::$lastMethod][self::$lastUri]['afterwares']['route'] = \array_merge(
             self::$routes[self::$lastMethod][self::$lastUri]['afterwares']['route'],
             (array) $afterwares
         );
@@ -230,7 +230,7 @@ class Handler
         if ($method == null) {
             return self::$routes;
         }
-        $method = strtoupper($method);
+        $method = \strtoupper($method);
         return self::$routes[$method] ?? [];
     }
 
@@ -244,7 +244,7 @@ class Handler
         if ($method == null) {
             return self::$onlyRoutes;
         }
-        $method = strtoupper($method);
+        $method = \strtoupper($method);
         return self::$onlyRoutes[$method] ?? [];
     }
 
@@ -283,7 +283,7 @@ class Handler
     public static function name(string $name): void
     {
         if (isset(self::$namedRoutes[$name])) {
-            throw new RuntimeException("Name Route '{$name}' Already Exists!");
+            throw new RuntimeException("Name Route [{$name}] Already Exists!");
         }
         self::$routes[self::$lastMethod][self::$lastUri]['name'] = $name;
         self::$namedRoutes[$name] = self::$lastUri;
@@ -299,13 +299,13 @@ class Handler
     public static function namedUrl(string $name, array $params = []): string
     {
         $namedRoutes = self::getNamedRoutes();
-        $uri = $namedRoutes[$name] ?? trim($name, '/');
+        $uri = $namedRoutes[$name] ?? \trim($name, '/');
         // Replace {param} placeholders
         foreach ($params as $key => $value) {
-            $uri = preg_replace('/\{' . $key . '(:[^}]*)?\}/', (string) trim($value, '/'), $uri);
+            $uri = \preg_replace('/\{' . $key . '(:[^}]*)?\}/', (string) \trim($value, '/'), $uri);
         }
         // Remove unreplaced params
-        $uri = preg_replace('/\{[^}]+\}/', '', $uri);
+        $uri = \preg_replace('/\{[^}]+\}/', '', $uri);
 
         return Url::normalize($uri);
     }

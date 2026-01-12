@@ -40,15 +40,15 @@ class Kernel
     public function handle(): void
     {
         // Remove "laika"
-        array_shift($this->args);
+        \array_shift($this->args);
 
         $command = $this->args[0] ?? null;
 
-        $params = array_slice($this->args, 1);
+        $params = \array_slice($this->args, 1);
 
         if ($command && isset($this->commands[strtolower($command)])) {
-            $class = $this->commands[strtolower($command)];
-            call_user_func([new $class(), 'run'], $params);
+            $class = $this->commands[\strtolower($command)];
+            \call_user_func([new $class(), 'run'], $params);
         } else {
             $this->printHelp();
         }
@@ -99,7 +99,7 @@ class Kernel
 
         AVAILABLE COMMANDS\n
         COMMON;
-        $keys = array_keys($this->commands);
+        $keys = \array_keys($this->commands);
         foreach ($keys as $key) {
             echo "\t-> {$key}\n";
         }

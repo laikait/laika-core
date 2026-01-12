@@ -29,7 +29,7 @@ class Redirect
      */
     public function back(string $named = '/', int $code = 302): void
     {
-        $this->send($_SERVER['HTTP_REFERER'] ?? named($named, url:true), $code);
+        $this->send($_SERVER['HTTP_REFERER'] ?? \named($named, url:true), $code);
     }
 
     /**
@@ -53,9 +53,9 @@ class Redirect
      */
     public function to(string $to, array $params = [], int $code = 302): void
     {
-        $url = parse_url($to, PHP_URL_HOST);
+        $url = \parse_url($to, PHP_URL_HOST);
         if (empty($url)) {
-            $url = named($to, $params, true);
+            $url = \named($to, $params, true);
         }
         $this->send($url, $code);
         return;
@@ -73,7 +73,7 @@ class Redirect
      */
     private function send(string $to, int $code = 302): never
     {
-        header("Location:{$to}", true, $code);
+        \header("Location:{$to}", true, $code);
         exit();
     }
 

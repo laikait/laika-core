@@ -26,10 +26,7 @@ class Env
     private array $params = [];
 
     // Singleton Process
-    private function __construct()
-    {
-        // Prevent Making New Instance
-    }
+    private function __construct(){}
 
     // Get Instance
     private static function getInstance()

@@ -72,8 +72,8 @@ class NavBuilder
       $html = '<ul>';
 
       foreach ($items as $item) {
-         $title = htmlspecialchars($item['title'], ENT_QUOTES, 'UTF-8');
-         $url   = htmlspecialchars($item['url'], ENT_QUOTES, 'UTF-8');
+         $title = \htmlspecialchars($item['title'], ENT_QUOTES, 'UTF-8');
+         $url   = \htmlspecialchars($item['url'], ENT_QUOTES, 'UTF-8');
 
          $html .= '<li>';
          $html .= "<a href=\"{$url}\">{$title}</a>";
