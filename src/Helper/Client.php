@@ -53,7 +53,7 @@ class Client
     public function language(): string
     {
         $lang = $_SERVER['HTTP_ACCEPT_LANGUAGE'] ?? 'en-US';
-        return explode(',', $lang)[0];
+        return \explode(',', $lang)[0];
     }
 
     /**
@@ -80,11 +80,11 @@ class Client
         ];
 
         foreach ($osPatterns as $pattern => $result) {
-            if (preg_match($pattern, $ua, $m)) {
-                if (is_array($result)) {
+            if (\preg_match($pattern, $ua, $m)) {
+                if (\is_array($result)) {
                     return $result[$m[1]] ?? "Windows NT {$m[1]}";
                 }
-                return sprintf($result, str_replace('_', '.', $m[1] ?? ''));
+                return \sprintf($result, \str_replace('_', '.', $m[1] ?? ''));
             }
         }
 
@@ -117,7 +117,7 @@ class Client
         ];
 
         foreach ($browsers as $browser) {
-            if (preg_match($browser['pattern'], $ua, $match)) {
+            if (\preg_match($browser['pattern'], $ua, $match)) {
                 return $browser['name'] . ' ' . $match[1];
             }
         }
@@ -130,17 +130,17 @@ class Client
      */
     public function deviceType(): string
     {
-        $ua = strtolower($this->userAgent);
+        $ua = \strtolower($this->userAgent);
 
         if ($this->isBot()) {
             return 'Bot';
         }
 
-        if (preg_match('/ipad|tablet/i', $ua)) {
+        if (\preg_match('/ipad|tablet/i', $ua)) {
             return 'Tablet';
         }
 
-        if (strpos($ua, 'mobile') !== false || preg_match('/iphone|ipod|android/i', $ua)) {
+        if (\strpos($ua, 'mobile') !== false || \preg_match('/iphone|ipod|android/i', $ua)) {
             return 'Mobile';
         }
 
@@ -152,7 +152,7 @@ class Client
      */
     public function isBot(): bool
     {
-        $ua = strtolower($this->userAgent);
+        $ua = \strtolower($this->userAgent);
 
         $bots = [
             'googlebot',
@@ -178,7 +178,7 @@ class Client
         ];
 
         foreach ($bots as $bot) {
-            if (strpos($ua, $bot) !== false) {
+            if (\strpos($ua, $bot) !== false) {
                 return true;
             }
         }
@@ -219,10 +219,10 @@ class Client
             ] as $key
         ) {
             if (!empty($_SERVER[$key])) {
-                $ips = explode(',', $_SERVER[$key]);
+                $ips = \explode(',', $_SERVER[$key]);
                 foreach ($ips as $ip) {
-                    $ip = trim($ip);
-                    if (filter_var($ip, FILTER_VALIDATE_IP, [FILTER_FLAG_IPV4, FILTER_FLAG_IPV6])) {
+                    $ip = \trim($ip);
+                    if (\filter_var($ip, FILTER_VALIDATE_IP, [FILTER_FLAG_IPV4, FILTER_FLAG_IPV6])) {
                         return $ip;
                     }
                 }

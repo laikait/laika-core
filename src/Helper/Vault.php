@@ -51,8 +51,8 @@ class Vault
         $this->tagLength = 16;
 
         // Hash The Key for Consistency
-        $this->key = hash('sha256', Config::get('secret', 'key'), true);
-        $this->ivLength = openssl_cipher_iv_length($this->cipher);
+        $this->key = \hash('sha256', Config::get('secret', 'key'), true);
+        $this->ivLength = \openssl_cipher_iv_length($this->cipher);
     }
 
     /**
@@ -63,14 +63,14 @@ class Vault
     public function encrypt(string $text): false|string
     {
         // Get IV
-        $iv = random_bytes($this->ivLength);
+        $iv = \random_bytes($this->ivLength);
         // Make Tag
-        $tag = bin2hex(random_bytes($this->tagLength));
-        $encrypted = openssl_encrypt($text, $this->cipher, $this->key, OPENSSL_RAW_DATA, $iv, $tag, '', $this->tagLength);
+        $tag = \bin2hex(random_bytes($this->tagLength));
+        $encrypted = \openssl_encrypt($text, $this->cipher, $this->key, OPENSSL_RAW_DATA, $iv, $tag, '', $this->tagLength);
 
         // Store IV + Encrypted Data Together (Base64 Encoded)
         if ($encrypted) {
-            return base64_encode($iv . $tag . $encrypted);
+            return \base64_encode($iv . $tag . $encrypted);
         }
         return false;
     }
@@ -82,15 +82,15 @@ class Vault
      */
     public function decrypt(string $encryptedBase64): false|string
     {
-        $data = base64_decode($encryptedBase64, true);
-        if ($data === false || strlen($data) <= ($this->ivLength + $this->tagLength)) {
+        $data = \base64_decode($encryptedBase64, true);
+        if ($data === false || \strlen($data) <= ($this->ivLength + $this->tagLength)) {
             throw new RuntimeException("Invalid Encrypted Data!");
         }
 
-        $iv = substr($data, 0, $this->ivLength);
-        $tag = substr($data, $this->ivLength, $this->tagLength);
-        $encrypted = substr($data, $this->ivLength + $this->tagLength);
+        $iv = \substr($data, 0, $this->ivLength);
+        $tag = \substr($data, $this->ivLength, $this->tagLength);
+        $encrypted = \substr($data, $this->ivLength + $this->tagLength);
 
-        return openssl_decrypt($encrypted, $this->cipher, $this->key, OPENSSL_RAW_DATA, $iv, $tag);
+        return \openssl_decrypt($encrypted, $this->cipher, $this->key, OPENSSL_RAW_DATA, $iv, $tag);
     }
 }

@@ -68,11 +68,11 @@ class Url
     {
         $this->scheme = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off' ? 'https' : 'http';
         $host = $_SERVER['HTTP_HOST'] ?? $_SERVER['SERVER_NAME'] ?? 'localhost';
-        $this->host = strtolower(explode(':', $host)[0]);
-        $this->path = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?? '/';
+        $this->host = \strtolower(\explode(':', $host)[0]);
+        $this->path = \parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?? '/';
         $this->queryString = $_SERVER['QUERY_STRING'] ?? '';
         $this->scriptName = $_SERVER['SCRIPT_NAME'] ?? ($_SERVER['PHP_SELF'] ?? '/index.php');
-        $this->directory = rtrim(str_replace('\\', '/', dirname($this->scriptName)), '/');
+        $this->directory = \rtrim(\str_replace('\\', '/', \dirname($this->scriptName)), '/');
         $this->baseUrl = $this->scheme . '://' . $this->host . $this->directory . '/';
     }
 
@@ -86,7 +86,7 @@ class Url
      */
     public function current(): string
     {
-        return rtrim($this->scheme . '://' . $this->host . ($_SERVER['REQUEST_URI'] ?? '/'), '/');
+        return \rtrim($this->scheme . '://' . $this->host . ($_SERVER['REQUEST_URI'] ?? '/'), '/');
     }
 
     /**
@@ -104,7 +104,7 @@ class Url
      */
     public function directory(): string
     {
-        return trim($this->directory, '/');
+        return \trim($this->directory, '/');
     }
 
     /**
@@ -113,7 +113,7 @@ class Url
      */
     public function path(): string
     {
-        return trim(str_replace($this->directory, '', $this->path), '/');
+        return \trim(\str_replace($this->directory, '', $this->path), '/');
     }
 
     /**
@@ -122,8 +122,8 @@ class Url
      */
     public function queries(): array
     {
-        parse_str($this->queryString, $queries);
-        return purify($queries);
+        \parse_str($this->queryString, $queries);
+        return \purify($queries);
     }
 
     /**
@@ -132,7 +132,7 @@ class Url
      * @param string|null $default - Optional Argument as String
      * @return ?string
      */
-    public function suery(string $key, ?string $default = null): ?string
+    public function query(string $key, ?string $default = null): ?string
     {
         return $this->queries()[$key] ?? $default;
     }
@@ -145,10 +145,10 @@ class Url
      */
     public function build(string $path, array $params = []): string
     {
-        $path = trim($path, '/');
+        $path = \trim($path, '/');
         $url = $this->base() . $path;
         if (!empty($params)) {
-            $url .= '?' . http_build_query($params);
+            $url .= '?' . \http_build_query($params);
         }
         return $url;
     }
@@ -160,7 +160,7 @@ class Url
      */
     public function segment(int $index): ?string
     {
-        $segments = explode('/', trim($this->path(), '/'));
+        $segments = \explode('/', \trim($this->path(), '/'));
         return $segments[$index - 1] ?? null;
     }
 
@@ -170,7 +170,7 @@ class Url
      */
     public function segments(): array
     {
-        $segments = explode('/', trim($this->path(), '/'));
+        $segments = \explode('/', \trim($this->path(), '/'));
         return $segments[0] ? $segments : [];
     }
 
@@ -181,8 +181,8 @@ class Url
      */
     public function withQuery(array $params): string
     {
-        $queries = array_merge($this->queries(), $params);
-        return $this->base() . $this->path() . '?' . http_build_query($queries);
+        $queries = \array_merge($this->queries(), $params);
+        return $this->base() . $this->path() . '?' . \http_build_query($queries);
     }
 
     /**
@@ -196,7 +196,7 @@ class Url
         foreach ($keys as $key) {
             unset($queries[$key]);
         }
-        return $this->base() . $this->path() . (empty($queries) ? '' : '?' . http_build_query($queries));
+        return $this->base() . $this->path() . (empty($queries) ? '' : '?' . \http_build_query($queries));
     }
 
     /**
@@ -208,10 +208,10 @@ class Url
     {
         $key = $key ?: 'page';
         $queries = $this->queries();
-        $queries[$key] = isset($queries[$key]) && is_numeric($queries[$key]) && (int) $queries[$key] > 1
+        $queries[$key] = isset($queries[$key]) && \is_numeric($queries[$key]) && (int) $queries[$key] > 1
             ? (int) $queries[$key] + 1 : 2;
 
-        return $this->base() . $this->path() . '?' . http_build_query($queries);
+        return $this->base() . $this->path() . '?' . \http_build_query($queries);
     }
 
     /**
@@ -223,10 +223,10 @@ class Url
     {
         $key = $key ?: 'page';
         $queries = $this->queries();
-        $queries[$key] = isset($queries[$key]) && is_numeric($queries[$key]) && (int) $queries[$key] > 1
+        $queries[$key] = isset($queries[$key]) && \is_numeric($queries[$key]) && (int) $queries[$key] > 1
             ? (int) $queries[$key] - 1 : 1;
 
-        return $this->base() . $this->path() . '?' . http_build_query($queries);
+        return $this->base() . $this->path() . '?' . \http_build_query($queries);
     }
 
     /**

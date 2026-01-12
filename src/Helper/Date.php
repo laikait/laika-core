@@ -31,25 +31,25 @@ class Date
     /**
      * Initiate Date Class
      * @param string $time Optional Argument. Default is 'now'.
-     * @param string $format Optional Argument. Default is 'Y-m-d H:i:s'.
+     * @param ?string $format Optional Argument. Default is null.
      * @param ?string $timezone Optional Argument. Default is null.
      */
-    public function __construct(string $time = 'now', string $format = 'Y-m-d H:i:s', ?string $timezone = null)
+    public function __construct(string $time = 'now', ?string $format = null, ?string $timezone = null)
     {
-        $this->timezone = $timezone ?: date_default_timezone_get();
-        $this->format = $format;
+        $this->timezone = $timezone ?: 'Europe/London';
+        $this->format = $format ?: 'Y-m-d H:i:s';
         $this->dateTime = new DateTime($time, new DateTimeZone($this->timezone));
     }
 
     /**
      * This Time
-     * @param string $format Optional Argument. Default is 'Y-m-d H:i:s'.
+     * @param ?string $format Optional Argument. Default is null.
      * @param ?string $timezone Optional Argument. Default is null.
-     * @return object
+     * @return self
      */
-    public static function now(string $format = 'Y-m-d H:i:s', ?string $timezone = null): static
+    public static function now(?string $format = null, ?string $timezone = null): self
     {
-        return new static('now', $format, $timezone);
+        return new self('now', $format, $timezone);
     }
 
     /**
@@ -248,19 +248,20 @@ class Date
      * Create Date from Format
      * @param string $format Required Argument. Example: 'Y-m-d H:i:s'
      * @param string $time Required Argument. Example: '2024-01-01 12:00:00'
-     * @param string $outputFormat Optional Argument. Default is 'Y-m-d H:i:s'.
-     * @param string $timezone Optional Argument. Default is 'UTC'.
+     * @param ?string $outputFormat Optional Argument. Default is 'Y-m-d H:i:s'.
+     * @param ?string $timezone Optional Argument. Default is 'UTC'.
      * @return self
      */
     public static function fromFormat(
         string $format,
         string $time,
-        string $outputFormat = 'Y-m-d H:i:s',
-        string $timezone = 'UTC'
+        ?string $outputFormat = null,
+        ?string $timezone = null
     ): self {
+        $format = $format ?: 'Y-m-d H:i:s';
         $tz = new DateTimeZone($timezone);
         $dt = DateTime::createFromFormat($format, $time, $tz);
-        $instance = new static('now', $outputFormat, $timezone);
+        $instance = new self('now', $outputFormat, $timezone);
         $instance->dateTime = $dt instanceof DateTime ? $dt : new DateTime('now', $tz);
         return $instance;
     }

@@ -31,12 +31,12 @@ class Pop extends Command
     public function run(array $params): void
     {
         // Check Parameters
-        if (count($params) < 1) {
+        if (\count($params) < 1) {
             $this->error("USAGE: php laika pop:view <name>");
             return;
         }
 
-        if (!preg_match($this->exp, $params[0])) {
+        if (!\preg_match($this->exp, $params[0])) {
             // Invalid Name
             $this->error("Invalid View Name: {$params[0]}");
             return;
@@ -50,12 +50,12 @@ class Pop extends Command
 
         $file = "{$this->path}/{$parts['name']}.tpl.php";
 
-        if (!is_file($file)) {
+        if (!\is_file($file)) {
             $this->error("View Doesn't Exist: {$file}");
             return;
         }
 
-        if (!unlink($file)) {
+        if (!\unlink($file)) {
             $this->error("Failed to Remove View: {$file}");
             return;
         }

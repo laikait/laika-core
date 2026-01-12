@@ -14,11 +14,6 @@ namespace Laika\Core\Helper;
 class Page
 {
     /**
-     * @var Page $instance
-     */
-    private static Page $instance;
-
-    /**
      * Total Results
      * @var int $totalResults
      */
@@ -37,21 +32,10 @@ class Page
      * Total Elements
      * @param ?int $totalElements Default is null
      */
-    public function __construct(?int $totalElements = null)
+    public function __construct(?int $totalElements = null, int|string $limit)
     {
         $this->totalElements = (int) $totalElements < 1  ? 1 : (int) $totalElements;
-        $this->totalPages = (int) ceil($this->totalElements / (int) option('data.limit', 20));
-    }
-
-    /**
-     * Singleton Instance
-     * @param ?int $totalResults Default is null
-     * @return Page
-     */
-    public static function instance(?int $totalResults = null): Page
-    {
-        self::$instance ??= new self($totalResults);
-        return self::$instance;
+        $this->totalPages = (int) \ceil($this->totalElements / (int) $limit);
     }
 
     /**
@@ -79,7 +63,7 @@ class Page
      */
     public function next(): string
     {
-        return Url::instance()->incrementQuery();
+        return \call_user_func([new Url, 'incrementQuery']);
     }
 
     /**
@@ -88,6 +72,6 @@ class Page
      */
     public function previous()
     {
-        return Url::instance()->decrementQuery();
+        return \call_user_func([new Url, 'decrementQuery']);
     }
 }

@@ -61,31 +61,6 @@ function purify(array $data): array
     }, $data);
 }
 
-// Redirect
-/**
- * @param string|array $slug Required Argument
- * @param ?array $params Optional Argument.
- * @return void
-*/
-function redirect(string|array $slug, ?array $params = null): void
-{
-    // Redirect if $slug is an URL
-    if (parse_url($slug, PHP_URL_HOST)) {
-        header('Location:' . $slug, true);
-        die();
-    }
-    // Convert to String if Slug is Array
-    if (is_array($slug)) {
-        $slug = implode('/', array_map('trim', $slug));
-    }
-    $slug = str_replace('\\', '/', $slug);
-    $slug = trim($slug, '/');
-
-    // Redirect
-    header('Location:' . call_user_func([new Url, 'build'], $slug, $params ?: []), true);
-    die();
-}
-
 /**
  * Add Hook
  * @param string $filter Filter Name.
@@ -112,44 +87,41 @@ function do_hook(string $filter, mixed $value = null, mixed ...$args): mixed
 
 /**
  * Get Filter Info
- * @param string $filter Filter Name.
+ * @param ?string $hook Hook Name. Default is null.
  * @return Array
 */
-function hook_info(string $filter): mixed
+function hooks(?string $hook = null): mixed
 {
-    return Filter::filter_info($filter);
+    return Filter::filter_info($hook);
 }
 
 /**
  * Get Named Route
+ * @param string $name Named Route Name. Example: 'client' or 'client?status=active'
+ * @param array $params Named Route Parameters. Example: ['id'=>1234]
+ * @param bool $url Return as Url or Slug. Default is false
  * @return string
  */
 function named(string $name, array $params = [], bool $url = false): string
 {
-    $path = trim(Router::url($name, $params), '/');
-    if ($url) {
-        return trim(do_hook('app.host'), '/') . "/{$path}";
-    }
-    return $path;
-}
-
-/**
- * Show Date
- * @param int $unixtime
- * @return string
- */
-function showdate(int $unixtime): string
-{
-    return do_hook('date.show', $unixtime);
+    // Get Slug
+    $named = parse_url($name, PHP_URL_PATH);
+    // Get Query String
+    $qstring = parse_url($name, PHP_URL_QUERY);
+    // Make Named Path
+    $path = trim(Router::url($named, $params), '/');
+    $path = $qstring ? "{$path}?{$qstring}" : $path;
+    // Return Named Path/URL
+    return $url ? rtrim(call_user_func([new Url, 'base']), '/') . "/{$path}" : $path;
 }
 
 /**
  * Throw Exception and Abort
- * @param int $code Error Code
+ * @param int $code Error Code. Default is 500
  * @param ?string $message Error Message
  * @return void
  */
-function abort(int $code, ?string $message = null): void
+function http_exception(int $code = 500, ?string $message = null): void
 {
     $message = $message ?: (call_user_func([new Response, 'codes'])[$code] ?? 'Unknown Error!');
     throw new HttpException($code, $message);
@@ -168,7 +140,7 @@ function report_bug(Throwable $th): void
 /**
  * API Response
  */
-function response()
+function api()
 {
     return new class {
         public function success(array $data = [], string $message = 'Success', int $status = 200, array $meta = []) {

@@ -49,15 +49,21 @@ class Api
      */
     protected string $allowedOrigin;
 
+    /**
+     * @var Response $response Response Object
+     */
+    protected Response $response;
+
     // Initiate API Object
     public function __construct()
     {
         $this->accepted             =   ['application/json', 'application/x-www-form-urlencoded'];
         $this->contentType          =   strtolower(strtok($_SERVER['CONTENT_TYPE'] ?? 'application/json', ';'));
-        $this->method               =   Request::instance()->method();
+        $this->method               =   call_user_func([new Request, 'method']);
         $this->message              =   null;
         $this->acceptableMethods    =   ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'];
         $this->allowedOrigin        =   '*';
+        $this->response             =   new Response();
 
         // Handle CORS preflight
         if ($this->method === 'OPTIONS') {
@@ -108,7 +114,7 @@ class Api
      */
     public function body(): array
     {
-        return Request::instance()->all();
+        return call_user_func([new Request], 'all');
     }
 
     /**
@@ -159,6 +165,7 @@ class Api
      */
     public function send(array $payload, int $status = 200, array $additional = []): never
     {
+        // Set Data
         if (!in_array($this->method, $this->acceptableMethods)) {
             $status = 415;
             $payload = [];
@@ -174,7 +181,7 @@ class Api
                 "status"    =>  $status,
                 "data"      =>  $payload,
                 "message"   =>  $this->message ?: "Success",
-                "context"   =>  Response::instance()->codes()[$status]['message'] ?? 'Unassigned',
+                "context"   =>  $this->response->codes()[$status]['message'] ?? 'Unassigned',
                 "timestamp" =>  date('c')
             ], $additional);
         }
@@ -185,8 +192,8 @@ class Api
         $charset  = $this->detectCharset();
 
         // Set Headers
-        Response::instance()->code($status);
-        Response::instance()->setHeader([
+        $this->response->code($status);
+        $this->response->setHeader([
             "Content-Type"  =>  "application/json; charset={$charset}",
             "Vary"          =>  "Accept, Accept-Charset"
         ]);
@@ -221,12 +228,13 @@ class Api
             return;
         }
 
-        Response::instance()->setHeader([
+        $headers = [
             "Access-Control-Allow-Origin"   =>  $this->allowedOrigin,
             "Access-Control-Allow-Methods"  =>  implode(', ', $this->acceptableMethods),
             "Access-Control-Allow-Headers"  =>  "Content-Type, Authorization, X-Requested-With, Accept, Accept-Encoding, Accept-Charset",
             "Access-Control-Expose-Headers" =>  "Content-Encoding, Content-Type, Content-Length"
-        ]);
+        ];
+        call_user_func([$this->response, 'setHeader'], $headers);
     }
 
     /**

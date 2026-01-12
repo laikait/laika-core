@@ -15,31 +15,11 @@ namespace Laika\Core\Console\Commands;
 
 use Laika\Core\Console\Command;
 use Laika\Core\Helper\Config;
-use Laika\Core\App\Options;
 use Laika\Model\Connection;
 use Exception;
 
 class Migrate extends Command
 {
-    /**
-     * Default Options Keys
-     * @return array<string,string>
-     */
-    private function defaulOptions(): array
-    {
-        return [
-            'app.name'      =>  'Laika Framework',
-            'time.zone'     =>  'Europe/London',
-            'time.format'   =>  'Y-M-d H:i:s',
-            'dbsession'     =>  'yes',
-            'debug'         =>  'yes',
-            'app.path'      =>  realpath(APP_PATH ?? __DIR__ . '/../../../../../../'),
-            'app.icon'      =>  'favicon.ico',
-            'app.logo'      =>  'logo.png',
-            'csrf.lifetime' =>  '300',
-        ];
-    }
-
     /**
      * Run the command to create a new controller.
      * @param array $params
@@ -47,37 +27,43 @@ class Migrate extends Command
      */
     public function run(array $params): void
     {
-        $defaul_name = $params[0] ?? 'default';
+        // Get Values
+        $args = ['connection' => null, 'model'=>null];
+        foreach ($params as $param) {
+            $parts = \explode(':', $param);
+            if (isset($parts[0])) {
+                $args[$parts[0]] = $parts[1] ?? null;
+            }
+        }
+
+        // Set Connection Name
+        $connection = $args['connection'] ?? 'default';
+        // Set Model
+        $model = $args['model'] ?? null;
         // Check DB Config Available
-        $configs = Config::get('database');
-        if (empty($configs) || !isset($configs[$defaul_name])) {
-            $this->error("Database [{$defaul_name}] Config Not Found!");
+        $config = Config::get('database', $connection);
+        if (empty($config)) {
+            $this->error("Database [{$connection}] Config Not Found or Missing Parameters!");
             return;
         }
         // Connect DB
-        foreach ($configs as $name => $config) {
-            Connection::add($config, $name);
-        }
+        Connection::add($config, $connection);
 
         // Create Table
         try {
-            $model = new Options($defaul_name);
-            $model->migrate();
+            // Migrate All Available Models
+            $models = $model ?
+                    ["\\Laika\\App\\Model\\{$model}"] :
+                    \call_user_func([new \Laika\Core\App\Infra(), 'getModels']);
 
-            // Check Option Table Doesn't Exists
-            if (empty($model->get())) {
-                $rows = [];
-                foreach ($this->defaulOptions() as $key => $val) {
-                    $rows[] = [$model->key => $key, $model->value => $val, $model->default => 'yes'];
-                }
-                // Insert Options
-                $model->insert($rows);
+            // Show Error if No Model Exists
+            if (empty($models)) {
+                $this->error("No Models Found to Migrate!");
             }
 
-            // Migrate All Available Models
-            $models = call_user_func([new \Laika\Core\App\Infra(), 'getModels']);
+            // Migrate Models
             foreach ($models as $model) {
-                call_user_func([new $model, 'migrate']);
+                \call_user_func([new $model, 'migrate']);
             }
 
             // Create Secret Config File if Not Exist

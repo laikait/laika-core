@@ -14,51 +14,22 @@ declare(strict_types=1);
 namespace Laika\Core\Http;
 
 use Laika\Session\Session;
-use Laika\Core\Helper\Url;
 
 class Redirect
 {
-    /**
-     * @property Redirect $instance
-     */
-    protected static Redirect $instance;
-
-    /**
-     * App Host
-     * @var string $host
-     */
-    protected string $host;
-
     ##################################################################
     /*------------------------- PUBLIC API -------------------------*/
     ##################################################################
 
     /**
-     * Initiate Object
-     */
-    public function __construct()
-    {
-        $this->host = do_hook('app.host', call_user_func([new Url, 'base']));
-    }
-
-    /**
-     * Get Instance
-     * @return Redirect
-     */
-    public static function instance(): Redirect
-    {
-        self::$instance ??= new Redirect();
-        return self::$instance;
-    }
-
-    /**
-     * Get Method
-     * @return string
+     * Redirect Back to The Previous Link
+     * @param string $named Named Route if Rrequired. Default is '/'
+     * @param int $code Response Code. Default is 302
      * @return void
      */
-    public function back(int $code = 302): void
+    public function back(string $named = '/', int $code = 302): void
     {
-        $this->send($_SERVER['HTTP_REFERER'] ?? $this->host, $code);
+        $this->send($_SERVER['HTTP_REFERER'] ?? \named($named, url:true), $code);
     }
 
     /**
@@ -74,18 +45,20 @@ class Redirect
     }
 
     /**
-     * Get Method
-     * @param string $to URL to Redirect.
+     * Redirect to A Link
+     * @param string $to Named/URL to Redirect.
+     * @param array $params Named Roue Parameters.
      * @param int $code HTTP Status Code. Default is 302.
      * @return void
      */
-    public function to(string $to, int $code = 302): void
+    public function to(string $to, array $params = [], int $code = 302): void
     {
-        $url = parse_url($to, PHP_URL_HOST);
-        if (!$url) {
-            $to = $this->host . trim($to, '/');
+        $url = \parse_url($to, PHP_URL_HOST);
+        if (empty($url)) {
+            $url = \named($to, $params, true);
         }
-        $this->send($to, $code);
+        $this->send($url, $code);
+        return;
     }
 
     ####################################################################
@@ -100,11 +73,7 @@ class Redirect
      */
     private function send(string $to, int $code = 302): never
     {
-        $url = parse_url($to, PHP_URL_HOST);
-        if (!$url) {
-            $to = $this->host . trim($to, '/');
-        }
-        header("Location:{$to}", true, $code);
+        \header("Location:{$to}", true, $code);
         exit();
     }
 

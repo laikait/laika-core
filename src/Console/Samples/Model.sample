@@ -17,33 +17,25 @@ namespace Laika\App\Model{{NAMESPACE}};
 defined('APP_PATH') || http_response_code(403).die('403 Direct Access Denied!');
 
 use Laika\Model\Blueprint;
-use Laika\Core\App\Model;
 use Laika\Model\Schema;
+use Laika\Model\Model;
 
 class {{NAME}} extends Model
 {
     // Table Name
     public string $table = '{{TABLE_NAME}}';
 
-    // Primary Key Column Name
-    public string $id = '{{PRIMARY_KEY}}';
-
-    // UUID Column Name
-    public string $uuid = 'uuid';
-
     /**
      * Migrate Table
      * @return mixed
      */
-    public function migrate(): mixed
+    public function migrate()
     {
         // Maigrate Table
-        Schema::table($this->table)
-                ->create(function (Blueprint $t) {
-                    $t->column($this->id)->int()->auto();
-                    $t->column('sample')->varchar();
-                    $t->column('status')->enum(['active', 'inactive'])->default('inactive');
-                })->execute();
-        return;
+        Schema::table($this->table)->create(function (Blueprint $t) {
+            $t->column($this->id)->int()->auto();
+            $t->column('sample')->varchar();
+            $t->column('status')->enum(['active', 'inactive'])->default('inactive');
+        })->execute();
     }
 }

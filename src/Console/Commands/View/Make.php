@@ -33,12 +33,12 @@ class Make extends Command
     public function run(array $params): void
     {
         // Check Parameters
-        if (count($params) < 1) {
+        if (\count($params) < 1) {
             $this->error("USAGE: php laika make:view <name>");
             return;
         }
 
-        if (!preg_match($this->exp, $params[0])) {
+        if (!\preg_match($this->exp, $params[0])) {
             // Invalid Name
             $this->error("Invalid View Name: '{$params[0]}'");
             return;
@@ -54,16 +54,16 @@ class Make extends Command
 
         $file = "{$this->path}/{$parts['name']}.tpl.php";
 
-        if (is_file($file)) {
+        if (\is_file($file)) {
             $this->error("View Already Exist: {$file}");
             return;
         }
 
         // Get Sample Content
-        $content = file_get_contents(__DIR__ . '/../../Samples/View.sample');
+        $content = \file_get_contents(__DIR__ . '/../../Samples/View.sample');
 
         // Replace Placeholders
-        if (file_put_contents($file, $content) === false) {
+        if (\file_put_contents($file, $content) === false) {
             $this->error("Failed to Create View: {$file}");
             return;
         }

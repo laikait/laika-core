@@ -33,7 +33,7 @@ class File
      */
     public function exists(): bool
     {
-        return file_exists($this->file);
+        return \file_exists($this->file);
     }
 
     /**
@@ -42,7 +42,7 @@ class File
      */
     public function readable(): bool
     {
-        return is_readable($this->file);
+        return \is_readable($this->file);
     }
 
     /**
@@ -51,7 +51,7 @@ class File
      */
     public function writable(): bool
     {
-        return is_writable($this->file);
+        return \is_writable($this->file);
     }
 
     /**
@@ -60,7 +60,7 @@ class File
      */
     public function size(): int|false
     {
-        return $this->exists() ? filesize($this->file) : false;
+        return $this->exists() ? \filesize($this->file) : false;
     }
 
     /**
@@ -69,7 +69,7 @@ class File
      */
     public function info(): array
     {
-        return pathinfo($this->file);
+        return \pathinfo($this->file);
     }
 
     /**
@@ -78,9 +78,9 @@ class File
      */
     public function mime(): string|false
     {
-        $finfo = finfo_open(FILEINFO_MIME_TYPE);
-        $mime = finfo_file($finfo, $this->file);
-        finfo_close($finfo);
+        $finfo = \finfo_open(FILEINFO_MIME_TYPE);
+        $mime = \finfo_file($finfo, $this->file);
+        \finfo_close($finfo);
         return $mime;
     }
 
@@ -90,7 +90,7 @@ class File
      */
     public function extension(): string
     {
-        return pathinfo($this->file, PATHINFO_EXTENSION);
+        return \pathinfo($this->file, PATHINFO_EXTENSION);
     }
 
     /**
@@ -99,7 +99,7 @@ class File
      */
     public function name(): string
     {
-        return pathinfo($this->file, PATHINFO_FILENAME);
+        return \pathinfo($this->file, PATHINFO_FILENAME);
     }
 
     /**
@@ -108,7 +108,7 @@ class File
      */
     public function base(): string
     {
-        return pathinfo($this->file, PATHINFO_BASENAME);
+        return \pathinfo($this->file, PATHINFO_BASENAME);
     }
 
     /**
@@ -117,7 +117,7 @@ class File
      */
     public function path(): string
     {
-        return pathinfo($this->file, PATHINFO_DIRNAME);
+        return \pathinfo($this->file, PATHINFO_DIRNAME);
     }
 
     /**
@@ -126,7 +126,7 @@ class File
      */
     public function read(): string|false
     {
-        return file_get_contents($this->file);
+        return \file_get_contents($this->file);
     }
 
     /**
@@ -139,7 +139,7 @@ class File
         // Make Directory if Not Exists
         Directory::make($this->path());
         // Write Contents
-        return file_put_contents($this->file, $str) !== false;
+        return \file_put_contents($this->file, $str) !== false;
     }
 
     /**
@@ -149,7 +149,7 @@ class File
      */
     public function append(string $str): bool
     {
-        return $this->writable() ? (file_put_contents($this->file, $str, FILE_APPEND) !== false) : false;
+        return $this->writable() ? (\file_put_contents($this->file, $str, FILE_APPEND) !== false) : false;
     }
 
     /**
@@ -158,7 +158,7 @@ class File
      */
     public function pop(): bool
     {
-        return unlink($this->file);
+        return \unlink($this->file);
     }
 
     /**
@@ -168,7 +168,7 @@ class File
      */
     public function move(string $to): bool
     {
-        $result = rename($this->file, $to);
+        $result = \rename($this->file, $to);
         if ($result) {
             $this->file = $to;
         }
@@ -182,7 +182,7 @@ class File
      */
     public function copy(string $to): bool
     {
-        return copy($this->file, $to);
+        return \copy($this->file, $to);
     }
 
     /**
@@ -193,7 +193,7 @@ class File
      */
     public function touch(?int $mtime = null, ?int $atime = null): bool
     {
-        return touch($this->file, $mtime, $atime);
+        return \touch($this->file, $mtime, $atime);
     }
 
     /**
@@ -219,10 +219,10 @@ class File
         $filename = $as ?? $this->name();
         $mime = $this->mime() ?: 'application/octet-stream';
 
-        header("Content-Type: {$mime}");
-        header("Content-Disposition: attachment; filename=\"{$filename}\"");
-        header("Content-Length: {$this->size()}");
-        readfile($this->file);
+        \header("Content-Type: {$mime}");
+        \header("Content-Disposition: attachment; filename=\"{$filename}\"");
+        \header("Content-Length: {$this->size()}");
+        \readfile($this->file);
         return;
     }
 }

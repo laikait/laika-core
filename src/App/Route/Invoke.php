@@ -28,37 +28,37 @@ class Invoke
     public static function middleware(array $middlewares, callable|string|array|null|object $controller, array $params = []): ?string
     {
         // Build the Chain in Normal Order (global → group → route)
-        $next = array_reduce(
-            array_reverse($middlewares), // Reverse to Preserve Execution order
+        $next = \array_reduce(
+            \array_reverse($middlewares), // Reverse to Preserve Execution order
             function ($next, $middleware) use ($params) {
                 return function ($params) use ($middleware, $next) {
                     // Separate Parameters From Middleware
-                    $parts = explode('|', $middleware);
-                    $parts[0] = trim($parts[0], '\\');
+                    $parts = \explode('|', $middleware);
+                    $parts[0] = \trim($parts[0], '\\');
                     // Get Class
-                    $middleware = class_exists($parts[0]) ? $parts[0] : "Laika\\App\\Middleware\\$parts[0]";
+                    $middleware = \class_exists($parts[0]) ? $parts[0] : "Laika\\App\\Middleware\\{$parts[0]}";
                     if (isset($parts[1])) {
                         $args = [];
-                        $paramParts = explode(',', $parts[1]);
+                        $paramParts = \explode(',', $parts[1]);
                         foreach ($paramParts as $paramPart) {
-                            [$k, $v] = explode('=', $paramPart);
-                            $args[trim($k)] = trim($v);
+                            [$k, $v] = \explode('=', $paramPart);
+                            $args[\trim($k)] = \trim($v);
                         }
-                        $params = array_merge($params, $args);
+                        $params = \array_merge($params, $args);
                     }
-                    if (!class_exists($middleware)) {
-                        report_bug(new RuntimeException("Invalid Middleware: {$middleware}"));
+                    if (!\class_exists($middleware)) {
+                        \report_bug(new RuntimeException("Invalid Middleware: [{$middleware}]"));
                     }
                     $obj = new $middleware;
 
                     // Check handle Method Exists
-                    if (!method_exists($obj, 'handle')) {
-                        report_bug(new RuntimeException("Method Not Found: {$middleware}::handle()"));
+                    if (!\method_exists($obj, 'handle')) {
+                        \report_bug(new RuntimeException("Method Not Found: [{$middleware}::handle()]"));
                     }
                     try {
                         return $obj->handle($next, $params);
                     } catch (\Throwable $th) {
-                        report_bug($th);
+                        \report_bug($th);
                     }
                 };
             },
@@ -79,31 +79,31 @@ class Invoke
     public static function afterware(array $afterwares, ?string $response, array $params = []): ?string
     {
         // Build the Chain in Normal Order (global → group → route)
-        $next = array_reduce(
-            array_reverse($afterwares), // Reverse to Preserve Execution order
+        $next = \array_reduce(
+            \array_reverse($afterwares), // Reverse to Preserve Execution order
             function ($next, $afterware) use ($params) {
                 return function ($response) use ($afterware, $next, $params) {
                     // Separate Parameters From Afterware
-                    $parts = explode('|', $afterware);
-                    $parts[0] = trim($parts[0], '\\');
-                    $afterware = class_exists($parts[0]) ? $parts[0] : "Laika\\App\\Middleware\\$parts[0]";
+                    $parts = \explode('|', $afterware);
+                    $parts[0] = \trim($parts[0], '\\');
+                    $afterware = \class_exists($parts[0]) ? $parts[0] : "Laika\\App\\Middleware\\{$parts[0]}";
                     if (isset($parts[1])) {
                         $args = [];
-                        $paramParts = explode(',', $parts[1]);
+                        $paramParts = \explode(',', $parts[1]);
                         foreach ($paramParts as $paramPart) {
-                            [$k, $v] = explode('=', $paramPart);
-                            $args[trim($k)] = trim($v);
+                            [$k, $v] = \explode('=', $paramPart);
+                            $args[\trim($k)] = \trim($v);
                         }
-                        $params = array_merge($params, $args);
+                        $params = \array_merge($params, $args);
                     }
-                    if (!class_exists($afterware)) {
-                        report_bug(new RuntimeException("Invalid Afterware: {$afterware}"));
+                    if (!\class_exists($afterware)) {
+                        \report_bug(new RuntimeException("Invalid Afterware: [{$afterware}]"));
                     }
 
                     $obj = new $afterware;
 
-                    if (!method_exists($obj, 'terminate')) {
-                        report_bug(new RuntimeException("Method Not Found: {$afterware}::terminate()"));
+                    if (!\method_exists($obj, 'terminate')) {
+                        \report_bug(new RuntimeException("Method Not Found: [{$afterware}::terminate()]"));
                     }
 
                     // Execute the current afterware, passing response and chain
@@ -112,7 +112,7 @@ class Invoke
                             return $next($newResponse);
                         }, $params);
                     } catch (\Throwable $th) {
-                        report_bug($th);
+                        \report_bug($th);
                     }
                 };
             },
@@ -122,85 +122,59 @@ class Invoke
         return $next($response);
     }
 
-    public static function controller(callable|string|array|null|object $handler, array $args): ?string
+    /**
+     * @param callable|string|null $handler Controller. Example: HomeController@index or Closure or null or Function
+     * @param array $args Args to Pass to Controller
+     * @throws RuntimeException
+     * @return ?string
+     */
+    public static function controller(callable|string|null $handler, array $args): ?string
     {
-        if (is_null($handler)) {
+        // Execute Null
+        if (\is_null($handler)) {
             return null;
         }
 
-        if (is_callable($handler)) {
+        // Execute Callable
+        if (\is_callable($handler)) {
             $reflection = new Reflection($handler, $args);
             try {
-                return call_user_func($handler, ...$reflection->namedArgs());
+                return \call_user_func($handler, ...$reflection->namedArgs());
             } catch (\Throwable $th) {
-                report_bug($th);
+                \report_bug($th);
             }
             return null;
         }
 
-        if (is_array($handler)) {
-            [$controller, $method] = $handler;
-            // Check Controller Exists
-            if (!class_exists($controller)) {
-                report_bug(new RuntimeException("Invalid Controller: " . print_r($handler, true)));
-            }
-            // Check Method Exists
-            if (!method_exists($controller, $method)) {
-                report_bug(new RuntimeException("Invalid Method: " . print_r($handler, true)));
-            }
-            // Call Controller
-            $obj = new $controller();
-            $reflection = new Reflection([$obj, $method], $args);
-            try {
-                return call_user_func([$obj, $method], ...$reflection->namedArgs());
-            } catch (\Throwable $th) {
-                report_bug($th);
-            }
-            return null;
-        }
-
-        if (is_object($handler)) {
-            // Check Method Exists
-            if (!method_exists($handler, 'index')) {
-                report_bug(new RuntimeException("Invalid Method: " . get_class($handler) . "::index()"));
-            }
-            // Call Controller
-            $reflection = new Reflection([$handler, 'index'], $args);
-            try {
-                return call_user_func([$handler, 'index'], ...$reflection->namedArgs());
-            } catch (\Throwable $th) {
-                report_bug($th);
-            }
-            return null;
-        }
-
-        if (is_string($handler)) {
-            $parts = explode('@', $handler);
+        // Execute String
+        if (\is_string($handler)) {
+            $parts = \explode('@', $handler);
             $controller = $parts[0];
             if (!isset($parts[1])) {
-                report_bug(new RuntimeException("Invalid Controller: {$handler}"));
+                \report_bug(new RuntimeException("Invalid Controller: {$handler}"));
             }
-            [$controller, $method] = explode('@', $handler);
+            [$controller, $method] = \explode('@', $handler);
             $controller = "Laika\\App\\Controller\\{$controller}";
             // Check Controller Exists
-            if (!class_exists($controller)) {
-                report_bug(new RuntimeException("Invalid Controller: {$handler}"));
+            if (!\class_exists($controller)) {
+                \report_bug(new RuntimeException("Invalid Controller: {$handler}"));
             }
             // Check Method Exists
-            if (!method_exists($controller, $method)) {
-                report_bug(new RuntimeException("Invalid Method: {$handler}"));
+            if (!\method_exists($controller, $method)) {
+                \report_bug(new RuntimeException("Invalid Method: {$handler}"));
             }
             // Call Controller
             $obj = new $controller();
             $reflection = new Reflection([$controller, $method], $args);
             try {
-                return call_user_func([$obj, $method], ...$reflection->namedArgs());
+                return \call_user_func([$obj, $method], ...$reflection->namedArgs());
             } catch (\Throwable $th) {
-                report_bug($th);
+                \report_bug($th);
             }
             return null;
         }
-        report_bug(new RuntimeException("Invalid Controller: " . print_r($handler, true)));
-        return null;
+
+        // Throw RuntimeException
+        throw new RuntimeException("Invalid Controller: " . print_r($handler, true));
     }
 }

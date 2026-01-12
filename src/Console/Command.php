@@ -54,11 +54,11 @@ abstract class Command
      */
     protected function parts(string $str, bool $ucfirst = true): array
     {
-        $str    =   trim($str, '/');
-        $parts  =   explode('/', $str);
+        $str    =   \trim($str, '/');
+        $parts  =   \explode('/', $str);
 
         // Get File Name
-        $result['name']         =   array_pop($parts);
+        $result['name']         =   \array_pop($parts);
         $result['path']         =   '';
         $result['namespace']    =   '';
 
@@ -66,7 +66,7 @@ abstract class Command
         foreach ($parts as $part) {
             // Ucfirst if true
             if ($ucfirst) {
-                $part = ucfirst($part);
+                $part = \ucfirst($part);
             }
 
             $result['path']         .=   "/{$part}";

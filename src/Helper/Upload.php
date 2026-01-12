@@ -39,7 +39,7 @@ class Upload
             return [];
         }
 
-        if (!is_array($this->fields['name'])) {
+        if (!\is_array($this->fields['name'])) {
             return [$this->fields];
         }
 
@@ -64,20 +64,20 @@ class Upload
      */
     public function single(string $directory, ?string $name = null): string|false
     {
-        if (!isset($this->fields['tmp_name']) || !is_uploaded_file($this->fields['tmp_name'])) {
+        if (!isset($this->fields['tmp_name']) || !\is_uploaded_file($this->fields['tmp_name'])) {
             return false;
         }
 
         // Make Directory if Not Exists
         Directory::make($directory);
 
-        $originalName = basename($this->fields['name']);
-        $extension = pathinfo($originalName, PATHINFO_EXTENSION);
+        $originalName = \basename($this->fields['name']);
+        $extension = \pathinfo($originalName, PATHINFO_EXTENSION);
         $name = $name ? "{$name}.{$extension}" : $originalName;
 
-        $destination = rtrim($directory, '/') . "/{$name}";
+        $destination = \rtrim($directory, '/') . "/{$name}";
 
-        return move_uploaded_file($this->fields['tmp_name'], $destination) ? $destination : false;
+        return \move_uploaded_file($this->fields['tmp_name'], $destination) ? $destination : false;
     }
 
     /**
@@ -93,12 +93,12 @@ class Upload
 
         $baseName     = $options['basename'] ?? null;
         $maxSize      = $options['maxsize'] ?? null;
-        $allowedExt   = isset($options['extensions']) ? array_map('strtolower', $options['extensions']) : null;
-        $allowedMime  = isset($options['mimetypes']) ? array_map('strtolower', $options['mimetypes']) : null;
+        $allowedExt   = isset($options['extensions']) ? \array_map('strtolower', $options['extensions']) : null;
+        $allowedMime  = isset($options['mimetypes']) ? \array_map('strtolower', $options['mimetypes']) : null;
         $processImage = $options['image'] ?? false;
 
-        if (!is_dir($destinationDir)) {
-            mkdir($destinationDir, 0755, true);
+        if (!\is_dir($destinationDir)) {
+            \mkdir($destinationDir, 0755, true);
         }
 
         foreach ($files as $index => $file) {
@@ -107,13 +107,13 @@ class Upload
             $tmp  = $file['tmp_name'] ?? '';
             $error = $file['error'] ?? UPLOAD_ERR_NO_FILE;
             // Get Extension
-            $ext = strtolower(pathinfo($name, PATHINFO_EXTENSION));
+            $ext = \strtolower(\pathinfo($name, PATHINFO_EXTENSION));
             // Get Mime Info
             $mime = '';
-            if ($tmp && is_file($tmp)) {
-                $finfo = finfo_open(FILEINFO_MIME_TYPE);
-                $mime  = strtolower(finfo_file($finfo, $tmp));
-                finfo_close($finfo);
+            if ($tmp && \is_file($tmp)) {
+                $finfo = \finfo_open(FILEINFO_MIME_TYPE);
+                $mime  = \strtolower(\finfo_file($finfo, $tmp));
+                \finfo_close($finfo);
             }
             // Get Slug
             $slug = $this->slugify(pathinfo($name, PATHINFO_FILENAME));
@@ -138,22 +138,22 @@ class Upload
                 continue;
             }
 
-            if ($allowedMime && !in_array($mime, $allowedMime)) {
+            if ($allowedMime && !\in_array($mime, $allowedMime)) {
                 $results['errors'][$name] = "MIME type $mime not allowed";
                 continue;
             }
 
             $finalName = $baseName ? "{$baseName}_{$index}" : $slug;
-            $destination = rtrim($destinationDir, '/') . '/' . time() ."-{$finalName}.{$ext}";
+            $destination = \rtrim($destinationDir, '/') . '/' . \time() ."-{$finalName}.{$ext}";
 
             if (move_uploaded_file($tmp, $destination)) {
-                if ($processImage && str_starts_with($mime, 'image/')) {
+                if ($processImage && \str_starts_with($mime, 'image/')) {
                     $img = new Image($destination);
                     $img->save($destination, 70);
                     $img->destroy();
                 }
 
-                $results['success'][$name] = ['slug' => basename($destination), 'path' => $destination];
+                $results['success'][$name] = ['slug' => \basename($destination), 'path' => $destination];
             } else {
                 $results['errors'][$name] = "Could Not Move Uploaded File!";
             }
@@ -169,13 +169,13 @@ class Upload
      */
     public function slugify(string $name): string
     {
-        $parts = explode('.', $name);
+        $parts = \explode('.', $name);
         $name = $parts[0];
-        $name = preg_replace('~[^\pL\d]+~u', '-', $name);
-        $name = iconv('UTF-8', 'ASCII//TRANSLIT//IGNORE', $name) ?: $name;
-        $name = preg_replace('~[^-\w]+~', '', $name);
-        $name = trim($name, '-');
-        $name = preg_replace('~-+~', '-', $name);
-        return strtolower($name) ?: 'file-' . uniqid() . '-' . time();
+        $name = \preg_replace('~[^\pL\d]+~u', '-', $name);
+        $name = \iconv('UTF-8', 'ASCII//TRANSLIT//IGNORE', $name) ?: $name;
+        $name = \preg_replace('~[^-\w]+~', '', $name);
+        $name = \trim($name, '-');
+        $name = \preg_replace('~-+~', '-', $name);
+        return \strtolower($name) ?: 'file-' . \uniqid() . '-' . \time();
     }
 }

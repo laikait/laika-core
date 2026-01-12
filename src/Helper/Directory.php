@@ -25,11 +25,11 @@ class Directory
      */
     public static function folders(string $path): array
     {
-        $path = realpath($path);
-        if (!$path || !is_dir($path)) {
+        $path = \realpath($path);
+        if (!$path || !\is_dir($path)) {
             throw new InvalidArgumentException("Invalid directory: '{$path}'");
         }
-        return glob("{$path}/*", GLOB_ONLYDIR) ?: [];
+        return \glob("{$path}/*", GLOB_ONLYDIR) ?: [];
     }
 
     // Get Files List From Directory
@@ -41,12 +41,12 @@ class Directory
      */
     public static function files(string $path, string $ext = '*'): array
     {
-        $path = realpath($path);
-        if (!$path || !is_dir($path)) {
+        $path = \realpath($path);
+        if (!$path || !\is_dir($path)) {
             throw new InvalidArgumentException("Invalid directory: '{$path}'");
         }
-        $ext = ltrim($ext, '.');
-        return glob("{$path}/*.{$ext}") ?: [];
+        $ext = \ltrim($ext, '.');
+        return \glob("{$path}/*.{$ext}") ?: [];
     }
 
     /**
@@ -56,7 +56,7 @@ class Directory
      */
     public static function exists(string $path): bool
     {
-        return is_dir($path);
+        return \is_dir($path);
     }
 
     /**
@@ -72,7 +72,7 @@ class Directory
         if (self::exists($path)) {
             return true;
         }
-        return mkdir($path, $permissions, $recursive);
+        return \mkdir($path, $permissions, $recursive);
     }
 
     /**
@@ -93,7 +93,7 @@ class Directory
         }
 
         // Remove Directory
-        return rmdir($path);
+        return \rmdir($path);
     }
 
     public static function empty(string $path): bool
@@ -102,11 +102,11 @@ class Directory
             return true;
         }
 
-        $files = array_diff(scandir($path), ['.', '..']);
+        $files = \array_diff(scandir($path), ['.', '..']);
         foreach ($files as $file) {
             $fullPath = "{$path}/{$file}";
-            if (is_writable($fullPath)) {
-                is_file($fullPath) ? unlink($fullPath) : self::empty($fullPath);
+            if (\is_writable($fullPath)) {
+                \is_file($fullPath) ? \unlink($fullPath) : self::empty($fullPath);
             } else {
                 return false;
             }
@@ -124,7 +124,7 @@ class Directory
      */
     public static function scanRecursive(string $path, bool $includeDirs = true, string|array $ext = '*'): array
     {
-        $path = realpath($path);
+        $path = \realpath($path);
         if (!$path || !is_dir($path)) {
             throw new InvalidArgumentException("Invalid directory: '{$path}'");
         }
@@ -136,8 +136,8 @@ class Directory
         );
 
         // Normalize extension filter
-        $extList = is_array($ext) ? array_map('strtolower', $ext) : [$ext];
-        $extList = array_map(fn ($e) => ltrim($e, '.'), $extList);
+        $extList = \is_array($ext) ? \array_map('strtolower', $ext) : [$ext];
+        $extList = \array_map(fn ($e) => \ltrim($e, '.'), $extList);
 
         foreach ($iterator as $item) {
             if ($item->isDir()) {
@@ -146,8 +146,8 @@ class Directory
                 }
             } else {
                 if ($extList !== ['*']) {
-                    $fileExt = strtolower(pathinfo($item->getFilename(), PATHINFO_EXTENSION));
-                    if (!in_array($fileExt, $extList, true)) {
+                    $fileExt = \strtolower(\pathinfo($item->getFilename(), PATHINFO_EXTENSION));
+                    if (!\in_array($fileExt, $extList, true)) {
                         continue;
                     }
                 }

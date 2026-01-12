@@ -51,7 +51,7 @@ class Response
      */
     public function code(int $code = 200): int
     {
-        http_response_code($code);
+        \http_response_code($code);
         return $code;
     }
 
@@ -61,7 +61,7 @@ class Response
      */
     public function poweredBy(string $str): void
     {
-        header("X-Powered-By: {$str}", true);
+        \header("X-Powered-By: {$str}", true);
     }
 
     /**
@@ -71,7 +71,7 @@ class Response
     public function setHeader(array $headers = []): void
     {
         foreach ($headers as $key => $value) {
-            header(trim($key) . ": " . trim((string) $value), true);
+            \header(\trim($key) . ": " . \trim((string) $value), true);
         }
     }
 
@@ -82,7 +82,7 @@ class Response
     public function register(): void
     {
         foreach ($this->headers as $key => $value) {
-            header(trim($key) . ": " . trim((string) $value), true);
+            \header(\trim($key) . ": " . \trim((string) $value), true);
         }
     }
 
@@ -94,13 +94,13 @@ class Response
     public function get(?string $key = null): array|string
     {
         $val = [];
-        foreach (headers_list() as $header) {
-            $parts = explode(':', $header, 2);
-            $val[strtolower(trim($parts[0]))] = trim($parts[1] ?? '');
+        foreach (\headers_list() as $header) {
+            $parts = \explode(':', $header, 2);
+            $val[\strtolower(\trim($parts[0]))] = \trim($parts[1] ?? '');
         }
 
         if ($key !== null) {
-            return $val[strtolower($key)] ?? '';
+            return $val[\strtolower($key)] ?? '';
         }
 
         return $val;

@@ -35,7 +35,7 @@ class Rename extends Command
     public function run(array $params): void
     {
         // Check Parameters
-        if (count($params) < 2) {
+        if (\count($params) < 2) {
             $this->error("USAGE: php laika rename:controller <old_name> <new_name>");
             return;
         }
@@ -45,13 +45,13 @@ class Rename extends Command
         $new = $params[1];
 
         // Check Old Controller Name is Valid
-        if (!preg_match($this->exp, $old)) {
+        if (!\preg_match($this->exp, $old)) {
             // Invalid Controller Name
             $this->error("Invalid Old Controller Name: [{$old}]");
             return;
         }
         // Check New Controller Name is Valid
-        if (!preg_match($this->exp, $new)) {
+        if (!\preg_match($this->exp, $new)) {
             // Invalid Controller Name
             $this->error("Invalid New Controller Name: [{$new}]!");
             return;
@@ -73,13 +73,13 @@ class Rename extends Command
         $new_file = "{$this->new_path}/{$new_parts['name']}.php";
 
         // Check Old Controller is Valid
-        if (!is_file($old_file)) {
+        if (!\is_file($old_file)) {
             $this->error("Old Controller [{$old}] Doesn't Exists!");
             return;
         }
 
         // Check New Controller is Valid
-        if (is_file($new_file)) {
+        if (\is_file($new_file)) {
             $this->error("New Controller [{$new}] Already Exist!");
             return;
         }
@@ -90,7 +90,7 @@ class Rename extends Command
         }
 
         // Get Contents
-        $content = file_get_contents($old_file);
+        $content = \file_get_contents($old_file);
         if ($content === false) {
             $this->error("Failed to Read Controller: [{$old}]!");
             return;
@@ -98,14 +98,14 @@ class Rename extends Command
 
         // Replace Namespace if Not Same
         if ($old_namespace != $new_namespace) {
-            $content = preg_replace('/' . preg_quote($old_namespace, '/') . '/', $new_namespace, $content);
+            $content = \preg_replace('/' . \preg_quote($old_namespace, '/') . '/', $new_namespace, $content);
         }
 
         // Replace Class Name
-        $content = preg_replace("/class {$old_parts['name']}/i", "class {$new_parts['name']}", $content);
+        $content = \preg_replace("/class {$old_parts['name']}/i", "class {$new_parts['name']}", $content);
 
         // Create New Controller File
-        if (file_put_contents($new_file, $content) === false) {
+        if (\file_put_contents($new_file, $content) === false) {
             $this->error("Failed to Create Controller: [$new]!");
             return;
         }

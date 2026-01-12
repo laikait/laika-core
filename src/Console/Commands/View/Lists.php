@@ -34,10 +34,10 @@ class Lists extends Command
     public function run(array $params): void
     {
         // Path
-        $path = trim($params[0] ?? '', '/');
+        $path = \trim($params[0] ?? '', '/');
 
         // Check View Name is Valid
-        if ($path && !preg_match($this->exp, $path)) {
+        if ($path && !\preg_match($this->exp, $path)) {
             // Invalid View Name
             $this->error("Invalid View Path: '{$path}'");
             return;
@@ -57,8 +57,8 @@ class Lists extends Command
         $paths = Directory::files($this->path, '.php');
         $items = [];
         foreach ($paths as $file) {
-            if (is_file($file)) {
-                $items[] = str_replace(["{$this->path}/", '.tpl.php'], [''], $file);
+            if (\is_file($file)) {
+                $items[] = \str_replace(["{$this->path}/", '.tpl.php'], [''], $file);
             }
         }
 
@@ -66,22 +66,22 @@ class Lists extends Command
         $headers = ['#', 'Templates'];
 
         // Find max width for "File Path" column
-        $maxLength = max(array_map('strlen', $items));
-        $col2Width = max(strlen($headers[1]), $maxLength);
+        $maxLength = \max(\array_map('strlen', $items));
+        $col2Width = \max(\strlen($headers[1]), $maxLength);
 
         // Table width
-        $line = '+' . str_repeat('-', 5) . '+' . str_repeat('-', $col2Width + 2) . "+\n";
+        $line = '+' . \str_repeat('-', 5) . '+' . \str_repeat('-', $col2Width + 2) . "+\n";
 
         // Print Header
         echo $line;
-        printf("| %-3s | %-{$col2Width}s |\n", $headers[0], $headers[1]);
+        \printf("| %-3s | %-{$col2Width}s |\n", $headers[0], $headers[1]);
         echo $line;
 
         $count = 1;
         // Print Rows
         foreach ($items as $item) {
-            $item = str_replace(["{$this->path}/", '.tpl.php'], [''], $item);
-            printf("| %-3d | %-{$col2Width}s |\n", $count, $item);
+            $item = \str_replace(["{$this->path}/", '.tpl.php'], [''], $item);
+            \printf("| %-3d | %-{$col2Width}s |\n", $count, $item);
             $count++;
         }
 

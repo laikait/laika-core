@@ -26,37 +26,27 @@ class Connect
     public static function db(): void
     {
         // Get Database Configs
-        $configs = Config::get('database', default:[]);
-        // Start All Connections
-        if (!empty($configs)) {
-            foreach ($configs as $name => $config) {
-                try {
-                    Connection::add($config, $name);
-                } catch (\Throwable $th) {
-                    throw new HttpException(500, "'{$name}' Database Error: {$th->getMessage()}", $th->getCode());
-                }
-            }
+        $config = Config::get('database', 'default');
+        // Check 'default' Connection Exists
+        if (empty($config)) {
+            throw new \RuntimeException("Database [default] Connection Name Doesn't Exists!");
+        }
+        // Start Default Connections
+        try {
+            Connection::add($config);
+        } catch (\Throwable $e) {
+            throw new HttpException(500, "Database Connection Error: {$e->getMessage()}");
         }
         return;
     }
 
     /**
-     * Set Time Zone
-     * @return void
-     */
-    public static function timezone(): void
-    {
-        // Set Date Time
-        date_default_timezone_set(\do_hook('time.zone', 'Europe/London'));
-    }
-
-    /**
-     * Set Session
+     * Set DB Session
      * @return void
      */
     public static function session(): void
     {
-        if (\do_hook('option.bool', 'dbsession', false)) {
+        if (Connection::has('default')) {
             SessionManager::config(Connection::get());
             return;
         }

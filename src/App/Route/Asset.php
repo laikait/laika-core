@@ -25,7 +25,7 @@ class Asset
     /**
      * @var string $templateSrc
      */
-    public static string $template = '/template-src';
+    public static string $template = '/tpl-src';
 
     /**
      * Accepted File Types
@@ -49,9 +49,9 @@ class Asset
      */
     public static function addType(string $ext, string $mime): void
     {
-        $ext = strtolower(trim($ext));
-        $mime = strtolower(trim($mime));
-        self::$acceptedTypes = array_merge(self::$acceptedTypes, [$ext => $mime]);
+        $ext = \strtolower(trim($ext));
+        $mime = \strtolower(trim($mime));
+        self::$acceptedTypes = \array_merge(self::$acceptedTypes, [$ext => $mime]);
         return;
     }
 
@@ -63,24 +63,26 @@ class Asset
     {
         Router::get(self::$app . '/{name:.+}', function($name) {
             // Trim leading/trailing slashes
-            $name = str_replace('../', '', $name);
-            $name = str_replace('./', '', $name);
-            $name = trim($name, '/');
+            $name = \str_replace('../', '', $name);
+            $name = \str_replace('./', '', $name);
+            $name = \trim($name, '/');
 
             // Supported Content Types
             $types = self::$acceptedTypes;
 
             // Get Asset File Path
             $file = APP_PATH . "/lf-assets/{$name}";
-            if(!is_file($file)){
-                http_response_code(404);
+            if(!\is_file($file)){
+                \http_response_code(404);
                 return;
             }
 
             // Read File
-            $ext = pathinfo($file, PATHINFO_EXTENSION);
-            if (array_key_exists(strtolower($ext), $types)) header("Content-Type: {$types[$ext]}");
-            readfile($file);
+            $ext = \pathinfo($file, PATHINFO_EXTENSION);
+            if (\array_key_exists(\strtolower($ext), $types)) {
+                \header("Content-Type: {$types[$ext]}");
+            }
+            \readfile($file);
             return;
         })->name('app.src');
     }
@@ -93,24 +95,26 @@ class Asset
     {
         Router::get(self::$template . '/{name:.+}', function($name) {
             // Trim leading/trailing slashes
-            $name = str_replace('../', '', $name);
-            $name = str_replace('./', '', $name);
-            $name = trim($name, '/');
+            $name = \str_replace('../', '', $name);
+            $name = \str_replace('./', '', $name);
+            $name = \trim($name, '/');
 
             // Supported Content Types
             $types = self::$acceptedTypes;
 
             // Get Asset File Path
             $file = APP_PATH."/lf-templates/{$name}";
-            if(!is_file($file)){
-                http_response_code(404);
+            if(!\is_file($file)){
+                \http_response_code(404);
                 return;
             }
 
             // Read File
-            $ext = pathinfo($file, PATHINFO_EXTENSION);
-            if (array_key_exists(strtolower($ext), $types)) header("Content-Type: {$types[$ext]}");
-            readfile($file);
+            $ext = \pathinfo($file, PATHINFO_EXTENSION);
+            if (\array_key_exists(strtolower($ext), $types)) {
+                \header("Content-Type: {$types[$ext]}");
+            }
+            \readfile($file);
             return;
         })->name('template.src');
     }

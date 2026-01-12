@@ -27,7 +27,7 @@ class Generate extends Command
     public function run(array $params): void
     {
         $byte = $params[0] ?? 32;
-        if (!is_numeric($byte) || ((int) $byte < 1)) {
+        if (!\is_numeric($byte) || ((int) $byte < 1)) {
             $this->error("USAGE: php laika generate:secret <byte_number::optional>");
             return;
         }
@@ -35,11 +35,11 @@ class Generate extends Command
         $byte = (int) $byte;
         // Create Secret Config File if Not Exist
         if (!Config::has('secret')) {
-            Config::create('secret', ['key' => bin2hex(random_bytes($byte))]);
+            Config::create('secret', ['key' => \bin2hex(\random_bytes($byte))]);
         }
 
         // Create Secret Key Value
-        Config::set('secret', 'key', bin2hex(random_bytes($byte)));
+        Config::set('secret', 'key', \bin2hex(\random_bytes($byte)));
         // Set Message
         $this->info("{$byte} Byte Secret Key Generated Successfully");
         return;

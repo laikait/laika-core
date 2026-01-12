@@ -30,13 +30,13 @@ class Pop extends Command
     public function run(array $params): void
     {
         // Check Parameters
-        if (count($params) < 1) {
+        if (\count($params) < 1) {
             $this->error("USAGE: php laika pop:controller <name>");
             return;
         }
 
         // Check Controller Name is Valid
-        if (!preg_match($this->exp, $params[0])) {
+        if (!\preg_match($this->exp, $params[0])) {
             // Invalid Controller Name
             $this->error("Invalid Controller Name: [{$params[0]}]!");
             return;
@@ -51,12 +51,12 @@ class Pop extends Command
         $file = "{$this->path}/{$parts['name']}.php";
 
         // Check Controller Path is Valid
-        if (!is_file($file)) {
+        if (!\is_file($file)) {
             $this->error("Controller [{$params[0]}] Doesn't Exists!");
             return;
         }
 
-        if (!unlink($file)) {
+        if (!\unlink($file)) {
             $this->error("Failed to Remove Controller: [{$file}]!");
             return;
         }

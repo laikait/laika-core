@@ -34,10 +34,10 @@ class Handler
     public static function register()
     {
         // Handle exceptions
-        set_exception_handler([new Handler(), 'handle']);
+        \set_exception_handler([new Handler(), 'handle']);
 
         // Convert PHP warnings & notices into exceptions
-        set_error_handler(function ($severity, $message, $file, $line) {
+        \set_error_handler(function ($severity, $message, $file, $line) {
             throw new \ErrorException($message, 0, $severity, $file, $line);
         });
         return;
@@ -64,19 +64,19 @@ class Handler
         // Create Directory If Not Exists
         Directory::make($logDir);
 
-        $file = $logDir . '/' . date('Y') . '-' . date('M') . '-' . date('d') . '-error.log';
+        $file = $logDir . '/' . \date('Y') . '-' . \date('M') . '-' . \date('d') . '-error.log';
 
-        $log = sprintf(
+        $log = \sprintf(
             "[%s] %s: %s in %s on line %d\nTrace:\n%s\n\n",
-            date('Y-M-d H:i:s'),
-            get_class($e),
+            \date('Y-M-d H:i:s'),
+            \get_class($e),
             $e->getMessage(),
             $e->getFile(),
             $e->getLine(),
             $e->getTraceAsString()
         );
 
-        file_put_contents($file, $log, FILE_APPEND);
+        \file_put_contents($file, $log, FILE_APPEND);
         return;
     }
 
@@ -86,7 +86,7 @@ class Handler
     protected function render(Throwable $e): void
     {
         if ($this->wantsJson()) {
-            Response::instance()->setHeader(['content-type'=>'application/json']);
+            \call_user_func([new Response, 'setHeader'], ['content-type'=>'application/json']);
             $this->renderJson($e);
         } else {
             $this->renderHtml($e);
@@ -98,7 +98,7 @@ class Handler
     {
         return (
             ($_SERVER['HTTP_ACCEPT'] ?? '') === 'application/json'
-            || str_starts_with($_SERVER['CONTENT_TYPE'] ?? '', 'application/json')
+            || \str_starts_with($_SERVER['CONTENT_TYPE'] ?? '', 'application/json')
             || ($_SERVER['HTTP_X_REQUESTED_WITH'] ?? '') === 'XMLHttpRequest'
         );
     }
@@ -115,9 +115,9 @@ class Handler
     private function renderJson(Throwable $e)
     {
         if ($e instanceof ValidationException) {
-            http_response_code($e->getStatusCode());
+            \http_response_code($e->getStatusCode());
 
-            echo json_encode([
+            echo \json_encode([
                 'message' => $e->getMessage(),
                 'errors' => $e->errors(),
             ]);
@@ -125,18 +125,18 @@ class Handler
         }
 
         if ($e instanceof HttpException) {
-            http_response_code($e->getStatusCode());
+            \http_response_code($e->getStatusCode());
 
-            echo json_encode([
+            echo \json_encode([
                 'message' => $e->getMessage(),
             ]);
             return;
         }
 
         // Fallback for unknown errors
-        http_response_code(500);
+        \http_response_code(500);
 
-        echo json_encode([
+        echo \json_encode([
             'message' => 'Laika Application Error!',
             'exception' => $this->debug ? $e->getMessage() : null,
         ]);
@@ -155,7 +155,7 @@ class Handler
             $code = $e->getStatusCode();
         }
 
-        http_response_code($code);
+        \http_response_code($code);
         echo "<h1>Something Went Wrong!</h1>";
         return;
     }
