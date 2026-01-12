@@ -29,7 +29,7 @@ class {{NAME}} extends Model
      * Migrate Table
      * @return mixed
      */
-    public function migrate(): mixed
+    public function migrate()
     {
         // Maigrate Table
         Schema::table($this->table)
@@ -38,6 +38,5 @@ class {{NAME}} extends Model
                     $t->column('sample')->varchar();
                     $t->column('status')->enum(['active', 'inactive'])->default('inactive');
                 })->execute();
-        return;
     }
 }
