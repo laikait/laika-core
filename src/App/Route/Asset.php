@@ -116,6 +116,6 @@ class Asset
             }
             \readfile($file);
             return;
-        })->name('template.src');
+        })->name('tpl.src');
     }
 }
