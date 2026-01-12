@@ -71,5 +71,11 @@ class ListCommands extends Command
             Generate:   php laika generate:secret <byte_number::optional>
             Pop     :   php laika pop:secret\n\n
         SECRET;
+
+        // MIGRATE
+        echo <<<MIGRATE
+        ## MIGRATE
+            Migrate :   php laika migrate <connection::optional> <model::optional>
+        MIGRATE;
     }
 }
