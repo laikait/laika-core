@@ -86,7 +86,7 @@ class Handler
     protected function render(Throwable $e): void
     {
         if ($this->wantsJson()) {
-            Response::instance()->setHeader(['content-type'=>'application/json']);
+            call_user_func([new Response, 'setHeader'], ['content-type'=>'application/json']);
             $this->renderJson($e);
         } else {
             $this->renderHtml($e);

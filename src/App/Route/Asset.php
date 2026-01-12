@@ -25,7 +25,7 @@ class Asset
     /**
      * @var string $templateSrc
      */
-    public static string $template = '/template-src';
+    public static string $template = '/tpl-src';
 
     /**
      * Accepted File Types

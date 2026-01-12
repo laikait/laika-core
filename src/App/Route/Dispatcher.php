@@ -238,10 +238,7 @@ class Dispatcher
          * Start Session
          */
         Connect::session();
-        /**
-         * Start Time Zone
-         */
-        Connect::timezone();
+
         /**
          * Load Hooks
          */

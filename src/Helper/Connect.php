@@ -41,16 +41,6 @@ class Connect
     }
 
     /**
-     * Set Time Zone
-     * @return void
-     */
-    public static function timezone(): void
-    {
-        // Set Date Time
-        date_default_timezone_set(\do_hook('option', 'time.zone', 'Europe/London'));
-    }
-
-    /**
      * Set Session
      * @return void
      */

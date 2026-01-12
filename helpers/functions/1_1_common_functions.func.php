@@ -61,31 +61,6 @@ function purify(array $data): array
     }, $data);
 }
 
-// Redirect
-/**
- * @param string|array $slug Required Argument
- * @param ?array $params Optional Argument.
- * @return void
-*/
-function redirect(string|array $slug, ?array $params = null): void
-{
-    // Redirect if $slug is an URL
-    if (parse_url($slug, PHP_URL_HOST)) {
-        header('Location:' . $slug, true);
-        die();
-    }
-    // Convert to String if Slug is Array
-    if (is_array($slug)) {
-        $slug = implode('/', array_map('trim', $slug));
-    }
-    $slug = str_replace('\\', '/', $slug);
-    $slug = trim($slug, '/');
-
-    // Redirect
-    header('Location:' . call_user_func([new Url, 'build'], $slug, $params ?: []), true);
-    die();
-}
-
 /**
  * Add Hook
  * @param string $filter Filter Name.
@@ -137,26 +112,16 @@ function named(string $name, array $params = [], bool $url = false): string
     $path = trim(Router::url($named, $params), '/');
     $path = $qstring ? "{$path}?{$qstring}" : $path;
     // Return Named Path/URL
-    return $url ? trim(do_hook('app.host'), '/') . "/{$path}" : $path;
-}
-
-/**
- * Show Date
- * @param int $unixtime
- * @return string
- */
-function showdate(int $unixtime): string
-{
-    return do_hook('date.show', $unixtime);
+    return $url ? rtrim(call_user_func([new Url, 'base']), '/') . "/{$path}" : $path;
 }
 
 /**
  * Throw Exception and Abort
- * @param int $code Error Code
+ * @param int $code Error Code. Default is 500
  * @param ?string $message Error Message
  * @return void
  */
-function abort(int $code, ?string $message = null): void
+function http_exception(int $code = 500, ?string $message = null): void
 {
     $message = $message ?: (call_user_func([new Response, 'codes'])[$code] ?? 'Unknown Error!');
     throw new HttpException($code, $message);
@@ -175,7 +140,7 @@ function report_bug(Throwable $th): void
 /**
  * API Response
  */
-function response()
+function api()
 {
     return new class {
         public function success(array $data = [], string $message = 'Success', int $status = 200, array $meta = []) {
