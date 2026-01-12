@@ -32,11 +32,10 @@ class {{NAME}} extends Model
     public function migrate()
     {
         // Maigrate Table
-        Schema::table($this->table)
-                ->create(function (Blueprint $t) {
-                    $t->column($this->id)->int()->auto();
-                    $t->column('sample')->varchar();
-                    $t->column('status')->enum(['active', 'inactive'])->default('inactive');
-                })->execute();
+        Schema::table($this->table)->create(function (Blueprint $t) {
+            $t->column($this->id)->int()->auto();
+            $t->column('sample')->varchar();
+            $t->column('status')->enum(['active', 'inactive'])->default('inactive');
+        })->execute();
     }
 }
