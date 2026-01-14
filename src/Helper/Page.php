@@ -30,11 +30,12 @@ class Page
     ##################################################################
     /**
      * Total Elements
-     * @param ?int $totalElements Default is null
+     * @param int $totalElements Total Elements
+     * @param int|string $limit Data Limits to Show. Default is 20
      */
-    public function __construct(?int $totalElements = null, int|string $limit)
+    public function __construct(int $totalElements = 0, int|string $limit = 20)
     {
-        $this->totalElements = (int) $totalElements < 1  ? 1 : (int) $totalElements;
+        $this->totalElements = $totalElements < 1  ? 1 : $totalElements;
         $this->totalPages = (int) \ceil($this->totalElements / (int) $limit);
     }
 

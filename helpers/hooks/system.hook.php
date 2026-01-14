@@ -220,7 +220,7 @@ add_hook('request.input', function(string $key, mixed $default = ''): mixed {
 /**
  * Get Request Values
  */
-add_hook('request.all', function(): array {
+add_hook('request.inputs', function(): array {
     return call_user_func([new Request, 'inputs']);
 });
 
