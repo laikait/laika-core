@@ -29,7 +29,11 @@ class Redirect
      */
     public function back(string $named = '/', int $code = 302): void
     {
-        $this->send($_SERVER['HTTP_REFERER'] ?? \named($named, url:true), $code);
+        $url = \parse_url($named, PHP_URL_HOST);
+        if (empty($url)) {
+            $url = \named($named, url:true);
+        }
+        $this->send($_SERVER['HTTP_REFERER'] ?? $url, $code);
     }
 
     /**
@@ -51,11 +55,11 @@ class Redirect
      * @param int $code HTTP Status Code. Default is 302.
      * @return void
      */
-    public function to(string $to, array $params = [], int $code = 302): void
+    public function to(string $to, int $code = 302): void
     {
         $url = \parse_url($to, PHP_URL_HOST);
         if (empty($url)) {
-            $url = \named($to, $params, true);
+            $url = \named($to, url:true);
         }
         $this->send($url, $code);
         return;
