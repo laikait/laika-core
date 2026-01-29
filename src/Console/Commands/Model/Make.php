@@ -21,6 +21,9 @@ class Make extends Command
     // App Model Path
     protected string $path = APP_PATH . '/lf-app/Model';
 
+    // App Migration Path
+    protected string $migrationPath = APP_PATH . '/lf-app/Migration';
+
     // Accepted Regular Expresion
     private string $exp = '/^[a-zA-Z_\/][a-zA-Z0-9_\/]+$/';
 
@@ -32,19 +35,21 @@ class Make extends Command
     {
         // Check Parameters
         if (\count($params) < 1) {
-            $this->error("USAGE: php laika make:model <name> <table::optional> <id::optional>");
+            $this->error("USAGE: php laika make:model <name> <table::optional>");
             return;
         }
-
-        // Table Name
-        $table = $params[1] ?? 'table_name';
 
         if (!\preg_match($this->exp, $params[0])) {
             // Invalid Name
             $this->error("Invalid Model Name: [{$params[0]}]!");
             return;
         }
+
+        // Get Class & Namespace Parts
         $parts = $this->parts($params[0]);
+
+        // Table Name
+        $table = strtolower($params[1] ?? $parts['name']);
 
         $this->path .= $parts['path'];
 
@@ -74,8 +79,24 @@ class Make extends Command
             $table
         ], $content);
 
+        // Create Model File
         if (\file_put_contents($file, $content) === false) {
             $this->error("Failed to Create Model: {$file}!");
+            return;
+        }
+
+        // Migration File
+        $migrationFile = "{$this->migrationPath}/" . ucfirst($table) . ".php";
+
+        // Get Sample Migration Content
+        $migrationContent = \file_get_contents(__DIR__ . '/../../Samples/Migration.sample');
+
+        // Replace Placeholders in Migration File
+        $migrationContent = \str_replace('{{TABLE}}', ucfirst($table), $migrationContent);
+
+        // Create Migration File
+        if (\file_put_contents($migrationFile, $migrationContent) === false) {
+            $this->error("Failed to Create Migration File: {$migrationFile}!");
             return;
         }
 

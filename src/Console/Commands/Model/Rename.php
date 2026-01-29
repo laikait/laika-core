@@ -22,6 +22,9 @@ class Rename extends Command
     // App Model Old Path
     protected string $old_path = APP_PATH . '/lf-app/Model';
 
+    // App Migration Path
+    protected string $migrationPath = APP_PATH . '/lf-app/Migration';
+
     // App Model New Path
     protected string $new_path = APP_PATH . '/lf-app/Model';
 

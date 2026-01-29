@@ -20,6 +20,9 @@ class Pop extends Command
     // App Model Path
     protected string $path = APP_PATH . '/lf-app/Model';
 
+    // App Migration Path
+    protected string $migrationPath = APP_PATH . '/lf-app/Migration';
+
     // Accepted Regular Expresion
     private string $exp = '/^[a-zA-Z_\/][a-zA-Z0-9_\/]+$/';
 
@@ -48,7 +51,14 @@ class Pop extends Command
         $this->path .= $parts['path'];
 
 
+        $namespace = "\\Laika\\App\\Model";
+        if ($parts['namespace']) {
+            $namespace .= "{$parts['namespace']}";
+        }
+        $class = "{$namespace}\\{$parts['name']}";
+
         $file = "{$this->path}/{$parts['name']}.php";
+        $migrationFile = "{$this->migrationPath}/" . ucfirst($parts['name']) . ".php";
 
         if (!\is_file($file)) {
             $this->error("Model [{$params[0]}] Doesn't Exist!");
@@ -60,7 +70,12 @@ class Pop extends Command
             return;
         }
 
-        $this->info("Model [{$params[0]}] Created Successfully!");
+        if (!\unlink($migrationFile)) {
+            $this->error("Failed to Remove Migration File: [{$migrationFile}]!");
+            return;
+        }
+
+        $this->info("Model [{$params[0]}] Removed Successfully!");
         return;
     }
 }
