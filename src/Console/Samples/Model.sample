@@ -11,7 +11,7 @@
 
 declare(strict_types=1);
 
-namespace Laika\App\Model{{NAMESPACE}};
+namespace Laika\App\Model;
 
 // Deny Direct Access
 defined('APP_PATH') || http_response_code(403).die('403 Direct Access Denied!');
@@ -21,7 +21,7 @@ use Laika\Model\Model;
 class {{NAME}} extends Model
 {
     // Table Name
-    protected string $table = '{{TABLE_NAME}}';
+    protected string $table = '{{TABLE}}';
 
     // Start Code From Here
 }

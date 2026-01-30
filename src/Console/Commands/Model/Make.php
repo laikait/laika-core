@@ -25,7 +25,7 @@ class Make extends Command
     protected string $migrationPath = APP_PATH . '/lf-app/Migration';
 
     // Accepted Regular Expresion
-    private string $exp = '/^[a-zA-Z_\/][a-zA-Z0-9_\/]+$/';
+    private string $exp = '/^[a-zA-Z_]+$/';
 
     /**
      * @param array $params
@@ -45,23 +45,20 @@ class Make extends Command
             return;
         }
 
-        // Get Class & Namespace Parts
-        $parts = $this->parts($params[0]);
-
+        // Model Name
+        $name = $params[0];
         // Table Name
-        $table = strtolower($params[1] ?? $parts['name']);
-
-        $this->path .= $parts['path'];
+        $table = strtolower($params[1] ?? $name);
 
         // Make Directory if Not Exist
         if (!Directory::exists($this->path)) {
             Directory::make($this->path);
         }
 
-        $file = "{$this->path}/{$parts['name']}.php";
+        $file = "{$this->path}/{$name}.php";
 
         if (\is_file($file)) {
-            $this->error("Model [{$params[0]}] Already Exist!");
+            $this->error("Model [{$params[0]}] Already Exists!");
             return;
         }
 
@@ -69,15 +66,7 @@ class Make extends Command
         $content = \file_get_contents(__DIR__ . '/../../Samples/Model.sample');
 
         // Replace Placeholders
-        $content = \str_replace([
-            '{{NAMESPACE}}',
-            '{{NAME}}',
-            '{{TABLE_NAME}}'
-        ], [
-            $parts['namespace'],
-            $parts['name'],
-            $table
-        ], $content);
+        $content = \str_replace(['{{NAME}}','{{TABLE}}'], [$name, $table], $content);
 
         // Create Model File
         if (\file_put_contents($file, $content) === false) {
@@ -86,13 +75,13 @@ class Make extends Command
         }
 
         // Migration File
-        $migrationFile = "{$this->migrationPath}/" . ucfirst($table) . ".php";
+        $migrationFile = "{$this->migrationPath}/{$name}.php";
 
         // Get Sample Migration Content
         $migrationContent = \file_get_contents(__DIR__ . '/../../Samples/Migration.sample');
 
         // Replace Placeholders in Migration File
-        $migrationContent = \str_replace('{{TABLE}}', ucfirst($table), $migrationContent);
+        $migrationContent = \str_replace(['{{NAME}}','{{TABLE}}'], [$name, $table], $migrationContent);
 
         // Create Migration File
         if (\file_put_contents($migrationFile, $migrationContent) === false) {

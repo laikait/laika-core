@@ -11,15 +11,14 @@ defined('APP_PATH') || http_response_code(403).die('403 Direct Access Denied!');
 use Laika\Model\Blueprint;
 use Laika\Model\Schema;
 
-class {{TABLE}}
+class {{NAME}}
 {
     /**
      * Migrate Table
-     * @param string $table Table Name
      */
-    public function migrate(string $table)
+    public function migrate()
     {
-        Schema::table($table)->create(function (Blueprint $t) {
+        Schema::table('{{TABLE}}')->create(function (Blueprint $t) {
             $t->column('id')->int()->unsigned()->auto();
             $t->column('uuid')->varchar()->length(50)->unique();
             $t->column('status')->enum(['active','inactive'])->default('active')->index();

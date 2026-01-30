@@ -21,13 +21,14 @@ class Infra
     /*============================ Model Info ============================*/
     public function getModels(): array
     {
-        $files = str_replace('/', '\\', APP_PATH . '/lf-app/Model');
+        $files = APP_PATH . '/lf-app/Model';
         // Get Model Paths
-        $paths = Directory::scanRecursive($files, true, 'php');
+        $paths = Directory::files($files, 'php');
         $models = [];
         foreach ($paths as $path) {
             if (is_file($path)) {
-                $models[] = 'Laika\\App\\Model\\' . str_replace(["{$files}\\", '.php', '/'], ['', '', '\\'], $path);
+                $info = pathinfo($path, PATHINFO_FILENAME);
+                $models[$info] = "Laika\\App\\Model\\{$info}";
             }
         }
         return $models;
@@ -39,16 +40,16 @@ class Infra
      */
     public function migrateModels(): void
     {
-        $models = $this->getModels();
-        foreach ($models as $model) {
-            $table = call_user_func([new $model, 'getTable']);
-            $class = "\\Laika\\App\\Migration\\" . ucfirst($table);
+        $models = array_keys($this->getModels());
+        foreach ($models as $name) {
+            $class = "\\Laika\\App\\Migration\\{$name}";
 
+            // Check Class Exists
             if (!class_exists($class)) {
                 throw new \Exception("Migration Class Not Found: {$class}");
             }
-            $obj = new $class();
-            \call_user_func([$obj, 'migrate'], $table);
+            // Migrate Model
+            \call_user_func([new $class, 'migrate']);
         }
         return;
     }
