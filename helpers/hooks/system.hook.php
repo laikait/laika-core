@@ -263,8 +263,8 @@ add_hook('tpl.scripts', function(): string{
 
 /*================================== COMMON HOOKS ==================================*/
 /**
- * DB Date Format
+ * Date Format
  */
-add_hook('default_date_format', function () {
+add_hook('date.format', function () {
     return date('Y-m-d H:i:s');
 }, 1000);
