@@ -17,23 +17,46 @@ use Laika\Session\Session;
 
 class Redirect
 {
+    /**
+     * @var string $named
+     */
+    protected string $named;
+
+    /**
+     * @var array $args
+     */
+    protected array $args;
+
     ##################################################################
     /*------------------------- PUBLIC API -------------------------*/
     ##################################################################
 
-    /**
-     * Redirect Back to The Previous Link
-     * @param string $named Named Route if Rrequired. Default is '/'
-     * @param int $code Response Code. Default is 302
-     * @return void
-     */
-    public function back(string $named = '/', int $code = 302): void
+    public function __construct()
     {
-        $url = \parse_url($named, PHP_URL_HOST);
-        if (empty($url)) {
-            $url = \named($named, url:true);
-        }
-        $this->send($_SERVER['HTTP_REFERER'] ?? $url, $code);
+        $this->named = '';
+        $this->args = [];
+    }
+
+    /**
+     * Redirect to Named
+     * @param string $named
+     * @return self
+     */
+    public function named(string $named): self
+    {
+        $this->named = $named;
+        return $this;
+    }
+
+    /**
+     * Redirect to Named With Params
+     * @param array $args
+     * @return self
+     */
+    public function args(array $args): self
+    {
+        $this->args = $args;
+        return $this;
     }
 
     /**
@@ -49,6 +72,24 @@ class Redirect
     }
 
     /**
+     * Redirect Back to The Previous Link
+     * @param string $named Named Route if Rrequired. Default is '/'
+     * @param int $code Response Code. Default is 302
+     * @return void
+     */
+    public function back(string $named = '/', int $code = 302): void
+    {
+        // Verify Named
+        $this->checkNamed();
+
+        $url = \parse_url($named, PHP_URL_HOST);
+        if (empty($url)) {
+            $url = \named($named, url:true);
+        }
+        $this->send($_SERVER['HTTP_REFERER'] ?? $url, $code);
+    }
+
+    /**
      * Redirect to A Link
      * @param string $to Named/URL to Redirect.
      * @param array $params Named Roue Parameters.
@@ -57,6 +98,9 @@ class Redirect
      */
     public function to(string $to, int $code = 302): void
     {
+        // Verify Named
+        $this->checkNamed();
+
         $url = \parse_url($to, PHP_URL_HOST);
         if (empty($url)) {
             $url = \named($to, url:true);
@@ -68,6 +112,16 @@ class Redirect
     ####################################################################
     /*------------------------- INTERNAL API -------------------------*/
     ####################################################################
+
+    /**
+     * Verify Named & Args
+     */
+    private function checkNamed()
+    {
+        if (!empty($this->named)) {
+            $this->send(\named($this->named, $this->args, true));
+        }
+    }
 
     /**
      * Redirect
