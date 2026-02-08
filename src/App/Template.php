@@ -129,7 +129,7 @@ class Template
      * Get Assigned Vars
      * @return array
      */
-    public function getVars(): array
+    public function vars(): array
     {
         return $this->vars;
     }
