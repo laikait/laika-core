@@ -63,7 +63,7 @@ add_hook('app.local', function(string $property, ...$args): string {
         throw new RuntimeException("'LANG' Class Doesn't Exists!");
     }
     // Return if Class Exists
-    if (!LANG::$$property) {
+    if (!isset(LANG::$$property)) {
         throw new InvalidArgumentException("Invalid Language Property: [$property]");
     }
     return \sprintf(LANG::$$property, ...$args);
