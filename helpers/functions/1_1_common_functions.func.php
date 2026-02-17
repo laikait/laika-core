@@ -138,22 +138,6 @@ function report_bug(Throwable $th): void
 }
 
 /**
- * API Response
- */
-function api()
-{
-    return new class {
-        public function success(array $data = [], string $message = 'Success', int $status = 200, array $meta = []) {
-            ApiResponse::success($data, $message, $status, $meta);
-        }
-
-        public function error(string $message = 'Error', int $status = 400, array $errors = [], array $meta = []) {
-            ApiResponse::error($message, $status, $errors, $meta);
-        }
-    };
-}
-
-/**
  * Config Obejct
  * @param string $name Config Name. Rrequired Argument. Example: app, database etc.
  * @param ?string $key Config Key. Optional Argument. Example: name, version etc.

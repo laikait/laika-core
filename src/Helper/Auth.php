@@ -25,7 +25,7 @@ class Auth extends Model
     private string $type;
 
     // DB Table Name
-    public string $table;
+    protected string $table;
 
     // Table ID Column
     public string $id;

@@ -1,11 +1,11 @@
 <?php
 
 /**
- * Laika PHP MVC Framework
+ * Laika PHP Micro Framework
  * Author: Showket Ahmed
  * Email: riyadhtayf@gmail.com
  * License: MIT
- * This file is part of the Laika PHP MVC Framework.
+ * This file is part of the Laika PHP Micro Framework.
  * For the full copyright and license information, please view the LICENSE file that was distributed with this source code.
  */
 
@@ -14,15 +14,14 @@ declare(strict_types=1);
 namespace Laika\Core\App\Route;
 
 use Laika\Core\Exceptions\Handler as ErrorHandler;
-use Laika\Core\Helper\Url as UriHelper;
+use Laika\Core\Helper\Url as UrlHelper;
 use Laika\Core\Helper\Directory;
-use Laika\Core\Helper\Connect;
+use Laika\Core\Http\Request;
 use Laika\Core\Http\Response;
 use Laika\Core\Helper\Config;
 use Laika\Core\Helper\Client;
 use Laika\Core\Helper\Token;
 use Laika\Core\App\Env;
-use RuntimeException;
 
 class Dispatcher
 {
@@ -32,7 +31,7 @@ class Dispatcher
         self::PreDispatcher();
 
         // Get Request Url
-        $requestUrl = Url::normalize(call_user_func([new UriHelper, 'path']));
+        $requestUrl = Url::normalize(call_user_func([new UrlHelper, 'path']));
         
         // Get If Request Uri Matched With Router List
         $res = Url::matchRequestRoute($requestUrl);
@@ -41,14 +40,14 @@ class Dispatcher
         $params = $res['params'];
 
         // Check URL is for Web
-        $isWebUrl = !\str_starts_with($res['route'] ?? '', Asset::$app) && !\str_starts_with($res['route'] ?? '', Asset::$template);
+        $asset = new Asset();
+
+        $isWebUrl = !\str_starts_with($res['route'] ?? '', $asset->app) && !\str_starts_with($res['route'] ?? '', $asset->template);
         
         // Add Additional Headers if Not Resource Route
         if ($isWebUrl) {
-                // Register Additional Headers
-                self::RegisterAdditionalHeaders();
-                // Register DB, Session, Timezone 
-                self::RegisterInitiators();
+            // Register DB, Session, Timezone 
+            self::RegisterInitiators();
         }
 
         // Execute Fallback For Invalid Route
@@ -82,6 +81,12 @@ class Dispatcher
         $routes = Handler::getRoutes(Url::method());
         $route = $routes[$res['route']];
 
+        // Return if Asset Route
+        if (!$isWebUrl) {
+            Invoke::middleware([], $route['controller'], $params);
+            return;
+        }
+
         // Collect before middlewares in order
         $middlewares = \array_merge(
             $route['middlewares']['global'],
@@ -90,35 +95,38 @@ class Dispatcher
         );
 
         // Run Middlewares -> Controller
+        $request = new Request;
+        $response = new Response;
+
+        // Get Output
         try {
-            $response = $isWebUrl ? Invoke::middleware($middlewares, $route['controller'], $params) :
-                            Invoke::middleware([], $route['controller'], $params);
+            $output = Invoke::middleware($middlewares, $route['controller'], $params, $request, $response);
         } catch (\Throwable $e) {
+            throw new \RuntimeException("Dispather Issue: {$e->getMessage()}");
             \report_bug($e);
         }
 
-        if ($isWebUrl) {
-            // Run Afterware
-            $afterwares = array_merge(
-                $route['afterwares']['global'],
-                $route['afterwares']['group'],
-                $route['afterwares']['route']
-            );
+        // Run Afterware
+        $afterwares = array_merge(
+            $route['afterwares']['global'],
+            $route['afterwares']['group'],
+            $route['afterwares']['route']
+        );
 
-            try {
-                echo empty($afterwares) ? $response : Invoke::afterware($afterwares, $response, $params);
-            } catch (\Throwable $e) {
-                \report_bug($e);
-            }
+        try {
+            echo empty($afterwares) ? $output : Invoke::afterware($afterwares, $output, $params, $request, $response);
+        } catch (\Throwable $e) {
+            \report_bug($e);
         }
         return;
     }
 
+    /*================================= PRIVATE API =================================*/
     /**
      * Connect App
      * @return void
      */
-    private static function RegisterAdditionalHeaders(): void
+    private static function RegisterHeaders(): void
     {
         // Set Headers
         $token = new Token();
@@ -127,7 +135,7 @@ class Dispatcher
             "App-Name"      =>  \do_hook('config.app', 'name', 'Laika Framework'),
             "Authorization" =>  $token->generate([
                 'uid'       =>  \mt_rand(100001, 999999),
-                'requestor' =>  \call_user_func([new UriHelper, 'base'])
+                'requestor' =>  \call_user_func([new UrlHelper, 'base'])
             ])
         ];
         \call_user_func([new Response, 'setHeader'], $headers);
@@ -145,12 +153,13 @@ class Dispatcher
             APP_PATH . '/lf-app/Model',
             APP_PATH . '/lf-app/Middleware',
             APP_PATH . '/lf-app/Afterware',
+            APP_PATH . '/lf-app/Migration'
         ];
 
         foreach ($dirs as $dir) {
             if (!\is_dir($dir)) {
                 if (!\mkdir($dir, 0755, true)) {
-                    throw new RuntimeException("Failed to Create Directory: {$dir}");
+                    throw new \RuntimeException("Failed to Create Directory: {$dir}");
                 }
             }
         }
@@ -218,9 +227,8 @@ class Dispatcher
         // Load Routes
         Url::LoadRoutes();
 
-        // Load App & Template Routes
-        Asset::registerAppResource();
-        Asset::registerTemplateResource();
+        // Load App & Template Assets Route
+        \call_user_func([new Asset(), 'registerAssetRoute']);
         return;
     }
 
@@ -228,17 +236,12 @@ class Dispatcher
      * Start Database, Session, Local, Timezone & Load Hook Files
      * @return void
      */
-    public static function RegisterInitiators(): void
+    private static function RegisterInitiators(): void
     {
         /**
-         * Start Database
+         * Register Headers
          */
-        Connect::db();
-        /**
-         * Start Session
-         */
-        Connect::session();
-
+        self::RegisterHeaders();
         /**
          * Load Hooks
          */

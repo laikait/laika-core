@@ -12,7 +12,6 @@
 declare(strict_types=1);
 
 namespace Laika\Core\Console;
-use Laika\Model\Connection;
 
 class Kernel
 {
@@ -67,6 +66,11 @@ class Kernel
             'rename:middleware'     =>  \Laika\Core\Console\Commands\Middleware\Rename::class,
             'pop:middleware'        =>  \Laika\Core\Console\Commands\Middleware\Pop::class,
             'list:middleware'       =>  \Laika\Core\Console\Commands\Middleware\Lists::class,
+            /* Afterware Commands */
+            'make:afterware'       =>  \Laika\Core\Console\Commands\Afterware\Make::class,
+            'rename:afterware'     =>  \Laika\Core\Console\Commands\Afterware\Rename::class,
+            'pop:afterware'        =>  \Laika\Core\Console\Commands\Afterware\Pop::class,
+            'list:afterware'       =>  \Laika\Core\Console\Commands\Afterware\Lists::class,
             /* Model Commands */
             'make:model'            =>  \Laika\Core\Console\Commands\Model\Make::class,
             'rename:model'          =>  \Laika\Core\Console\Commands\Model\Rename::class,

@@ -21,8 +21,11 @@ class Make extends Command
     // App Model Path
     protected string $path = APP_PATH . '/lf-app/Model';
 
+    // App Migration Path
+    protected string $migrationPath = APP_PATH . '/lf-app/Migration';
+
     // Accepted Regular Expresion
-    private string $exp = '/^[a-zA-Z_\/][a-zA-Z0-9_\/]+$/';
+    private string $exp = '/^[a-zA-Z_]+$/';
 
     /**
      * @param array $params
@@ -32,31 +35,30 @@ class Make extends Command
     {
         // Check Parameters
         if (\count($params) < 1) {
-            $this->error("USAGE: php laika make:model <name> <table::optional> <id::optional>");
+            $this->error("USAGE: php laika make:model <name> <table::optional>");
             return;
         }
-
-        // Table Name
-        $table = $params[1] ?? 'table_name';
 
         if (!\preg_match($this->exp, $params[0])) {
             // Invalid Name
             $this->error("Invalid Model Name: [{$params[0]}]!");
             return;
         }
-        $parts = $this->parts($params[0]);
 
-        $this->path .= $parts['path'];
+        // Model Name
+        $name = $params[0];
+        // Table Name
+        $table = strtolower($params[1] ?? $name);
 
         // Make Directory if Not Exist
         if (!Directory::exists($this->path)) {
             Directory::make($this->path);
         }
 
-        $file = "{$this->path}/{$parts['name']}.php";
+        $file = "{$this->path}/{$name}.php";
 
         if (\is_file($file)) {
-            $this->error("Model [{$params[0]}] Already Exist!");
+            $this->error("Model [{$params[0]}] Already Exists!");
             return;
         }
 
@@ -64,18 +66,26 @@ class Make extends Command
         $content = \file_get_contents(__DIR__ . '/../../Samples/Model.sample');
 
         // Replace Placeholders
-        $content = \str_replace([
-            '{{NAMESPACE}}',
-            '{{NAME}}',
-            '{{TABLE_NAME}}'
-        ], [
-            $parts['namespace'],
-            $parts['name'],
-            $table
-        ], $content);
+        $content = \str_replace(['{{NAME}}','{{TABLE}}'], [$name, $table], $content);
 
+        // Create Model File
         if (\file_put_contents($file, $content) === false) {
             $this->error("Failed to Create Model: {$file}!");
+            return;
+        }
+
+        // Migration File
+        $migrationFile = "{$this->migrationPath}/{$name}.php";
+
+        // Get Sample Migration Content
+        $migrationContent = \file_get_contents(__DIR__ . '/../../Samples/Migration.sample');
+
+        // Replace Placeholders in Migration File
+        $migrationContent = \str_replace(['{{NAME}}','{{TABLE}}'], [$name, $table], $migrationContent);
+
+        // Create Migration File
+        if (\file_put_contents($migrationFile, $migrationContent) === false) {
+            $this->error("Failed to Create Migration File: {$migrationFile}!");
             return;
         }
 

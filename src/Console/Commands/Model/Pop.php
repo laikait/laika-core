@@ -20,8 +20,11 @@ class Pop extends Command
     // App Model Path
     protected string $path = APP_PATH . '/lf-app/Model';
 
+    // App Migration Path
+    protected string $migrationPath = APP_PATH . '/lf-app/Migration';
+
     // Accepted Regular Expresion
-    private string $exp = '/^[a-zA-Z_\/][a-zA-Z0-9_\/]+$/';
+    private string $exp = '/^[a-zA-Z_]+$/';
 
     /**
      * @param array $params
@@ -41,14 +44,13 @@ class Pop extends Command
             return;
         }
 
-        // Get Parts
-        $parts = $this->parts($params[0]);
+        // Model Name
+        $model = $params[0];
+        // Table Name
+        $table = strtolower($params[1] ?? $model);
 
-        // Get Path
-        $this->path .= $parts['path'];
-
-
-        $file = "{$this->path}/{$parts['name']}.php";
+        $file = "{$this->path}/{$model}.php";
+        $migrationFile = "{$this->migrationPath}/{$model}.php";
 
         if (!\is_file($file)) {
             $this->error("Model [{$params[0]}] Doesn't Exist!");
@@ -60,7 +62,12 @@ class Pop extends Command
             return;
         }
 
-        $this->info("Model [{$params[0]}] Created Successfully!");
+        if (is_file($migrationFile) && !\unlink($migrationFile)) {
+            $this->error("Failed to Remove Migration File: [{$migrationFile}]!");
+            return;
+        }
+
+        $this->info("Model [{$params[0]}] Removed Successfully!");
         return;
     }
 }

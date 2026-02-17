@@ -19,8 +19,8 @@ class Validator
      * Validate data according to given rules.
      *
      * @param array $data           Input data (e.g., $_REQUEST)
-     * @param array $rules          Validation rules (e.g., ['email' => 'required|email'])
-     * @param array $customMessages Custom error messages
+     * @param array $rules          Validation rules (e.g., ['email' => 'required|email|regex:/pattern/'])
+     * @param array $customMessages Custom error messages. Example: ['email.required' => 'Email is required.']
      * @return array                Validation errors
      */
     public static function make(array $data, array $rules, array $customMessages = []): array

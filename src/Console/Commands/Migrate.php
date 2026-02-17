@@ -16,7 +16,6 @@ namespace Laika\Core\Console\Commands;
 use Laika\Core\Console\Command;
 use Laika\Core\Helper\Config;
 use Laika\Model\Connection;
-use Exception;
 
 class Migrate extends Command
 {
@@ -27,44 +26,33 @@ class Migrate extends Command
      */
     public function run(array $params): void
     {
-        // Get Values
-        $args = ['connection' => null, 'model'=>null];
-        foreach ($params as $param) {
-            $parts = \explode(':', $param);
-            if (isset($parts[0])) {
-                $args[$parts[0]] = $parts[1] ?? null;
-            }
-        }
+        // Get Single Model if Exists
+        $model = $params[0] ?? null;
 
-        // Set Connection Name
-        $connection = $args['connection'] ?? 'default';
-        // Set Model
-        $model = $args['model'] ?? null;
         // Check DB Config Available
-        $config = Config::get('database', $connection);
-        if (empty($config)) {
-            $this->error("Database [{$connection}] Config Not Found or Missing Parameters!");
+        $config = Config::get('database', 'default');
+        if (empty($config) || !is_array($config)) {
+            $this->error("Database [default] Config Not Found or Missing Parameters!");
             return;
         }
         // Connect DB
-        Connection::add($config, $connection);
+        Connection::add($config);
 
         // Create Table
         try {
-            // Migrate All Available Models
+            // Migrate Migration Tables
             $models = $model ?
-                    ["\\Laika\\App\\Model\\{$model}"] :
+                    ["\\Laika\\App\\Model\\" . ucfirst($model)] :
                     \call_user_func([new \Laika\Core\App\Infra(), 'getModels']);
 
-            // Show Error if No Model Exists
+            // Show Error if No Migration Exists
             if (empty($models)) {
-                $this->error("No Models Found to Migrate!");
+                $this->error("No Migrations Found to Run!");
+                return;
             }
 
-            // Migrate Models
-            foreach ($models as $model) {
-                \call_user_func([new $model, 'migrate']);
-            }
+            // Migrate Tables
+            \call_user_func([new \Laika\Core\App\Infra(), 'migrateModels']);
 
             // Create Secret Config File if Not Exist
             if (!Config::has('secret')) {
@@ -76,8 +64,9 @@ class Migrate extends Command
             }
             // Success Message
             $this->info("App Migrated Successfully");
+            return;
         } catch (\Throwable $th) {
-            $this->error($th->getMessage());
+            $this->error($th->getMessage() . ' ' . $th->getFile() . ':' . $th->getLine());
             return;
         }
     }

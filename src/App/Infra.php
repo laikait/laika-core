@@ -1,11 +1,11 @@
 <?php
 
 /**
- * Laika PHP MMC Framework
+ * Laika PHP Micro Framework
  * Author: Showket Ahmed
  * Email: riyadhtayf@gmail.com
  * License: MIT
- * This file is part of the Laika PHP MVC Framework.
+ * This file is part of the Laika PHP Micro Framework.
  * For the full copyright and license information, please view the LICENSE file that was distributed with this source code.
  */
 
@@ -21,16 +21,37 @@ class Infra
     /*============================ Model Info ============================*/
     public function getModels(): array
     {
-        $files = str_replace('/', '\\', APP_PATH . '/lf-app/Model');
+        $files = APP_PATH . '/lf-app/Model';
         // Get Model Paths
-        $paths = Directory::scanRecursive($files, true, 'php');
+        $paths = Directory::files($files, 'php');
         $models = [];
         foreach ($paths as $path) {
             if (is_file($path)) {
-                $models[] = 'Laika\\App\\Model\\' . str_replace(["{$files}\\", '.php', '/'], ['', '', '\\'], $path);
+                $info = pathinfo($path, PATHINFO_FILENAME);
+                $models[$info] = "Laika\\App\\Model\\{$info}";
             }
         }
         return $models;
+    }
+
+    /**
+     * Migrate Models
+     * @return void
+     */
+    public function migrateModels(): void
+    {
+        $models = array_keys($this->getModels());
+        foreach ($models as $name) {
+            $class = "\\Laika\\App\\Migration\\{$name}";
+
+            // Check Class Exists
+            if (!class_exists($class)) {
+                throw new \Exception("Migration Class Not Found: {$class}");
+            }
+            // Migrate Model
+            \call_user_func([new $class, 'migrate']);
+        }
+        return;
     }
 
     /*============================ Controllers Info ============================*/

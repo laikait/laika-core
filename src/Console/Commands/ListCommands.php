@@ -47,10 +47,18 @@ class ListCommands extends Command
             Delete  :   php laika pop:middleware <name>
             List    :   php laika list:middleware <sub_path::optional>\n\n
         MIDDLEWARES;
+        // AFTERWARES
+        echo <<<AFTERWARE
+        ## AFTERWARES
+            Make    :   php laika make:afterware <name>
+            Rename  :   php laika rename:afterware <old_name> <new_name>
+            Delete  :   php laika pop:afterware <name>
+            List    :   php laika list:afterware <sub_path::optional>\n\n
+        AFTERWARE;
         // MODEL
         echo <<<MODEL
         ## MODEL
-            Make    :   php laika make:model <name> <table_name::optional> <primary_key::optional>
+            Make    :   php laika make:model <name> <table::optional>
             Rename  :   php laika rename:model <old_name> <new_name>
             Delete  :   php laika pop:model <name>
             List    :   php laika list:model <sub_path::optional>\n\n

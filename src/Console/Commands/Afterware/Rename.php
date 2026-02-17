@@ -11,25 +11,22 @@
 
 declare(strict_types=1);
 
-namespace Laika\Core\Console\Commands\Model;
+namespace Laika\Core\Console\Commands\Afterware;
 
 use Laika\Core\Helper\Directory;
 use Laika\Core\Console\Command;
 
-// Rename Model Class
+// Rename Afterware Class
 class Rename extends Command
 {
-    // App Model Old Path
-    protected string $old_path = APP_PATH . '/lf-app/Model';
+    // App Afterware Old Path
+    protected string $old_path = APP_PATH . '/lf-app/Afterware';
 
-    // App Migration Path
-    protected string $migrationPath = APP_PATH . '/lf-app/Migration';
-
-    // App Model New Path
-    protected string $new_path = APP_PATH . '/lf-app/Model';
+    // App Afterware New Path
+    protected string $new_path = APP_PATH . '/lf-app/Afterware';
 
     // Accepted Regular Expresion
-    private string $exp = '/^[a-zA-Z_\/][a-zA-Z0-9_\/]+$/';
+    private string $exp = '/^[a-zA-Z_\/]+$/';
 
     /**
      * @param array $params
@@ -39,7 +36,7 @@ class Rename extends Command
     {
         // Check Parameters
         if (\count($params) < 2) {
-            $this->error("Usage: php laika rename:model <old_name> <new_name>");
+            $this->error("Usage: php laika rename:afterware <old_name> <new_name>");
             return;
         }
 
@@ -47,16 +44,16 @@ class Rename extends Command
         $old = $params[0];
         $new = $params[1];
 
-        // Check Old Model Name is Valid
+        // Check Old Afterware Name is Valid
         if (!\preg_match($this->exp, $old)) {
-            // Invalid Model Name
-            $this->error("Invalid Old Model Name: [{$old}]!");
+            // Invalid Afterware Name
+            $this->error("Invalid Old Afterware Name: [{$old}]!");
             return;
         }
-        // Check New Model Name is Valid
+        // Check New Afterware Name is Valid
         if (!\preg_match($this->exp, $new)) {
-            // Invalid Model Name
-            $this->error("Invalid New Model Name: '{$new}'");
+            // Invalid Afterware Name
+            $this->error("Invalid New Afterware Name: [{$new}]!");
             return;
         }
 
@@ -69,25 +66,25 @@ class Rename extends Command
         $this->new_path .= $new_parts['path'];
 
         // Old and New Namespace
-        $old_namespace = "namespace Laika\\App\\Model{$old_parts['namespace']}";
-        $new_namespace = "namespace Laika\\App\\Model{$new_parts['namespace']}";
+        $old_namespace = "namespace Laika\\App\\Afterware{$old_parts['namespace']}";
+        $new_namespace = "namespace Laika\\App\\Afterware{$new_parts['namespace']}";
 
         $old_file = "{$this->old_path}/{$old_parts['name']}.php";
         $new_file = "{$this->new_path}/{$new_parts['name']}.php";
 
-        // Check Old Model is Valid
+        // Check Old Afterware is Valid
         if (!\is_file($old_file)) {
-            $this->error("Model [$old] Doesn't Exists!");
+            $this->error("Old Afterware [{$old}] Doesn't Exists!");
             return;
         }
 
-        // Check New Model is Valid
+        // Check New Afterware is Valid
         if (\is_file($new_file)) {
-            $this->error("New Model [{$old}] Already Exist!");
+            $this->error("New Afterware [{$new}] Doesn't Exists!");
             return;
         }
 
-        // Check New Path Exist
+        // Create Directory if Doesn't Exists
         if (!Directory::exists($this->new_path)) {
             Directory::make($this->new_path);
         }
@@ -95,7 +92,7 @@ class Rename extends Command
         // Get Contents
         $content = \file_get_contents($old_file);
         if ($content === false) {
-            $this->error("Failed to Read Model: [{$old}]");
+            $this->error("Failed to Read Afterware: [{$old}]");
             return;
         }
 
@@ -107,19 +104,19 @@ class Rename extends Command
         // Replace Class Name
         $content = \preg_replace("/class {$old_parts['name']}/i", "class {$new_parts['name']}", $content);
 
-        // Create New Model File
+        // Create New Afterware File
         if (\file_put_contents($new_file, $content) === false) {
-            $this->error("Failed to Create Model: [{$new}]!");
+            $this->error("Failed to Create Afterware: [{$new}]");
             return;
         }
 
-        // Remove Old Model File
+        // Remove Old Afterware File
+
         if (!\unlink($old_file)) {
-            $this->error("Failed to Remove Model: [{$old_file}]!");
+            $this->error("Failed to Remove Afterware: [$old_file]!");
             return;
         }
 
-        $this->info("Model [$old] Renamed to [{$new}] Successfully!");
-        return;
+        $this->info("Afterware [{$old}] Renamed to [{$new}] Successfully!");
     }
 }

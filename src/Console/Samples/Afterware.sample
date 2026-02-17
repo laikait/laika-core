@@ -11,26 +11,26 @@
 
 declare(strict_types=1);
 
-namespace Laika\App\Middleware{{NAMESPACE}};
+namespace Laika\App\Afterware{{NAMESPACE}};
 
 // Deny Direct Access
 defined('APP_PATH') || http_response_code(403).die('403 Direct Access Denied!');
 
-use Closure;
-
 class {{NAME}}
 {
     /**
-     * @param string $response. Controller Response
-     * @param Closure $next. $next will Pass Parameters to Next Afterware
+     * @param $next Pass Parameters to Next Afterware
+     * @param $request $request Request Object
+     * @param $response $response Response Object
+     * @param $output Controller Output
      * @param $params Parameters
      */
-    public function terminate(string $response, Closure $next, array $params): string
+    public function terminate($next, $request, $response, $output, $params): string
     {
         // After controller
         // Write Code From Here ......
 
-        // You can modify the response if needed
-        return $next($response);
+        // You can modify the Output if needed
+        return $next($output);
     }
 }

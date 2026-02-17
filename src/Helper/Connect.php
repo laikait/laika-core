@@ -35,7 +35,7 @@ class Connect
         try {
             Connection::add($config);
         } catch (\Throwable $e) {
-            throw new HttpException(500, "Database Connection Error: {$e->getMessage()}");
+            throw new \RuntimeException("Database Connection Error: {$e->getMessage()}", $e->getCode(), $e);
         }
         return;
     }

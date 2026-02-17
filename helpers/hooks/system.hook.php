@@ -25,7 +25,7 @@ add_hook('app.host', function(): string
 {
     $host = call_user_func([new Url, 'base']);
     return \rtrim($host, '/') . '/';
-});
+}, 1000);
 /*=================================== ASSET HOOKS ===================================*/
 /**
  * Load App Asset
@@ -37,7 +37,7 @@ add_hook('app.asset', function(string $file): string {
     }
     $file = \trim($file, '/');
     return \named('app.src', ['name' => $file], true);
-});
+}, 1000);
 
 /**
  * Load Template Asset
@@ -49,7 +49,7 @@ add_hook('tpl.asset', function(string $file): string {
     }
     $file = trim($file, '/');
     return named('tpl.src', ['name' => $file], true);
-});
+}, 1000);
 
 /**
  * Local Language
@@ -63,7 +63,7 @@ add_hook('app.local', function(string $property, ...$args): string {
         throw new RuntimeException("'LANG' Class Doesn't Exists!");
     }
     // Return if Class Exists
-    if (!LANG::$$property) {
+    if (!isset(LANG::$$property)) {
         throw new InvalidArgumentException("Invalid Language Property: [$property]");
     }
     return \sprintf(LANG::$$property, ...$args);
@@ -77,7 +77,7 @@ add_hook('app.local', function(string $property, ...$args): string {
  */
 add_hook('config.app', function(?string $key = null, mixed $default = null): mixed{
     return config('app', $key, $default);
-});
+}, 1000);
 
 /**
  * Env Config
@@ -86,7 +86,7 @@ add_hook('config.app', function(?string $key = null, mixed $default = null): mix
  */
 add_hook('config.env', function(?string $key = null, mixed $default = null): mixed{
     return config('env', $key, $default);
-});
+}, 1000);
 
 /**
  * Database Config
@@ -95,7 +95,7 @@ add_hook('config.env', function(?string $key = null, mixed $default = null): mix
  */
 add_hook('config.database', function(?string $key = null, mixed $default = null): mixed{
     return config('database', $key, $default);
-});
+}, 1000);
 
 /**
  * Mail Config
@@ -104,7 +104,7 @@ add_hook('config.database', function(?string $key = null, mixed $default = null)
  */
 add_hook('config.mail', function(?string $key = null, mixed $default = null): mixed{
     return config('mail', $key, $default);
-});
+}, 1000);
 
 /**
  * Database Config
@@ -113,7 +113,7 @@ add_hook('config.mail', function(?string $key = null, mixed $default = null): mi
  */
 add_hook('config.memcached', function(?string $key = null, mixed $default = null): mixed{
     return config('memcached', $key, $default);
-});
+}, 1000);
 
 /**
  * Database Config
@@ -122,7 +122,7 @@ add_hook('config.memcached', function(?string $key = null, mixed $default = null
  */
 add_hook('config.redis', function(?string $key = null, mixed $default = null): mixed{
     return config('redis', $key, $default);
-});
+}, 1000);
 
 /**
  * Database Config
@@ -131,7 +131,7 @@ add_hook('config.redis', function(?string $key = null, mixed $default = null): m
  */
 add_hook('config.secret', function(?string $key = 'key', mixed $default = null): mixed{
     return config('secret', $key, $default);
-});
+}, 1000);
 
 /*================================== CSRF HOOKS ==================================*/
 /**
@@ -141,7 +141,7 @@ add_hook('config.secret', function(?string $key = 'key', mixed $default = null):
  */
 add_hook('csrf.field', function (?string $for = null): string{
     return call_user_func([new CSRF(for:$for), 'field']);
-});
+}, 1000);
 
 /*================================== MESSAGE HOOKS ==================================*/
 /**
@@ -152,7 +152,7 @@ add_hook('csrf.field', function (?string $for = null): string{
 add_hook('message.set', function(string $message, bool $status): void {
     Session::set('message', ['info'=>$message,'status'=>$status]);
     return;
-});
+}, 1000);
 
 /**
  * Get Notification Message
@@ -160,10 +160,8 @@ add_hook('message.set', function(string $message, bool $status): void {
 add_hook('message.show', function(): array {
     $message = Session::get('message');
     Session::pop('message');
-    if(!$message) return [];
-
-    return $message;
-});
+    return $message ?: [];
+}, 1000);
 
 /*================================== PAGE HOOKS ==================================*/
 /**
@@ -172,7 +170,7 @@ add_hook('message.show', function(): array {
  */
 add_hook('page.title', function(string $title): string {
     return "{$title} | " . do_hook('app.name');
-});
+}, 1000);
 
 /**
  * Page Number
@@ -180,7 +178,7 @@ add_hook('page.title', function(string $title): string {
 add_hook('page.number', function(): int {
     $number = (int) do_hook('request.input', 'page', 1);
     return $number < 1 ? 1 : $number;
-});
+}, 1000);
 
 /**
  * Next Page Number
@@ -188,7 +186,7 @@ add_hook('page.number', function(): int {
 add_hook('page.next', function()
 {
     return call_user_func([new Url, 'incrementQuery']);
-});
+}, 1000);
 
 /**
  * Previous Page Number
@@ -196,7 +194,7 @@ add_hook('page.next', function()
 add_hook('page.previous', function()
 {
     return call_user_func([new Url, 'decrementQuery']);
-});
+}, 1000);
 
 /*================================== REQUEST HOOKS ==================================*/
 
@@ -206,7 +204,7 @@ add_hook('page.previous', function()
  */
 add_hook('request.header', function(string $key): ?string {
     return call_user_func([new Request, 'header'], $key);
-});
+}, 1000);
 
 /**
  * Get Request Input Value
@@ -215,14 +213,14 @@ add_hook('request.header', function(string $key): ?string {
  */
 add_hook('request.input', function(string $key, mixed $default = ''): mixed {
     return call_user_func([new Request, 'input'], $key, $default);
-});
+}, 1000);
 
 /**
  * Get Request Values
  */
 add_hook('request.inputs', function(): array {
     return call_user_func([new Request, 'inputs']);
-});
+}, 1000);
 
 /**
  * Check Method Request is Post/Get/Put/Patch/Delete/Ajax
@@ -253,7 +251,7 @@ add_hook('request.is', function(string $method): bool {
             return false;
             break;
     }
-});
+}, 1000);
 
 /*================================== TEMPLATE HOOKS ==================================*/
 // Set Template Default JS Vars
@@ -261,4 +259,12 @@ add_hook('tpl.scripts', function(): string{
     $authorizarion = call_user_func([new Response, 'get'], 'authorization');
     $appuri = trim(do_hook('app.host'), '/');
     return "<script>let token = '{$authorizarion}'; let appuri = '{$appuri}';</script>\n";
-});
+}, 1000);
+
+/*================================== COMMON HOOKS ==================================*/
+/**
+ * Date Format
+ */
+add_hook('date.format', function () {
+    return date('Y-m-d H:i:s');
+}, 1000);
