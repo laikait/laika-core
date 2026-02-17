@@ -16,15 +16,15 @@ namespace Laika\App\Middleware{{NAMESPACE}};
 // Deny Direct Access
 defined('APP_PATH') || http_response_code(403).die('403 Direct Access Denied!');
 
-use Closure;
-
 class {{NAME}}
 {
     /**
-     * @param Closure $next. $next will Pass Parameters to Next Middleware or Controller
+     * @param $next Pass Parameters to Next Middleware or Controller
+     * @param $request Request Object
+     * @param $response Response Object
      * @param $params Parameters
      */
-    public function handle(Closure $next, array $params)
+    public function handle($next, $request, $response, $params)
     {
         // Start Code From Here....
 

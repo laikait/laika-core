@@ -1,11 +1,11 @@
 <?php
 
 /**
- * Laika PHP MVC Framework
+ * Laika PHP Micro Framework
  * Author: Showket Ahmed
  * Email: riyadhtayf@gmail.com
  * License: MIT
- * This file is part of the Laika PHP MVC Framework.
+ * This file is part of the Laika PHP Micro Framework.
  * For the full copyright and license information, please view the LICENSE file that was distributed with this source code.
  */
 
@@ -18,20 +18,25 @@ use Laika\Core\App\Router;
 class Asset
 {
     /**
+     * @var ?Asset $asset
+     */
+    protected static ?Asset $asset = null;
+
+    /**
      * @var string $appSrc
      */
-    public static string $app = '/app-src';
+    private string $app = '/app-src';
 
     /**
      * @var string $templateSrc
      */
-    public static string $template = '/tpl-src';
+    private string $template = '/tpl-src';
 
     /**
      * Accepted File Types
      * @var array $acceptedTypes
      */
-    private static array $acceptedTypes = [
+    private array $acceptedTypes = [
                 'css'   =>  'text/css',
                 'js'    =>  'application/javascript',
                 'png'   =>  'image/png',
@@ -43,32 +48,40 @@ class Asset
                 'ico'   =>  'image/x-icon',
     ];
 
+    public static function instance(): self
+    {
+        self::$asset ??= new self();
+
+        return self::$asset;
+    }
+
     /**
      * Add Accepted File Type for Resource
      * @return void
      */
-    public static function addType(string $ext, string $mime): void
+    public function addType(string $ext, string $mime): void
     {
         $ext = \strtolower(trim($ext));
         $mime = \strtolower(trim($mime));
-        self::$acceptedTypes = \array_merge(self::$acceptedTypes, [$ext => $mime]);
+        self::instance()->acceptedTypes = \array_merge(self::instance()->acceptedTypes, [$ext => $mime]);
         return;
     }
 
     /**
-     * Register App Resource
+     * Register Asset Routes
      * @return void
      */
-    public static function registerAppResource(): void
+    public function registerAssetRoute(): void
     {
-        Router::get(self::$app . '/{name:.+}', function($name) {
+        // Register App Resources
+        Router::get(self::instance()->app . '/{name:.+}', function($name) {
             // Trim leading/trailing slashes
             $name = \str_replace('../', '', $name);
             $name = \str_replace('./', '', $name);
             $name = \trim($name, '/');
 
             // Supported Content Types
-            $types = self::$acceptedTypes;
+            $types = self::instance()->acceptedTypes;
 
             // Get Asset File Path
             $file = APP_PATH . "/lf-assets/{$name}";
@@ -85,22 +98,16 @@ class Asset
             \readfile($file);
             return;
         })->name('app.src');
-    }
 
-    /**
-     * Register Template Resource
-     * @return void
-     */
-    public static function registerTemplateResource(): void
-    {
-        Router::get(self::$template . '/{name:.+}', function($name) {
+        // Register Template Resources
+        Router::get(self::instance()->template . '/{name:.+}', function($name) {
             // Trim leading/trailing slashes
             $name = \str_replace('../', '', $name);
             $name = \str_replace('./', '', $name);
             $name = \trim($name, '/');
 
             // Supported Content Types
-            $types = self::$acceptedTypes;
+            $types = self::instance()->acceptedTypes;
 
             // Get Asset File Path
             $file = APP_PATH."/lf-templates/{$name}";
@@ -117,5 +124,15 @@ class Asset
             \readfile($file);
             return;
         })->name('tpl.src');
+    }
+
+    public function __isset($prop): bool
+    {
+        return self::instance()->$prop;
+    }
+
+    public function __get($prop)
+    {
+        return self::instance()->$prop;
     }
 }

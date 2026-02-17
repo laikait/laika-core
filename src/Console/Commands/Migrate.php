@@ -48,6 +48,7 @@ class Migrate extends Command
             // Show Error if No Migration Exists
             if (empty($models)) {
                 $this->error("No Migrations Found to Run!");
+                return;
             }
 
             // Migrate Tables
@@ -63,8 +64,9 @@ class Migrate extends Command
             }
             // Success Message
             $this->info("App Migrated Successfully");
+            return;
         } catch (\Throwable $th) {
-            $this->error($th->getMessage());
+            $this->error($th->getMessage() . ' ' . $th->getFile() . ':' . $th->getLine());
             return;
         }
     }

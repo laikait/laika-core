@@ -11,16 +11,15 @@
 
 declare(strict_types=1);
 
-namespace Laika\Core\Console\Commands\Middleware;
+namespace Laika\Core\Console\Commands\Afterware;
 
-use Laika\Core\Helper\Directory;
 use Laika\Core\Console\Command;
 
-// Make Middleware Class
+// Make Afterware Class
 class Lists extends Command
 {
-    // App Middleware Path
-    protected string $path = APP_PATH . '/lf-app/Middleware';
+    // App Afterware Path
+    protected string $path = APP_PATH . '/lf-app/Afterware';
 
     /**
      * @param array $params
@@ -28,13 +27,13 @@ class Lists extends Command
      */
     public function run(array $params): void
     {
-        $middlewares = \call_user_func([new \Laika\Core\App\Infra(), 'getMiddlewares']);
+        $afterwares = \call_user_func([new \Laika\Core\App\Infra(), 'getAfterwares']);
 
         // Header
-        $headers = ['#', 'Middlewares'];
+        $headers = ['#', 'Afterwares'];
 
         // Find max width for "File Path" column
-        $maxLength = \max(\array_map('strlen', $middlewares) ?: [30]);
+        $maxLength = \max(\array_map('strlen', $afterwares) ?: [30]);
         $col2Width = \max(\strlen($headers[1]), $maxLength);
 
         // Table width
@@ -47,7 +46,7 @@ class Lists extends Command
 
         $count = 0;
         // Print Rows
-        foreach ($middlewares as $item) {
+        foreach ($afterwares as $item) {
             $count++;
             \printf("| %-3d | %-{$col2Width}s |\n", $count, $item);
         }

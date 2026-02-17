@@ -23,6 +23,7 @@ class {{NAME}}
             $t->column('uuid')->varchar()->length(50)->unique();
             $t->column('status')->enum(['active','inactive'])->default('active')->index();
             $t->column('created')->datetime()->index();
+            $t->column('deleted_at')->datetime()->null()->index(); // Keep This Column
         })->execute();
     }
 }
