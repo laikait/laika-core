@@ -21,30 +21,10 @@ class Kernel extends Command
     /**
      * @param array $args Pass $argv from the command line
      */
-    public function __construct(array $args)
+    public function __construct()
     {
         // Register Commands
         $this->registerCommands();
-    }
-
-    /**
-     * Handle Kernel
-     * @return void
-     */
-    public function handle(): void
-    {
-        // $this->run();
-        // // Remove "laika"
-        // // \array_shift($this->params['action']);
-
-        // // $command = $this->params['action'][0] ?? null;
-
-        // // if ($command && isset(self::$commands[strtolower($command)])) {
-        // //     $class = self::$commands[\strtolower($command)];
-        // //     \call_user_func([new $class(), 'run'], $this->params);
-        // // } else {
-        // //     $this->printHelp();
-        // // }
     }
 
     /**
