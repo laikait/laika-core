@@ -13,7 +13,7 @@ declare(strict_types=1);
 
 namespace Laika\Core\Console;
 
-class Kernel extends Command
+class Console extends Command
 {
     // Commands
     protected static array $commands = [];
