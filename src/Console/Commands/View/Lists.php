@@ -31,7 +31,7 @@ class Lists extends Command
      * @param array $params
      * @return void
      */
-    public function run(array $params): void
+    public function run(array $params, array $options = []): void
     {
         // Path
         $path = \trim($params[0] ?? '', '/');

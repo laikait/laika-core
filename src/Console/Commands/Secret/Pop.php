@@ -23,7 +23,7 @@ class Pop extends Command
      * @param array $params
      * @return void
      */
-    public function run(array $params): void
+    public function run(array $params, array $options = []): void
     {
         // Create Secret Config File if Not Exist
         if (!Config::has('secret')) {

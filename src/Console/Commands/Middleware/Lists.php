@@ -26,7 +26,7 @@ class Lists extends Command
      * @param array $params
      * @return void
      */
-    public function run(array $params): void
+    public function run(array $params, array $options = []): void
     {
         $middlewares = \call_user_func([new \Laika\Core\App\Infra(), 'getMiddlewares']);
 

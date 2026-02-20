@@ -28,7 +28,7 @@ class Pop extends Command
      * @param array $params
      * @return void
      */
-    public function run(array $params): void
+    public function run(array $params, array $options = []): void
     {
         // Check Parameters
         if (\count($params) < 1) {
