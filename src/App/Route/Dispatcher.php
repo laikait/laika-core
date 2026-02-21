@@ -15,6 +15,7 @@ namespace Laika\Core\App\Route;
 
 use Laika\Core\Exceptions\Handler as ErrorHandler;
 use Laika\Core\Helper\Url as UrlHelper;
+use Laika\Core\System\MemoryManager;
 use Laika\Core\Helper\Directory;
 use Laika\Core\Http\Request;
 use Laika\Core\Http\Response;
@@ -214,6 +215,11 @@ class Dispatcher
     {
         // Register Error Handler
         ErrorHandler::register();
+
+        // Register Memory Manager & Monitor Peak Memory Usage
+        $manager = new MemoryManager();
+        $manager->apply();
+        $manager->monitor();
 
         // Create Secret Key
         self::CreateSecretKey();
