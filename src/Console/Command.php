@@ -20,30 +20,33 @@ abstract class Command
      * @param array $params
      * This method should be implemented by each command class to define its behavior.
      * It should accept an array of parameters that can be passed from the command line.
+     * It should accept an array of options that can be passed from the command line.
      * @return void
      */
-    abstract public function run(array $params): void;
+    abstract public function run(array $params, array $options = []): void;
 
     /**
      * @param string $message
      * This method is used to print informational messages to the console.
-     * @return void
+     * @return never
      */
-    protected function info(string $message): void
+    protected function info(string $message): never
     {
         // Green Text
         echo "\033[32m[SUCCESS]>> \033[0m{$message}\n"; // green text
+        exit(0);
     }
 
     /**
      * @param string $message
      * This method is used to print informational messages to the console.
-     * @return void
+     * @return never
      */
-    protected function error(string $message): void
+    protected function error(string $message): never
     {
         // Red Text
         echo "\033[31m[ERROR]>> \033[0m{$message}\n";
+        exit(0);
     }
 
     /**

@@ -227,7 +227,7 @@ class Handler
      */
     public static function getRoutes(?string $method = null): array
     {
-        if ($method == null) {
+        if (empty($method)) {
             return self::$routes;
         }
         $method = \strtoupper($method);

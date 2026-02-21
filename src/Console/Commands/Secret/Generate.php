@@ -24,7 +24,7 @@ class Generate extends Command
      * @param array $params
      * @return void
      */
-    public function run(array $params): void
+    public function run(array $params, array $options = []): void
     {
         $byte = $params[0] ?? 32;
         if (!\is_numeric($byte) || ((int) $byte < 1)) {

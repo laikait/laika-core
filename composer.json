@@ -37,7 +37,7 @@
         "laikait/laika-model": "^2",
         "laikait/laika-session": "^1",
         "twig/twig": "^3",
-        "firebase/php-jwt": "^6",
+        "firebase/php-jwt": "^7",
         "aws/aws-sdk-php": "^3.275",
         "filp/whoops": "^2.18",
         "phpmailer/phpmailer": "^7.0.0"

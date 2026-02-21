@@ -24,7 +24,7 @@ class Migrate extends Command
      * @param array $params
      * @return void
      */
-    public function run(array $params): void
+    public function run(array $params, array $options = []): void
     {
         // Get Single Model if Exists
         $model = $params[0] ?? null;
