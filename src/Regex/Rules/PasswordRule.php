@@ -29,7 +29,7 @@ class PasswordRule extends Rule
         bool $lower = true,
         bool $numeric = true,
         bool $special = true,
-        string $specialChars = '@$^&()_=!%*?#&~\'"{}\\|:";<>,./?'
+        string $specialChars = '@$^&()_=!%*?#&~\'"{}\|:";<>,./?'
     ) {
         $this->min = $min;
         $this->upper = $upper;
