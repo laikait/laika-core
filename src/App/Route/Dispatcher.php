@@ -103,7 +103,7 @@ class Dispatcher
         try {
             $output = Invoke::middleware($middlewares, $route['controller'], $params, $request, $response);
         } catch (\Throwable $e) {
-            \report_bug($e);
+            throw new \RuntimeException($e->getMessage(), (int) $e->getCode(), $e);
         }
 
         // Run Afterware
@@ -116,7 +116,7 @@ class Dispatcher
         try {
             echo empty($afterwares) ? $output : Invoke::afterware($afterwares, $output, $params, $request, $response);
         } catch (\Throwable $e) {
-            \report_bug($e);
+            throw new \RuntimeException($e->getMessage(), (int) $e->getCode(), $e);
         }
         return;
     }
