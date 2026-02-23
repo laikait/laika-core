@@ -103,7 +103,6 @@ class Dispatcher
         try {
             $output = Invoke::middleware($middlewares, $route['controller'], $params, $request, $response);
         } catch (\Throwable $e) {
-            throw new \RuntimeException("Dispather Issue: {$e->getMessage()}");
             \report_bug($e);
         }
 
