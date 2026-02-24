@@ -8,8 +8,7 @@
             "Laika\\Core\\": "src/"
         },
         "files": [
-            "helpers/functions.php",
-            "helpers/hooks.php"
+            "helpers/loader.php"
         ]
     },
     "autoload-dev": {
