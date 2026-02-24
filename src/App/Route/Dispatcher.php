@@ -254,7 +254,7 @@ class Dispatcher
         /**
          * Set App Info Environment
          */
-        Env::set('app|info', \do_hook('config.app'));
-        Env::set('app|client', call_user_func([new Client, 'all']));
+        Env::set('app.info', \do_hook('config.app'));
+        Env::set('app.client', call_user_func([new Client, 'all']));
     }
 }

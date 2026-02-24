@@ -17,8 +17,7 @@
             "Laika\\Tests\\": "tests/"
         },
         "files": [
-            "helpers/functions.php",
-            "helpers/hooks.php"
+            "helpers/loader.php"
         ]
     },
     "authors": [
