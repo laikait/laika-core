@@ -159,7 +159,7 @@ class Invoke
             try {
                 return \call_user_func($handler, ...$reflection->namedArgs());
             } catch (\Throwable $th) {
-                throw new \RuntimeException("Controller Error: {$th->getMessage()}");
+                \report_bug($th);
             }
             return null;
         }
@@ -170,7 +170,7 @@ class Invoke
             try {
                 [$controller, $method] = \explode('@', $handler);
             } catch (\Throwable $th) {
-                throw new \RuntimeException("Invalid Controller Assigned: [{$handler}]");
+                throw new \RuntimeException("Invalid Controller Assigned: [{$handler}]", (int) $th->getCode(), $th);
             }
 
             $controller = "Laika\\App\\Controller\\{$controller}";

@@ -17,8 +17,7 @@
             "Laika\\Tests\\": "tests/"
         },
         "files": [
-            "helpers/functions.php",
-            "helpers/hooks.php"
+            "helpers/loader.php"
         ]
     },
     "authors": [
@@ -34,7 +33,7 @@
     "minimum-stability": "stable",
     "require": {
         "php": ">=8.1",
-        "laikait/laika-model": "^2",
+        "laikait/laika-model": "^3",
         "laikait/laika-session": "^1",
         "twig/twig": "^3",
         "firebase/php-jwt": "^7",

@@ -44,7 +44,8 @@ class Env
     public static function set(string $key, mixed $value): void
     {
         $instance = self::getInstance();
-        $keys = array_filter(explode('|', $key), fn ($k) => $k !== '');
+        // Sanitize to Array
+        $keys = $instance->sanitize($key);
 
         $ref = &$instance->params;
         foreach ($keys as $k) {
@@ -66,7 +67,7 @@ class Env
     public static function get(string $key, mixed $default = null): mixed
     {
         $instance = self::getInstance();
-        $keys = array_filter(explode('|', $key), fn ($k) => $k !== '');
+        $keys = $instance->sanitize($key);
 
         $ref = $instance->params;
         foreach ($keys as $k) {
@@ -86,5 +87,16 @@ class Env
     {
         $instance = self::getInstance();
         return $instance->params;
+    }
+
+    /*============================= INTERNAL API =============================*/
+    /**
+     * Sanitize String to Array
+     * @return array
+     */
+    protected function sanitize(string $key): array
+    {
+        $key = preg_replace('/[^a-z0-9_\-\.]+/i', '.', $key);
+        return array_filter(explode('.', $key), fn ($k) => $k !== '');
     }
 }
