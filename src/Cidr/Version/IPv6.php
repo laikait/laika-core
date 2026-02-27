@@ -126,16 +126,16 @@ class IPv6
         return self::bin2ip(self::subOneFromBin($this->broadcastBin));
     }
 
-    /** Total addresses as a GMP integer (can be astronomically large). */
-    public function getTotalAddresses(): \GMP
+    /** Total addresses as a BCMath string (can be astronomically large). */
+    public function getTotalAddresses(): string
     {
-        return gmp_pow(2, 128 - $this->prefix);
+        return bcpow('2', (string) (128 - $this->prefix));
     }
 
-    /** Human-readable total (uses GMP). */
+    /** Human-readable total. */
     public function getTotalAddressesString(): string
     {
-        return gmp_strval($this->getTotalAddresses());
+        return $this->getTotalAddresses();
     }
 
     public function getAddressType(): string
@@ -258,10 +258,13 @@ class IPv6
 
         $subnets   = [];
         $blockBits = 128 - $newPrefix;
+        $blockSize = bcpow('2', (string) $blockBits);
+        $baseInt   = self::binToBc($this->networkBin);
 
         for ($i = 0; $i < $count; $i++) {
-            $offset  = gmp_mul(gmp_init($i), gmp_pow(2, $blockBits));
-            $netBin  = self::gmpToBin(gmp_add(self::binToGmp($this->networkBin), $offset));
+            $offset    = bcmul((string) $i, $blockSize);
+            $netInt    = bcadd($baseInt, $offset);
+            $netBin    = self::bcToBin($netInt);
             $subnets[] = new self(self::bin2ip($netBin) . "/$newPrefix");
         }
         return $subnets;
@@ -304,7 +307,7 @@ class IPv6
             'last_address'          => $this->getLastAddress(),
             'first_host'            => $this->getFirstHost(),
             'last_host'             => $this->getLastHost(),
-            'total_addresses'       => $this->getTotalAddressesString(),
+            'total_addresses'       => $this->getTotalAddresses(),
             'address_type'          => $this->getAddressType(),
             'is_private'            => $this->isPrivate(),
             'is_link_local'         => $this->isLinkLocal(),
@@ -372,14 +375,25 @@ class IPv6
         return pack('C*', ...$bytes);
     }
 
-    private static function binToGmp(string $bin): \GMP
+    private static function binToBc(string $bin): string
     {
-        return gmp_import($bin, 1, GMP_MSW_FIRST | GMP_BIG_ENDIAN);
+        $result = '0';
+        for ($i = 0; $i < 16; $i++) {
+            $result = bcadd(bcmul($result, '256'), (string) ord($bin[$i]));
+        }
+        return $result;
     }
 
-    private static function gmpToBin(\GMP $n): string
+    private static function bcToBin(string $dec): string
     {
-        $hex = str_pad(gmp_strval($n, 16), 32, '0', STR_PAD_LEFT);
+        $hex = '';
+        $n   = $dec;
+        while (bccomp($n, '0') > 0) {
+            $rem = (int) bcmod($n, '16');
+            $hex = dechex($rem) . $hex;
+            $n   = bcdiv($n, '16', 0);
+        }
+        $hex = str_pad($hex, 32, '0', STR_PAD_LEFT);
         return hex2bin($hex);
     }
 }
