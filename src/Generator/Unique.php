@@ -14,12 +14,12 @@ declare(strict_types=1);
 // Namespace
 namespace Laika\Core\Generator;
 
-class PatternGenerator
+class Unique
 {
     /**
      * @param string $prefix Example: 'inv-'. Default is '';
      */
-    public function __construct(private string $prefix = '') {}
+    public function __construct(private string $prefix = '', private bool $upper = false) {}
 
     /**
      * Generate Pattern As Per Input
@@ -32,58 +32,44 @@ class PatternGenerator
         // Validate Pattern
         $result = $this->validatePattern($pattern);
 
-        $result = str_replace('{y}', $this->getYear(), $result);
-        $result = str_replace('{d}', $this->getDay(), $result);
-        $result = str_replace('{m}', $this->getMinute(), $result);
-        $result = str_replace('{s}', $this->getSecond(), $result);
-        $result = str_replace('{c}', $this->getChar(), $result);
-        $result = str_replace('{n}', $this->getNumber(), $result);
+        // Replace every token individually via callback
+        $result = preg_replace_callback('/\{Y\}|\{y\}|\{d\}|\{m\}|\{G\}|\{H\}|\{s\}|\{c\}|\{n\}/', function (array $match): string {
+            return match ($match[0]) {
+                '{Y}' => date('Y'),
+                '{y}' => date('y'),
+                '{d}' => date('d'),
+                '{m}' => date('i'),
+                '{G}' => date('G'),
+                '{H}' => date('H'),
+                '{s}' => date('s'),
+                '{c}' => $this->singleChar(),
+                '{n}' => $this->singleNumber(),
+            };
+        }, $result);
 
-        return $this->prefix . $result . (string) $suffix;
+        $str = $this->prefix . $result . (string) ($suffix ?? '');
+
+        return $this->upper ? strtoupper($str) : $str;
     }
 
     /*================================ INTERNAL API ================================*/
 
-    // 2-digit year  e.g. 25
-    private function getYear(): string
+    // 1 random alphanumeric character (a-z)
+    private function singleChar(): string
     {
-        return date('y');
-    }
-
-    // 2-digit day of the month  e.g. 07
-    private function getDay(): string
-    {
-        return date('d');
-    }
-
-    // 2-digit minute  e.g. 04
-    private function getMinute(): string
-    {
-        return date('i');
-    }
-
-    // 2-digit second  e.g. 59
-    private function getSecond(): string
-    {
-        return date('s');
-    }
-
-    // 1 random alphanumeric character (a-z, A-Z, 0-9)
-    private function getChar(): string
-    {
-        $chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
+        $chars = 'abcdefghijklmnopqrstuvwxyz';
         return $chars[random_int(0, strlen($chars) - 1)];
     }
 
-    // 1 random digit  0-99
-    private function getNumber(): string
+    // 1 random digit  0-9
+    private function singleNumber(): string
     {
-        return (string) random_int(0, 99);
+        return (string) random_int(0, 9);
     }
 
     /**
      * Ensures the pattern contains at least MIN_TOKENS valid tokens.
-     *
+     * @param string $pattern String to Validate
      * @throws \InvalidArgumentException when fewer than MIN_TOKENS tokens are found
      * @return string
      */
@@ -91,7 +77,7 @@ class PatternGenerator
     {
         // Sanitize Pattern
         $pattern = preg_replace('/\s+/', '', $pattern);
-        $validTokens = ['{y}', '{d}', '{m}', '{s}', '{c}', '{n}'];
+        $validTokens = ['{Y}', '{y}', '{d}', '{m}', '{G}', '{H}', '{s}', '{c}', '{n}'];
         $minTokens = 3;
         $count = 0;
 
@@ -102,7 +88,7 @@ class PatternGenerator
 
         if ($count < $minTokens) {
             throw new \InvalidArgumentException(
-                "Pattern [{$pattern}] contains only {$count} identifier(s). A minimum of {$minTokens} identifiers is required. Available tokens: {y}, {d}, {m}, {s}, {c}, {n}.");
+                "Pattern [{$pattern}] contains only {$count} identifier(s). A minimum of {$minTokens} identifiers is required. Available tokens: '{Y}', '{y}', '{d}', '{m}', '{G}', '{H}', '{s}', '{c}', '{n}'.");
         }
 
         return $pattern;
