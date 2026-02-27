@@ -21,9 +21,10 @@ class {{NAME}}
         Schema::on()->createIfNotExists('{{TABLE}}', function (Blueprint $t) {
             $t->id();
             $t->uid();
-            $t->string('status', 50);
+            $t->string('status', 50)->comment('This is {{TABLE}} Status');
             $t->deleted();
-            $t->string('status')->comment('This is {{TABLE}} Status');
+            
+            $t->index('status);
         });
     }
 }
