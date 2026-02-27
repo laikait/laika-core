@@ -24,7 +24,6 @@ class {{NAME}}
             $t->string('status', 50);
             $t->deleted();
             $t->string('status')->comment('This is {{TABLE}} Status');
-            $t->unique('uid');
         });
     }
 }
