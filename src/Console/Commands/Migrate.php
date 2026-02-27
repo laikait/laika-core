@@ -63,7 +63,7 @@ class Migrate extends Command
                 Config::set('secret', 'key', bin2hex(random_bytes(64)));
             }
             // Success Message
-            $this->info("App Migrated Successfully");
+            $this->info("Database Migrated Successfully");
             return;
         } catch (\Throwable $th) {
             $this->error($th->getMessage() . ' ' . $th->getFile() . ':' . $th->getLine());
