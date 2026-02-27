@@ -13,4 +13,4 @@ declare(strict_types=1);
 
 namespace Laika\Core\Exceptions;
 
-class CidrException extends \RuntimeException {}
+class IPException extends \RuntimeException {}

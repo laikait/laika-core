@@ -11,11 +11,11 @@
 
 declare(strict_types=1);
 
-namespace Laika\Core\Cidr;
+namespace Laika\Core\IP;
 
-use Laika\Core\Cidr\Version\IPv4;
-use Laika\Core\Cidr\Version\IPv6;
-use Laika\Core\Exceptions\CidrException;
+use Laika\Core\IP\Version\IPv4;
+use Laika\Core\IP\Version\IPv6;
+use Laika\Core\Exceptions\IPException;
 
 /**
  * Comprehensive IPv4 & IPv6 CIDR class.
@@ -54,7 +54,7 @@ class Cidr
             return new IPv6($cidr);
         }
 
-        throw new CidrException("Cannot detect address family for: $cidr");
+        throw new IPException("Cannot detect address family for: $cidr");
     }
 
     /**
@@ -71,7 +71,7 @@ class Cidr
         if (filter_var($startIp, FILTER_VALIDATE_IP, FILTER_FLAG_IPV6)) {
             return IPv6::fromRange($startIp, $endIp);
         }
-        throw new CidrException("Unrecognised IP address: $startIp");
+        throw new IPException("Unrecognised IP address: $startIp");
     }
 
     /**
@@ -106,6 +106,6 @@ class Cidr
         if (filter_var($firstIp, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4)) {
             return IPv4::summarise($cidrs);
         }
-        throw new CidrException("IPv6 CIDR summarisation not yet implemented in this release");
+        throw new IPException("IPv6 CIDR summarisation not yet implemented in this release");
     }
 }

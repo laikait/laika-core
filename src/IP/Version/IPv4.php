@@ -11,9 +11,9 @@
 
 declare(strict_types=1);
 
-namespace Laika\Core\Cidr\Version;
+namespace Laika\Core\IP\Version;
 
-use Laika\Core\Exceptions\CidrException;
+use Laika\Core\Exceptions\IPException;
 
 // ─────────────────────────────────────────────────────────────────────────────
 // IPv4 CIDR
@@ -31,18 +31,18 @@ class IPv4
     public function __construct(string $cidr)
     {
         if (!str_contains($cidr, '/')) {
-            throw new CidrException("Invalid CIDR (missing prefix length): $cidr");
+            throw new IPException("Invalid CIDR (missing prefix length): $cidr");
         }
 
         [$ip, $prefixStr] = explode('/', $cidr, 2);
 
         if (!filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4)) {
-            throw new CidrException("Invalid IPv4 address: $ip");
+            throw new IPException("Invalid IPv4 address: $ip");
         }
 
         $prefix = (int) $prefixStr;
         if ($prefix < 0 || $prefix > 32) {
-            throw new CidrException("IPv4 prefix must be 0–32, got: $prefix");
+            throw new IPException("IPv4 prefix must be 0–32, got: $prefix");
         }
 
         $this->prefix      = $prefix;
@@ -59,10 +59,10 @@ class IPv4
     public static function fromRange(string $startIp, string $endIp): self
     {
         if (!filter_var($startIp, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4)) {
-            throw new CidrException("Invalid start IPv4: $startIp");
+            throw new IPException("Invalid start IPv4: $startIp");
         }
         if (!filter_var($endIp, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4)) {
-            throw new CidrException("Invalid end IPv4: $endIp");
+            throw new IPException("Invalid end IPv4: $endIp");
         }
 
         $start = self::ip2int($startIp);
@@ -98,7 +98,7 @@ class IPv4
     public static function fromMask(string $networkIp, string $subnetMask): self
     {
         if (!filter_var($subnetMask, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4)) {
-            throw new CidrException("Invalid subnet mask: $subnetMask");
+            throw new IPException("Invalid subnet mask: $subnetMask");
         }
 
         $maskInt = self::ip2int($subnetMask);
@@ -107,7 +107,7 @@ class IPv4
         // Validate the mask is contiguous
         $expected = $prefix === 0 ? 0 : (~0 << (32 - $prefix)) & 0xFFFFFFFF;
         if ($maskInt !== $expected) {
-            throw new CidrException("Subnet mask is not contiguous: $subnetMask");
+            throw new IPException("Subnet mask is not contiguous: $subnetMask");
         }
 
         return new self("$networkIp/$prefix");
@@ -218,7 +218,7 @@ class IPv4
         }
 
         if (!filter_var($cidrOrIp, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4)) {
-            throw new CidrException("Invalid IP: $cidrOrIp");
+            throw new IPException("Invalid IP: $cidrOrIp");
         }
 
         $ipInt = self::ip2int($cidrOrIp);
@@ -296,12 +296,12 @@ class IPv4
     public function split(int $count): array
     {
         if ($count < 2 || ($count & ($count - 1)) !== 0) {
-            throw new CidrException("Split count must be a power of 2, got: $count");
+            throw new IPException("Split count must be a power of 2, got: $count");
         }
 
         $newPrefix = $this->prefix + (int) log($count, 2);
         if ($newPrefix > 32) {
-            throw new CidrException("Cannot split /{$this->prefix} into $count subnets (would exceed /32)");
+            throw new IPException("Cannot split /{$this->prefix} into $count subnets (would exceed /32)");
         }
 
         $subnets   = [];
@@ -319,7 +319,7 @@ class IPv4
     public function supernet(): self
     {
         if ($this->prefix === 0) {
-            throw new CidrException("Already at /0, no supernet available");
+            throw new IPException("Already at /0, no supernet available");
         }
         return new self($this->getNetworkAddress() . '/' . ($this->prefix - 1));
     }

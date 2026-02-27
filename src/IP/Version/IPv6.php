@@ -11,9 +11,9 @@
 
 declare(strict_types=1);
 
-namespace Laika\Core\Cidr\Version;
+namespace Laika\Core\IP\Version;
 
-use Laika\Core\Exceptions\CidrException;
+use Laika\Core\Exceptions\IPException;
 
 // ─────────────────────────────────────────────────────────────────────────────
 // IPv6 CIDR
@@ -29,18 +29,18 @@ class IPv6
     public function __construct(string $cidr)
     {
         if (!str_contains($cidr, '/')) {
-            throw new CidrException("Invalid CIDR (missing prefix length): $cidr");
+            throw new IPException("Invalid CIDR (missing prefix length): $cidr");
         }
 
         [$ip, $prefixStr] = explode('/', $cidr, 2);
 
         if (!filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_IPV6)) {
-            throw new CidrException("Invalid IPv6 address: $ip");
+            throw new IPException("Invalid IPv6 address: $ip");
         }
 
         $prefix = (int) $prefixStr;
         if ($prefix < 0 || $prefix > 128) {
-            throw new CidrException("IPv6 prefix must be 0–128, got: $prefix");
+            throw new IPException("IPv6 prefix must be 0–128, got: $prefix");
         }
 
         $this->prefix = $prefix;
@@ -58,10 +58,10 @@ class IPv6
     public static function fromRange(string $startIp, string $endIp): self
     {
         if (!filter_var($startIp, FILTER_VALIDATE_IP, FILTER_FLAG_IPV6)) {
-            throw new CidrException("Invalid start IPv6: $startIp");
+            throw new IPException("Invalid start IPv6: $startIp");
         }
         if (!filter_var($endIp, FILTER_VALIDATE_IP, FILTER_FLAG_IPV6)) {
-            throw new CidrException("Invalid end IPv6: $endIp");
+            throw new IPException("Invalid end IPv6: $endIp");
         }
 
         $startBin = self::ip2bin($startIp);
@@ -188,7 +188,7 @@ class IPv6
         }
 
         if (!filter_var($cidrOrIp, FILTER_VALIDATE_IP, FILTER_FLAG_IPV6)) {
-            throw new CidrException("Invalid IPv6: $cidrOrIp");
+            throw new IPException("Invalid IPv6: $cidrOrIp");
         }
 
         $ipBin = self::ip2bin($cidrOrIp);
@@ -248,12 +248,12 @@ class IPv6
     public function split(int $count): array
     {
         if ($count < 2 || ($count & ($count - 1)) !== 0) {
-            throw new CidrException("Split count must be a power of 2, got: $count");
+            throw new IPException("Split count must be a power of 2, got: $count");
         }
 
         $newPrefix = $this->prefix + (int) log($count, 2);
         if ($newPrefix > 128) {
-            throw new CidrException("Cannot split /{$this->prefix} into $count subnets");
+            throw new IPException("Cannot split /{$this->prefix} into $count subnets");
         }
 
         $subnets   = [];
@@ -276,7 +276,7 @@ class IPv6
     public function supernet(): self
     {
         if ($this->prefix === 0) {
-            throw new CidrException("Already at /0");
+            throw new IPException("Already at /0");
         }
         return new self($this->getNetworkAddress() . '/' . ($this->prefix - 1));
     }
