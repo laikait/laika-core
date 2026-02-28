@@ -138,17 +138,6 @@ function report_bug(Throwable $th): void
 }
 
 /**
- * Throw Error
- * @param \Throwable $e Existing Throwable Object
- * @param class-string<\Throwable> $throwable New Throwable Class Name. Example: Exception
- * @return never 
- */
-function throw_error(\Throwable $e, string $throwable = 'Exception'): never
-{
-    throw new $throwable($e->getMessage(), (int) $e->getCode(), $e);
-}
-
-/**
  * Config Obejct
  * @param string $name Config Name. Rrequired Argument. Example: app, database etc.
  * @param ?string $key Config Key. Optional Argument. Example: name, version etc.
