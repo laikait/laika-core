@@ -178,7 +178,7 @@ class Auth extends Model
     {
         $key = \bin2hex(random_bytes(32));
         // Check Already Exist & Return
-        $rows = $this->select($this->id)->where([$this->id => $this->event])->count();
+        $rows = $this->select($this->id)->where([$this->id => $key])->count();
         return ($rows === 0) ? $key : $this->generateEventKey();
     }
 }

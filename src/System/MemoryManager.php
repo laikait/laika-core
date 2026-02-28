@@ -47,11 +47,15 @@ final class MemoryManager
 
     /**
      * Register Peak Memory Usage Logger.
-     * @param callable|null $logger Optional callback to receive peak memory usage in MB and bytes. Signature: function(float $peakMb, int $peakBytes): void
+     * @param ?callable $logger Optional callback to receive peak memory usage in MB and bytes. Signature: function(float $peakMb, int $peakBytes): void
+     * @param bool $enabled Optional callback to receive peak memory usage in MB and bytes. Signature: function(float $peakMb, int $peakBytes): void
      * @return void
      */
-    public function monitor(callable $logger = null): void
+    public function monitor(?callable $logger = null, bool $enabled = false): void
     {
+        if ($logger === null && !$enabled) {
+            return;
+        }
         if (self::$monitorRegistered) {
             return;
         }

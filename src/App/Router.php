@@ -13,6 +13,9 @@ declare(strict_types=1);
 
 namespace Laika\Core\App;
 
+use Laika\Core\Route\Handler;
+use Laika\Core\Route\Dispatcher;
+
 class Router
 {
     /**
@@ -25,7 +28,7 @@ class Router
      */
     public static function get(string $uri, callable|string|array|null|object $controller = null, string|array $middlewares = []): self
     {
-        Route\Handler::register('get', $uri, $controller, $middlewares);
+        Handler::register('get', $uri, $controller, $middlewares);
         return new self();
     }
 
@@ -39,7 +42,7 @@ class Router
      */
     public static function post(string $uri, callable|string|array|null|object $controller = null, string|array $middlewares = []): self
     {
-        Route\Handler::register('post', $uri, $controller, $middlewares);
+        Handler::register('post', $uri, $controller, $middlewares);
         return new self();
     }
 
@@ -53,7 +56,7 @@ class Router
      */
     public static function put(string $uri, callable|string|array|null|object $controller = null, string|array $middlewares = []): self
     {
-        Route\Handler::register('put', $uri, $controller, $middlewares);
+        Handler::register('put', $uri, $controller, $middlewares);
         return new self();
     }
 
@@ -67,7 +70,21 @@ class Router
      */
     public static function patch(string $uri, callable|string|array|null|object $controller = null, string|array $middlewares = []): self
     {
-        Route\Handler::register('patch', $uri, $controller, $middlewares);
+        Handler::register('patch', $uri, $controller, $middlewares);
+        return new self();
+    }
+
+    /**
+     * Router Delete Request
+     * @param string $uri Register Router Url. Example: '/home'
+     * @param callable|string|array|null|object $controller Register Router Controller.
+     * Example: 'Sample/Namespace/Class@index' or ['Sample/Namespace/Class','index'] or new Sample/Namespace/Class() (it will call index method)
+     * @param string|array $middlewares Register Router Url Middleware(s). Example: ['Sample/Namespace/Middleware'] or 'Sample/Namespace/Middleware'. Example Using Parameters: ['Sample/Namespace/Middleware|type=admin'] or 'Sample/Namespace/Middleware|type=admin'
+     * @return self
+     */
+    public static function delete(string $uri, callable|string|array|null|object $controller = null, string|array $middlewares = []): self
+    {
+        Handler::register('delete', $uri, $controller, $middlewares);
         return new self();
     }
 
@@ -81,7 +98,7 @@ class Router
      */
     public static function options(string $uri, callable|string|array|null|object $controller = null, string|array $middlewares = []): self
     {
-        Route\Handler::register('options', $uri, $controller, $middlewares);
+        Handler::register('options', $uri, $controller, $middlewares);
         return new self();
     }
 
@@ -96,7 +113,7 @@ class Router
      */
     public static function group(string $prefix, callable $handler, string|array $middlewares = [], string|array $afterwares = []): void
     {
-        Route\Handler::registerGroup($prefix, $handler, $middlewares, $afterwares);
+        Handler::registerGroup($prefix, $handler, $middlewares, $afterwares);
         return;
     }
 
@@ -107,7 +124,7 @@ class Router
      */
     public static function middleware(string|array $middlewares): self
     {
-        Route\Handler::middlewareRegister($middlewares);
+        Handler::middlewareRegister($middlewares);
         return new self();
     }
 
@@ -118,7 +135,7 @@ class Router
      */
     public static function afterware(string|array $afterware): self
     {
-        Route\Handler::afterwareRegister($afterware);
+        Handler::afterwareRegister($afterware);
         return new self();
     }
 
@@ -129,7 +146,7 @@ class Router
      */
     public static function globalMiddleware(string|array $middlewares): void
     {
-        Route\Handler::globalMiddlewareRegister($middlewares);
+        Handler::globalMiddlewareRegister($middlewares);
         return;
     }
 
@@ -140,18 +157,17 @@ class Router
      */
     public static function globalAfterware(string|array $afterwares): void
     {
-        Route\Handler::globalAfterwareRegister($afterwares);
+        Handler::globalAfterwareRegister($afterwares);
         return;
     }
 
     /**
      * Dispatch Router & Run Application
-     * @param ?string $requestUrl Server Request Uri
      * @return void
      */
-    public static function dispatch(?string $requestUrl = null): void
+    public static function dispatch(): void
     {
-        Route\Dispatcher::dispatch($requestUrl);
+        Dispatcher::dispatch();
     }
 
     /**
@@ -162,7 +178,7 @@ class Router
      */
     public static function fallback(callable|string|array|null|object $callable = null, string $group = '/'): void
     {
-        Route\Handler::registerFallback($callable, $group);
+        Handler::registerFallback($callable, $group);
     }
 
     /**
@@ -172,7 +188,7 @@ class Router
      */
     public function name(string $name): self
     {
-        Route\Handler::name($name);
+        Handler::name($name);
         return new self();
     }
 
@@ -183,6 +199,6 @@ class Router
      */
     public static function url(string $name, array $param = []): string
     {
-        return Route\Handler::namedUrl($name, $param);
+        return Handler::namedUrl($name, $param);
     }
 }

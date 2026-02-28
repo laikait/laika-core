@@ -32,7 +32,7 @@ class Response
     {
         $this->headers = [
             "Access-Control-Allow-Origin"       =>  "*",
-            "Access-Control-Allow-Methods"      =>  "GET, POST",
+            "Access-Control-Allow-Methods"      =>  "GET, POST, PUT, PATCH, DELETE, OPTIONS",
             "Access-Control-Allow-Headers"      =>  "Authorization, Origin, X-Requested-With, Content-Type, Accept, X-Laika-Token",
             "Access-Control-Allow-Credentials"  =>  "true",
             "X-Powered-By"                      =>  "Laika Framework",

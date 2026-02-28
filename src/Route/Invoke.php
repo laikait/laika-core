@@ -11,7 +11,7 @@
 
 declare(strict_types=1);
 
-namespace Laika\Core\App\Route;
+namespace Laika\Core\Route;
 
 use Laika\Core\Http\Request;
 use Laika\Core\Http\Response;
