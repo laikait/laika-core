@@ -48,7 +48,20 @@ class Make extends Command
         // Model Name
         $name = $params[0];
         // Table Name
-        $table = strtolower($params[1] ?? $name);
+        $table = $options['long']['table'] ?? $options['short']['t'] ?? $name;
+        $id = $options['long']['primary'] ?? $options['short']['p'] ?? 'id';
+
+        // Check Table Name Is Valid
+        if (!preg_match('/^[a-zA-Z_]+$/', $table)) {
+            $this->error("Table Name Should Contains Only a-z, A-Z & _");
+            return;
+        }
+
+        // Check Primary Key Name Is Valid
+        if (!preg_match('/^[a-zA-Z_]+$/', $id)) {
+            $this->error("Primary Column Name Should Contains Only a-z, A-Z & _");
+            return;
+        }
 
         // Make Directory if Not Exist
         if (!Directory::exists($this->path)) {
@@ -66,7 +79,7 @@ class Make extends Command
         $content = \file_get_contents(__DIR__ . '/../../Samples/Model.sample');
 
         // Replace Placeholders
-        $content = \str_replace(['{{NAME}}','{{TABLE}}'], [$name, $table], $content);
+        $content = \str_replace(['{{NAME}}','{{TABLE}}', '{{ID}}'], [$name, $table, $id], $content);
 
         // Create Model File
         if (\file_put_contents($file, $content) === false) {
