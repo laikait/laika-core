@@ -22,7 +22,7 @@ class Make extends Command
     protected string $path = APP_PATH . '/lf-templates';
 
     // Accepted Regular Expresion
-    private string $exp = '/^[a-zA-Z0-9_\-\/]+$/';
+    private string $exp = '/^[a-zA-Z0-9_\-]+$/';
 
     /**
      * Run the command to create a new controller.
@@ -34,41 +34,44 @@ class Make extends Command
     {
         // Check Parameters
         if (\count($params) < 1) {
-            $this->error("USAGE: php laika make:view <name>");
+            $this->error("USAGE: php laika make:template <name>");
             return;
         }
+
+        // Get Extension
+        $ext = strtolower($params[0] ?? 'twig');
 
         if (!\preg_match($this->exp, $params[0])) {
             // Invalid Name
-            $this->error("Invalid View Name: '{$params[0]}'");
+            $this->error("Invalid Template Name: '{$params[0]}'");
             return;
         }
-        $parts = $this->parts($params[0], false);
+        // $parts = $this->parts($params[0], false);
 
-        $this->path .= $parts['path'];
+        $name = trim($params[0]);
 
         // Make Directory if Not Exist
         if (!Directory::exists($this->path)) {
             Directory::make($this->path);
         }
 
-        $file = "{$this->path}/{$parts['name']}.tpl.php";
+        $file = "{$this->path}/{$name}.{$ext}";
 
         if (\is_file($file)) {
-            $this->error("View Already Exist: {$file}");
+            $this->error("Template Already Exist: {$file}");
             return;
         }
 
         // Get Sample Content
-        $content = \file_get_contents(__DIR__ . '/../../Samples/View.sample');
+        $content = \file_get_contents(__DIR__ . '/../../Samples/Template.sample');
 
         // Replace Placeholders
         if (\file_put_contents($file, $content) === false) {
-            $this->error("Failed to Create View: {$file}");
+            $this->error("Failed to Create Template: {$file}");
             return;
         }
 
-        $this->success("View Created Successfully: {$params[0]}");
+        $this->success("Template Created Successfully: {$params[0]}");
         return;
     }
 }

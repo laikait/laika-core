@@ -54,11 +54,15 @@ class Lists extends Command
             return;
         }
 
-        $paths = Directory::files($this->path, '.php');
+        $paths = Directory::files($this->path);
         $items = [];
         foreach ($paths as $file) {
             if (\is_file($file)) {
-                $items[] = \str_replace(["{$this->path}/", '.tpl.php'], [''], $file);
+                $file = \str_replace("{$this->path}/", '', $file);
+                $name = pathinfo($file, PATHINFO_FILENAME);
+                if ($name != 'functions') {
+                    $items[] = $name;
+                }
             }
         }
 
@@ -77,12 +81,13 @@ class Lists extends Command
         \printf("| %-3s | %-{$col2Width}s |\n", $headers[0], $headers[1]);
         echo $line;
 
-        $count = 1;
+        $count = 0;
         // Print Rows
         foreach ($items as $item) {
-            $item = \str_replace(["{$this->path}/", '.tpl.php'], [''], $item);
             \printf("| %-3d | %-{$col2Width}s |\n", $count, $item);
             $count++;
+            // if ($item != 'functions') {
+            // }
         }
 
         echo $line;

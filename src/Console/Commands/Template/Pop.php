@@ -32,35 +32,35 @@ class Pop extends Command
     {
         // Check Parameters
         if (\count($params) < 1) {
-            $this->error("USAGE: php laika pop:view <name>");
+            $this->error("USAGE: php laika pop:template <name>");
             return;
         }
 
         if (!\preg_match($this->exp, $params[0])) {
             // Invalid Name
-            $this->error("Invalid View Name: {$params[0]}");
+            $this->error("Invalid Template Name: {$params[0]}");
             return;
         }
 
-        // Get Parts
-        $parts = $this->parts($params[0], false);
+        // Get Extension
+        $ext = strtolower($params[0] ?? 'twig');
 
-        // Get Path
-        $this->path .= $parts['path'];
+        // Get Name
+        $name = trim($params[0]);
 
-        $file = "{$this->path}/{$parts['name']}.tpl.php";
+        $file = "{$this->path}/{$name}.{$ext}";
 
         if (!\is_file($file)) {
-            $this->error("View Doesn't Exist: {$file}");
+            $this->error("Template Doesn't Exist: {$file}");
             return;
         }
 
         if (!\unlink($file)) {
-            $this->error("Failed to Remove View: {$file}");
+            $this->error("Failed to Remove Template: {$file}");
             return;
         }
 
-        $this->success("View Created Successfully: {$params[0]}");
+        $this->success("Template Created Successfully: {$params[0]}");
         return;
     }
 }
