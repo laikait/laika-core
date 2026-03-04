@@ -117,6 +117,6 @@ class Rename extends Command
             return;
         }
 
-        $this->info("Middleware [{$old}] Renamed to [{$new}] Successfully!");
+        $this->success("Middleware [{$old}] Renamed to [{$new}] Successfully!");
     }
 }

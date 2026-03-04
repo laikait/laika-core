@@ -62,6 +62,6 @@ class Pop extends Command
             return;
         }
 
-        $this->info("Middleware [{$params[0]}] Removed Successfully!");
+        $this->success("Middleware [{$params[0]}] Removed Successfully!");
     }
 }

@@ -33,7 +33,7 @@ class Pop extends Command
         // Create Secret Key Value
         Config::set('secret', 'key', '');
         // Set Message
-        $this->info("Secret Key Removed Successfully");
+        $this->success("Secret Key Removed Successfully");
         return;
     }
 }

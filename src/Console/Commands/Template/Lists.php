@@ -11,7 +11,7 @@
 
 declare(strict_types=1);
 
-namespace Laika\Core\Console\Commands\View;
+namespace Laika\Core\Console\Commands\Template;
 
 use Laika\Core\Helper\Directory;
 use Laika\Core\Console\Command;

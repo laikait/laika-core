@@ -67,7 +67,7 @@ class Pop extends Command
             return;
         }
 
-        $this->info("Model [{$params[0]}] Removed Successfully!");
+        $this->success("Model [{$params[0]}] Removed Successfully!");
         return;
     }
 }

@@ -62,12 +62,12 @@ class Console extends Command
                 'pop:model'             =>  \Laika\Core\Console\Commands\Model\Pop::class,
                 'list:model'            =>  \Laika\Core\Console\Commands\Model\Lists::class,
                 /* View Commands */
-                'make:view'             =>  \Laika\Core\Console\Commands\View\Make::class,
-                'rename:view'           =>  \Laika\Core\Console\Commands\View\Rename::class,
-                'pop:view'              =>  \Laika\Core\Console\Commands\View\Pop::class,
-                'list:view'             =>  \Laika\Core\Console\Commands\View\Lists::class,
+                'make:view'             =>  \Laika\Core\Console\Commands\Template\Make::class,
+                'rename:view'           =>  \Laika\Core\Console\Commands\Template\Rename::class,
+                'pop:view'              =>  \Laika\Core\Console\Commands\Template\Pop::class,
+                'list:view'             =>  \Laika\Core\Console\Commands\Template\Lists::class,
                 /* Other Commands */
-                'help'                  =>  \Laika\Core\Console\Commands\ListCommands::class,
+                'help'                  =>  \Laika\Core\Console\Commands\Help::class,
                 /* Migrate */
                 'migrate'               =>  \Laika\Core\Console\Commands\Migrate::class,
                 /* Route */

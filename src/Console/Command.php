@@ -25,29 +25,153 @@ abstract class Command
      */
     abstract public function run(array $params, array $options = []): void;
 
+    /*========================== FORGROUND COLOR START ==========================*/
     /**
-     * @param string $message
-     * This method is used to print informational messages to the console.
-     * @return never
+     * Black Text
+     * @return string
      */
-    protected function info(string $message): never
+    protected function txt_black(string $text): string
     {
-        // Green Text
-        echo "\033[32m[SUCCESS]>> \033[0m{$message}\n"; // green text
-        exit(0);
+        return "\e[30m{$text}\e[0m";
     }
 
     /**
-     * @param string $message
-     * This method is used to print informational messages to the console.
-     * @return never
+     * Red Text
+     * @return string
      */
-    protected function error(string $message): never
+    protected function txt_red(string $text): string
     {
-        // Red Text
-        echo "\033[31m[ERROR]>> \033[0m{$message}\n";
-        exit(0);
+        return "\e[31m{$text}\e[0m";
     }
+
+    /**
+     * Green Text
+     * @return string
+     */
+    protected function txt_green(string $text): string
+    {
+        return "\e[32m{$text}\e[0m";
+    }
+
+    /**
+     * Yellow Text
+     * @return string
+     */
+    protected function txt_yellow(string $text): string
+    {
+        return "\e[33m{$text}\e[0m";
+    }
+
+    /**
+     * Blue Text
+     * @return string
+     */
+    protected function txt_blue(string $text): string
+    {
+        return "\e[34m{$text}\e[0m";
+    }
+
+    /**
+     * Magenta Text
+     * @return string
+     */
+    protected function txt_magenta(string $text): string
+    {
+        return "\e[35m{$text}\e[0m";
+    }
+
+    /**
+     * Cyan Text
+     * @return string
+     */
+    protected function txt_cyan(string $text): string
+    {
+        return "\e[36m{$text}\e[0m";
+    }
+
+    /**
+     * White Text
+     * @return string
+     */
+    protected function txt_white(string $text): string
+    {
+        return "\e[37m{$text}\e[0m";
+    }
+    /*=========================== FORGROUND COLOR END ===========================*/
+
+    /*========================== BACKGROUND COLOR START ==========================*/
+    /**
+     * Black Background
+     * @return string
+     */
+    protected function bg_black(string $text): string
+    {
+        return "\e[40m{$text}\e[0m";
+    }
+
+    /**
+     * Red Background
+     * @return string
+     */
+    protected function bg_red(string $text): string
+    {
+        return "\e[41m{$text}\e[0m";
+    }
+
+    /**
+     * Green Background
+     * @return string
+     */
+    protected function bg_green(string $text): string
+    {
+        return "\e[42m{$text} \e[0m";
+    }
+
+    /**
+     * Yellow Background
+     * @return string
+     */
+    protected function bg_yellow(string $text): string
+    {
+        return "\e[43m{$text}\e[0m";
+    }
+
+    /**
+     * Blue Text
+     * @return string
+     */
+    protected function bg_blue(string $text): string
+    {
+        return "\e[44m{$text}\e[0m";
+    }
+
+    /**
+     * Magenta Text
+     * @return string
+     */
+    protected function bg_magenta(string $text): string
+    {
+        return "\e[45m{$text}\e[0m";
+    }
+
+    /**
+     * Cyan Text
+     * @return string
+     */
+    protected function bg_cyan(string $text): string
+    {
+        return "\e[46m{$text}\e[0m";
+    }
+
+    /**
+     * White Text
+     * @return string
+     */
+    protected function bg_white(string $text): string
+    {
+        return "\e[47m{$text}\e[0m";
+    }
+    /*=========================== BACKGROUND COLOR END ===========================*/
 
     /**
      * @param string $str. Directory Path Stringl. Example: 'Admin/User'
@@ -76,5 +200,35 @@ abstract class Command
             $result['namespace']    .=   "\\{$part}";
         }
         return $result;
+    }
+
+    /**
+     * @param string $message
+     * This method is used to print informational messages to the console.
+     * @return never
+     */
+    protected function success(string $message): never
+    {
+        // Green Text
+        echo "\e[32m[{$this->txt_green('SUCCESS')}]>> \e[0m{$message}\n";
+        exit(0);
+    }
+
+    protected function warning(string $message): never
+    {
+        // Green Text
+        echo "\e[32m[{$this->txt_yellow('WARNING')}]>> \e[0m{$message}\n";
+        exit(0);
+    }
+
+    /**
+     * @param string $message
+     * This method is used to print informational messages to the console.
+     * @return never
+     */
+    protected function error(string $message): never
+    {
+        echo "\e[31m[{$this->txt_red('ERROR')}]>> \e[0m{$message}\n";
+        exit(0);
     }
 }

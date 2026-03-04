@@ -78,7 +78,7 @@ class Make extends Command
             return;
         }
 
-        $this->info("Controller [{$params[0]}] Created Successfully!");
+        $this->success("Controller [{$params[0]}] Created Successfully!");
         return;
     }
 }

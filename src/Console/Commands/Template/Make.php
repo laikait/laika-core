@@ -11,11 +11,12 @@
 
 declare(strict_types=1);
 
-namespace Laika\Core\Console\Commands\View;
+namespace Laika\Core\Console\Commands\Template;
 
+use Laika\Core\Helper\Directory;
 use Laika\Core\Console\Command;
 
-class Pop extends Command
+class Make extends Command
 {
     // App View Path
     protected string $path = APP_PATH . '/lf-templates';
@@ -25,6 +26,7 @@ class Pop extends Command
 
     /**
      * Run the command to create a new controller.
+     *
      * @param array $params
      * @return void
      */
@@ -32,35 +34,41 @@ class Pop extends Command
     {
         // Check Parameters
         if (\count($params) < 1) {
-            $this->error("USAGE: php laika pop:view <name>");
+            $this->error("USAGE: php laika make:view <name>");
             return;
         }
 
         if (!\preg_match($this->exp, $params[0])) {
             // Invalid Name
-            $this->error("Invalid View Name: {$params[0]}");
+            $this->error("Invalid View Name: '{$params[0]}'");
             return;
         }
-
-        // Get Parts
         $parts = $this->parts($params[0], false);
 
-        // Get Path
         $this->path .= $parts['path'];
+
+        // Make Directory if Not Exist
+        if (!Directory::exists($this->path)) {
+            Directory::make($this->path);
+        }
 
         $file = "{$this->path}/{$parts['name']}.tpl.php";
 
-        if (!\is_file($file)) {
-            $this->error("View Doesn't Exist: {$file}");
+        if (\is_file($file)) {
+            $this->error("View Already Exist: {$file}");
             return;
         }
 
-        if (!\unlink($file)) {
-            $this->error("Failed to Remove View: {$file}");
+        // Get Sample Content
+        $content = \file_get_contents(__DIR__ . '/../../Samples/View.sample');
+
+        // Replace Placeholders
+        if (\file_put_contents($file, $content) === false) {
+            $this->error("Failed to Create View: {$file}");
             return;
         }
 
-        $this->info("View Created Successfully: {$params[0]}");
+        $this->success("View Created Successfully: {$params[0]}");
         return;
     }
 }

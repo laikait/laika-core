@@ -72,6 +72,6 @@ class Make extends Command
             return;
         }
 
-        $this->info("Middleware [{$params[0]}] Created Successfully!");
+        $this->success("Middleware [{$params[0]}] Created Successfully!");
     }
 }

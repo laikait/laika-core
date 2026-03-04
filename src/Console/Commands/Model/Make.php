@@ -102,7 +102,7 @@ class Make extends Command
             return;
         }
 
-        $this->info("Model [{$params[0]}] Created Successfully!");
+        $this->success("Model [{$params[0]}] Created Successfully!");
         return;
     }
 }

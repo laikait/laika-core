@@ -15,7 +15,7 @@ namespace Laika\Core\Console\Commands;
 
 use Laika\Core\Console\Command;
 
-class ListCommands extends Command
+class Help extends Command
 {
     /**
      * Run the command to create a new controller.
@@ -24,16 +24,51 @@ class ListCommands extends Command
      */
     public function run(array $params, array $options = []): void
     {
-        echo <<<LIST
-        --------------------------------
-        -----  LAIKA COMMAND LISTS -----
-        --------------------------------\n
-        LIST;
+        $match = strtolower($params[0] ?? 'n/a');
+
+        switch ($match) {
+            case 'model':
+                (new \Laika\Core\Console\Commands\Help\ModelHelp())->run($params, $options);
+                break;
+
+            case 'controller':
+                (new \Laika\Core\Console\Commands\Help\ControllerHelp())->run($params, $options);
+                break;
+
+            case 'middleware':
+                (new \Laika\Core\Console\Commands\Help\MiddlewareHelp())->run($params, $options);
+                break;
+
+            case 'afterware':
+                (new \Laika\Core\Console\Commands\Help\AfterwareHelp())->run($params, $options);
+                break;
+
+            case 'template':
+                (new \Laika\Core\Console\Commands\Help\TemplateHelp())->run($params, $options);
+                break;
+            
+            default:
+                $this->allHelpCommands();
+                break;
+        }
+        return;
+    }
+
+    /**
+     * All Help Commands
+     * @return void
+     */
+    private function allHelpCommands(): void
+    {
+        echo "---------------------------";
+        echo $this->txt_cyan("\nLAIKA COMMAND LISTS\n");
+        echo "---------------------------\n";
 
         // CONTROLLERS
         // TEMPLATE CONTROLLERS
         echo <<<CONTROLLERS
-        ## CONTROLLERS
+
+        {$this->txt_green('## CONTROLLERS   [php laika help:controller]')}\n
             Make    :   php laika make:controller <name>
             Rename  :   php laika rename:controller <old_name> <new_name>
             Delete  :   php laika pop:controller <name>
@@ -41,7 +76,7 @@ class ListCommands extends Command
         CONTROLLERS;
         // MIDDLEWARES
         echo <<<MIDDLEWARES
-        ## MIDDLEWARES
+        {$this->txt_green('## MIDDLEWARES   [php laika help:middleware]')}\n
             Make    :   php laika make:middleware <name>
             Rename  :   php laika rename:middleware <old_name> <new_name>
             Delete  :   php laika pop:middleware <name>
@@ -49,7 +84,7 @@ class ListCommands extends Command
         MIDDLEWARES;
         // AFTERWARES
         echo <<<AFTERWARE
-        ## AFTERWARES
+        {$this->txt_green('## AFTERWARES   [php laika help:afterware]')}\n
             Make    :   php laika make:afterware <name>
             Rename  :   php laika rename:afterware <old_name> <new_name>
             Delete  :   php laika pop:afterware <name>
@@ -57,33 +92,35 @@ class ListCommands extends Command
         AFTERWARE;
         // MODEL
         echo <<<MODEL
-        ## MODEL
-            Make    :   php laika make:model <name> <table::optional>
+        {$this->txt_green('## MODEL   [php laika help:model]')}\n
+            Make    :   php laika make:model <name>
             Rename  :   php laika rename:model <old_name> <new_name>
             Delete  :   php laika pop:model <name>
             List    :   php laika list:model <sub_path::optional>\n\n
         MODEL;
 
         // VIEW
-        echo <<<VIEW
-        ## VIEW
-            Make    :   php laika make:view <name>
-            Rename  :   php laika rename:view <old_name> <new_name>
-            Delete  :   php laika pop:view <name>
-            List    :   php laika list:view <sub_path::optional>\n\n
-        VIEW;
+        echo <<<TEMPLATE
+        {$this->txt_green('## TEMPLATE   [php laika help:template]')}\n
+            Make    :   php laika make:template <name>
+            Rename  :   php laika rename:template <old_name> <new_name>
+            Delete  :   php laika pop:template <name>
+            List    :   php laika list:template <sub_path::optional>\n\n
+        TEMPLATE;
 
         // SECRET
         echo <<<SECRET
-        ## SECRET
+        {$this->txt_green('## SECRET   [php laika help:secret]')}\n
             Generate:   php laika generate:secret <byte_number::optional>
             Pop     :   php laika pop:secret\n\n
         SECRET;
 
         // MIGRATE
         echo <<<MIGRATE
-        ## MIGRATE
+        {$this->txt_green('## MIGRATE   [php laika help:migrate]')}\n
             Migrate :   php laika migrate <connection::optional> <model::optional>
         MIGRATE;
+
+        return;
     }
 }

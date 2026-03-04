@@ -117,6 +117,6 @@ class Rename extends Command
             return;
         }
 
-        $this->info("Afterware [{$old}] Renamed to [{$new}] Successfully!");
+        $this->success("Afterware [{$old}] Renamed to [{$new}] Successfully!");
     }
 }
