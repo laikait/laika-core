@@ -94,7 +94,7 @@ class Make extends Command
         $migrationContent = \file_get_contents(__DIR__ . '/../../Samples/Migration.sample');
 
         // Replace Placeholders in Migration File
-        $migrationContent = \str_replace(['{{NAME}}','{{TABLE}}'], [$name, $table], $migrationContent);
+        $migrationContent = \str_replace(['{{NAME}}','{{TABLE}}', '{{ID}}'], [$name, $table, $id], $migrationContent);
 
         // Create Migration File
         if (\file_put_contents($migrationFile, $migrationContent) === false) {

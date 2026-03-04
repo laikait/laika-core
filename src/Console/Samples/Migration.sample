@@ -19,7 +19,7 @@ class {{NAME}}
     public function migrate()
     {
         Schema::on()->createIfNotExists('{{TABLE}}', function (Blueprint $t) {
-            $t->id();
+            $t->id('{{ID}}');
             $t->uid();
             $t->string('status', 50)->comment('This is {{TABLE}} Status');
             $t->deleted();

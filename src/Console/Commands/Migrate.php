@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace Laika\Core\Console\Commands;
 
 use Laika\Core\Console\Command;
+use Laika\Model\Schema\Schema;
 use Laika\Core\Helper\Config;
 use Laika\Model\Connection;
 
@@ -50,6 +51,9 @@ class Migrate extends Command
                 $this->error("No Migrations Found to Run!");
                 return;
             }
+
+            // Disable Foreign Key Check
+            Schema::on()->statement('SET foreign_key_checks = 0');
 
             // Migrate Tables
             \call_user_func([new \Laika\Core\App\Infra(), 'migrateModels']);
