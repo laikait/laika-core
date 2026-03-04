@@ -24,7 +24,7 @@ class {{NAME}}
             $t->string('status', 50)->comment('This is {{TABLE}} Status');
             $t->deleted();
             
-            $t->index('status);
+            $t->index('status');
         });
     }
 }
