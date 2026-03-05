@@ -88,7 +88,7 @@ class Make extends Command
         }
 
         // Migration File
-        $migrationFile = "{$this->migrationPath}/{$name}.php";
+        $migrationFile = "{$this->migrationPath}/" . preg_replace('/model/i', '', $name) . "Schema.php";
 
         // Get Sample Migration Content
         $migrationContent = \file_get_contents(__DIR__ . '/../../Samples/Migration.sample');

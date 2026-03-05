@@ -50,7 +50,7 @@ class Pop extends Command
         $table = strtolower($params[1] ?? $model);
 
         $file = "{$this->path}/{$model}.php";
-        $migrationFile = "{$this->migrationPath}/{$model}.php";
+        $migrationFile = "{$this->migrationPath}/" . preg_replace('/model/i', '', $model) . "Schema.php";
 
         if (!\is_file($file)) {
             $this->error("Model [{$params[0]}] Doesn't Exist!");
