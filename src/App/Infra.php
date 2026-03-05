@@ -19,7 +19,11 @@ use Laika\Core\Helper\Directory;
 class Infra
 {
     /*============================ Model Info ============================*/
-    public function getModels(): array
+    /**
+     * Get All Model Classes
+     * @return array
+     */
+    public function getModelClasses(): array
     {
         $files = APP_PATH . '/lf-app/Model';
         // Get Model Paths
@@ -35,12 +39,31 @@ class Infra
     }
 
     /**
+     * Get All Schema Classes
+     * @return array
+     */
+    public function getSchemaClasses(): array
+    {
+        $files = APP_PATH . '/lf-app/Migration';
+        // Get Model Paths
+        $paths = Directory::files($files, 'php');
+        $models = [];
+        foreach ($paths as $path) {
+            if (is_file($path)) {
+                $info = pathinfo($path, PATHINFO_FILENAME);
+                $models[$info] = "Laika\\App\\Migration\\{$info}";
+            }
+        }
+        return $models;
+    }
+
+    /**
      * Migrate Models
      * @return void
      */
     public function migrateModels(): void
     {
-        $models = array_keys($this->getModels());
+        $models = array_keys($this->getModelClasses());
         foreach ($models as $name) {
             $class = "\\Laika\\App\\Migration\\{$name}";
 
@@ -55,7 +78,11 @@ class Infra
     }
 
     /*============================ Controllers Info ============================*/
-    public function getControllers(): array
+    /**
+     * Get Controller Classes
+     * @return array
+     */
+    public function getControllerClasses(): array
     {
         $files = str_replace('/', '\\', APP_PATH . '/lf-app/Controller');
         // Get Controller Paths
@@ -70,7 +97,11 @@ class Infra
     }
 
     /*============================ Middlewares Info ============================*/
-    public function getMiddlewares(): array
+    /**
+     * Get Middlewar Classes
+     * @return array
+     */
+    public function getMiddlewareClasses(): array
     {
         $files = str_replace('/', '\\', APP_PATH . '/lf-app/Middleware');
         // Get Middleware Paths
@@ -85,7 +116,11 @@ class Infra
     }
 
     /*============================ Afterwares Info ============================*/
-    public function getAfterwares(): array
+    /**
+     * Get Afterware Classes
+     * @return array
+     */
+    public function getAfterwareClasses(): array
     {
         $files = str_replace('/', '\\', APP_PATH . '/lf-app/Afterware');
         // Get Afterware Paths
@@ -100,7 +135,11 @@ class Infra
     }
 
     /*============================ Views Info ============================*/
-    public function getViews(): array
+    /**
+     * Get Template Names
+     * @return array
+     */
+    public function getTemplateNames(): array
     {
         $files = str_replace('/', '\\', APP_PATH . '/lf-templates');
         // Get View Paths

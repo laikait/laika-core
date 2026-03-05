@@ -13,7 +13,6 @@ declare(strict_types=1);
 
 namespace Laika\Core\Console\Commands\Middleware;
 
-use Laika\Core\Helper\Directory;
 use Laika\Core\Console\Command;
 
 // Make Middleware Class
@@ -28,7 +27,7 @@ class Lists extends Command
      */
     public function run(array $params, array $options = []): void
     {
-        $middlewares = \call_user_func([new \Laika\Core\App\Infra(), 'getMiddlewares']);
+        $middlewares = \call_user_func([new \Laika\Core\App\Infra(), 'getMiddlewareClasses']);
 
         // Header
         $headers = ['#', 'Middlewares'];

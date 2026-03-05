@@ -86,8 +86,6 @@ class Lists extends Command
         foreach ($items as $item) {
             \printf("| %-3d | %-{$col2Width}s |\n", $count, $item);
             $count++;
-            // if ($item != 'functions') {
-            // }
         }
 
         echo $line;
