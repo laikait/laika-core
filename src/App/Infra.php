@@ -57,26 +57,6 @@ class Infra
         return $models;
     }
 
-    /**
-     * Migrate Models
-     * @return void
-     */
-    public function migrateModels(): void
-    {
-        $models = array_keys($this->getModelClasses());
-        foreach ($models as $name) {
-            $class = "\\Laika\\App\\Migration\\{$name}";
-
-            // Check Class Exists
-            if (!class_exists($class)) {
-                throw new \Exception("Migration Class Not Found: {$class}");
-            }
-            // Migrate Model
-            \call_user_func([new $class, 'migrate']);
-        }
-        return;
-    }
-
     /*============================ Controllers Info ============================*/
     /**
      * Get Controller Classes
