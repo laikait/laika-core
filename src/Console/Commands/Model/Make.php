@@ -88,13 +88,14 @@ class Make extends Command
         }
 
         // Migration File
-        $migrationFile = "{$this->migrationPath}/" . preg_replace('/model/i', '', $name) . "Schema.php";
+        $schemaName = preg_replace('/model/i', '', $name) . 'Schema';
+        $migrationFile = "{$this->migrationPath}/{$schemaName}.php";
 
         // Get Sample Migration Content
         $migrationContent = \file_get_contents(__DIR__ . '/../../Samples/Migration.sample');
 
         // Replace Placeholders in Migration File
-        $migrationContent = \str_replace(['{{NAME}}','{{TABLE}}', '{{ID}}'], [$name, $table, $id], $migrationContent);
+        $migrationContent = \str_replace(['{{NAME}}','{{TABLE}}', '{{ID}}'], [$schemaName, $table, $id], $migrationContent);
 
         // Create Migration File
         if (\file_put_contents($migrationFile, $migrationContent) === false) {
