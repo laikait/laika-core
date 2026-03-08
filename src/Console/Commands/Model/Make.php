@@ -46,9 +46,9 @@ class Make extends Command
         }
 
         // Model Name
-        $name = $params[0];
+        $model = $params[0];
         // Table Name
-        $table = $options['long']['table'] ?? $options['short']['t'] ?? $name;
+        $table = $options['long']['table'] ?? $options['short']['t'] ?? $model;
         $id = $options['long']['primary'] ?? $options['short']['p'] ?? 'id';
 
         // Check Table Name Is Valid
@@ -68,7 +68,7 @@ class Make extends Command
             Directory::make($this->path);
         }
 
-        $file = "{$this->path}/{$name}.php";
+        $file = "{$this->path}/{$model}.php";
 
         if (\is_file($file)) {
             $this->error("Model [{$params[0]}] Already Exists!");
@@ -79,7 +79,7 @@ class Make extends Command
         $content = \file_get_contents(__DIR__ . '/../../Samples/Model.sample');
 
         // Replace Placeholders
-        $content = \str_replace(['{{NAME}}','{{TABLE}}', '{{ID}}'], [$name, $table, $id], $content);
+        $content = \str_replace(['{{NAME}}','{{TABLE}}', '{{ID}}'], [$model, $table, $id], $content);
 
         // Create Model File
         if (\file_put_contents($file, $content) === false) {
@@ -88,14 +88,14 @@ class Make extends Command
         }
 
         // Migration File
-        $schemaName = preg_replace('/model/i', '', $name) . 'Schema';
+        $schemaName = preg_replace('/model/i', '', $model) . 'Schema';
         $migrationFile = "{$this->migrationPath}/{$schemaName}.php";
 
         // Get Sample Migration Content
         $migrationContent = \file_get_contents(__DIR__ . '/../../Samples/Migration.sample');
 
         // Replace Placeholders in Migration File
-        $migrationContent = \str_replace(['{{NAME}}','{{TABLE}}', '{{ID}}'], [$schemaName, $table, $id], $migrationContent);
+        $migrationContent = \str_replace(['{{NAME}}','{{TABLE}}', '{{ID}}', '{{MODEL}}'], [$schemaName, $table, $id, $model], $migrationContent);
 
         // Create Migration File
         if (\file_put_contents($migrationFile, $migrationContent) === false) {

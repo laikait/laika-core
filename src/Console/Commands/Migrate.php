@@ -60,6 +60,8 @@ class Migrate extends Command
             try {
                 // Disable Foreign Key Check
                 Schema::on()->statement('SET foreign_key_checks = 0');
+
+                // Migrate Schema
                 array_map(function ($table) {
                     $tblModel = new $table();
                     if (!method_exists($tblModel, 'migrate')) {
@@ -67,6 +69,15 @@ class Migrate extends Command
                     }
                     $tblModel->migrate();
                 }, $schemaClasses);
+
+                // Migrate Default Column Values
+                array_map(function ($table) {
+                    $tblModel = new $table();
+                    if (method_exists($tblModel, 'default')) {
+                        $tblModel->default();
+                    }
+                }, $schemaClasses);
+
             } catch (\Throwable $th) {
                 $this->error($th->getMessage());
                 return;
