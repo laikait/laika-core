@@ -30,24 +30,24 @@ class {{NAME}}
         });
     }
 
-    // /**
-    //  * Default Values to Insert
-    //  * @return void
-    //  */
-    // public function default(): void
-    // {
-    //     $model = new ServiceUsageRecords();
-    //     $model->transaction(function ($m) {
-    //         try {
-    //             $default = [
-    //                 'uid' => $m->uid(),
-    //                 'status' => 'active'
-    //             ];
-    //             $m->insert($default);
-    //         } catch (\Throwable $e) {
-    //             throw new MigrationException("Unable to Insert Into 'service_usage_records'", (int) $e->getCode(), $e);
-    //         }
-    //     });
-    //     return;
-    // }
+    /**
+     * Default Values to Insert
+     * @return void
+     */
+    public function default(): void
+    {
+        // $model = new {{MODEL}}();
+        // $model->transaction(function ($m) {
+        //     try {
+        //         $default = [
+        //             'uid' => $m->uid(),
+        //             'status' => 'active'
+        //         ];
+        //         $m->insert($default);
+        //     } catch (\Throwable $e) {
+        //         throw new MigrationException("Unable to Insert Into '{{TABLE}}'", (int) $e->getCode(), $e);
+        //     }
+        // });
+        return;
+    }
 }
