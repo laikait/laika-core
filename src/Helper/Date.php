@@ -36,7 +36,7 @@ class Date
      */
     public function __construct(string $time = 'now', ?string $format = null, ?string $timezone = null)
     {
-        $this->timezone = $timezone ?: 'Europe/London';
+        $this->timezone = $timezone ?: 'UTC';
         $this->format = $format ?: 'Y-m-d H:i:s';
         $this->dateTime = new DateTime($time, new DateTimeZone($this->timezone));
     }
@@ -276,7 +276,7 @@ class Date
         ?string $outputFormat = null,
         ?string $timezone = null
     ): self {
-        $tz = new DateTimeZone($timezone ?: 'Europe/London');
+        $tz = new DateTimeZone($timezone ?: 'UTC');
         $dt = DateTime::createFromFormat($format, $time, $tz);
 
         if (!$dt instanceof DateTime) {
