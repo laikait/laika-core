@@ -262,9 +262,12 @@ add_hook('tpl.scripts', function(): string{
 }, 1000);
 
 /*================================== COMMON HOOKS ==================================*/
-/**
- * Date Format
- */
-add_hook('date.format', function () {
-    return date('Y-m-d H:i:s');
+/** Get All Timezones */
+add_hook('time.zones', function () {
+    return \DateTimeZone::listIdentifiers(DateTimeZone::ALL);
+}, 1000);
+
+/** Time Local Format */
+add_hook('time.local.format', function (string $time, string $format = 'Y-m-d H:i:s', string $timezone = 'UTC') {
+    return (new \Laika\Core\Helper\Date($time, $format))->toLocal($timezone)->format();
 }, 1000);
