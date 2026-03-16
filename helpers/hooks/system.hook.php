@@ -176,8 +176,7 @@ add_hook('page.title', function(string $title): string {
  * Page Number
  */
 add_hook('page.number', function(): int {
-    $number = (int) do_hook('request.input', 'page', 1);
-    return $number < 1 ? 1 : $number;
+    return max(1, (int) do_hook('request.input', 'page', 1));
 }, 1000);
 
 /**
