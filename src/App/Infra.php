@@ -25,14 +25,15 @@ class Infra
      */
     public function getModelClasses(): array
     {
-        $files = APP_PATH . '/lf-app/Model';
-        // Get Model Paths
-        $paths = Directory::files($files, 'php');
+        $base = APP_PATH . '/lf-app/Model';
+        $paths = Directory::files($base, 'php');
         $models = [];
         foreach ($paths as $path) {
             if (is_file($path)) {
-                $info = pathinfo($path, PATHINFO_FILENAME);
-                $models[$info] = "Laika\\App\\Model\\{$info}";
+                // Strip base path, normalise to forward slashes, remove extension
+                $relative = ltrim(str_replace($base, '', $path), '/\\');
+                $class = str_replace(['/', '\\', '.php'], ['\\', '\\', ''], $relative);
+                $models[] = 'Laika\\App\\Model\\' . $class;
             }
         }
         return $models;
@@ -44,17 +45,18 @@ class Infra
      */
     public function getSchemaClasses(): array
     {
-        $files = APP_PATH . '/lf-app/Migration';
-        // Get Model Paths
-        $paths = Directory::files($files, 'php');
-        $models = [];
+        $base = APP_PATH . '/lf-app/Migration';
+        $paths = Directory::files($base, 'php');
+        $schemas = [];
         foreach ($paths as $path) {
             if (is_file($path)) {
-                $info = pathinfo($path, PATHINFO_FILENAME);
-                $models[$info] = "Laika\\App\\Migration\\{$info}";
+                // Strip base path, normalise to forward slashes, remove extension
+                $relative = ltrim(str_replace($base, '', $path), '/\\');
+                $class = str_replace(['/', '\\', '.php'], ['\\', '\\', ''], $relative);
+                $schemas[] = 'Laika\\App\\Migration\\' . $class;
             }
         }
-        return $models;
+        return $schemas;
     }
 
     /*============================ Controllers Info ============================*/
@@ -64,16 +66,18 @@ class Infra
      */
     public function getControllerClasses(): array
     {
-        $files = str_replace('/', '\\', APP_PATH . '/lf-app/Controller');
-        // Get Controller Paths
-        $paths = Directory::scanRecursive($files, true, 'php');
-        $models = [];
+        $base = APP_PATH . '/lf-app/Controller';
+        $paths = Directory::scanRecursive($base, true, 'php');
+        $controllers = [];
         foreach ($paths as $path) {
             if (is_file($path)) {
-                $models[] = 'Laika\\App\\Controller\\' . str_replace(["{$files}\\", '.php', '/'], ['', '', '\\'], $path);
+                // Strip base path, normalise to forward slashes, remove extension
+                $relative = ltrim(str_replace($base, '', $path), '/\\');
+                $class = str_replace(['/', '\\', '.php'], ['\\', '\\', ''], $relative);
+                $controllers[] = 'Laika\\App\\Controller\\' . $class;
             }
         }
-        return $models;
+        return $controllers;
     }
 
     /*============================ Middlewares Info ============================*/
@@ -83,16 +87,17 @@ class Infra
      */
     public function getMiddlewareClasses(): array
     {
-        $files = str_replace('/', '\\', APP_PATH . '/lf-app/Middleware');
-        // Get Middleware Paths
-        $paths = Directory::scanRecursive($files, true, 'php');
-        $models = [];
+        $base = APP_PATH . '/lf-app/Middleware';
+        $paths = Directory::scanRecursive($base, true, 'php');
+        $middlewares = [];
         foreach ($paths as $path) {
             if (is_file($path)) {
-                $models[] = 'Laika\\App\\Middleware\\' . str_replace(["{$files}\\", '.php', '/'], ['', '', '\\'], $path);
+                $relative = ltrim(str_replace($base, '', $path), '/\\');
+                $class = str_replace(['/', '\\', '.php'], ['\\', '\\', ''], $relative);
+                $middlewares[] = 'Laika\\App\\Middleware\\' . $class;
             }
         }
-        return $models;
+        return $middlewares;
     }
 
     /*============================ Afterwares Info ============================*/
@@ -102,16 +107,17 @@ class Infra
      */
     public function getAfterwareClasses(): array
     {
-        $files = str_replace('/', '\\', APP_PATH . '/lf-app/Afterware');
-        // Get Afterware Paths
-        $paths = Directory::scanRecursive($files, true, 'php');
-        $models = [];
+        $base = APP_PATH . '/lf-app/Afterware';
+        $paths = Directory::scanRecursive($base, true, 'php');
+        $afterwares = [];
         foreach ($paths as $path) {
             if (is_file($path)) {
-                $models[] = 'Laika\\App\\Afterware\\' . str_replace(["{$files}\\", '.php', '/'], ['', '', '\\'], $path);
+                $relative = ltrim(str_replace($base, '', $path), '/\\');
+                $class = str_replace(['/', '\\', '.php'], ['\\', '\\', ''], $relative);
+                $afterwares[] = 'Laika\\App\\Afterware\\' . $class;
             }
         }
-        return $models;
+        return $afterwares;
     }
 
     /*============================ Views Info ============================*/
@@ -121,15 +127,15 @@ class Infra
      */
     public function getTemplateNames(): array
     {
-        $files = str_replace('/', '\\', APP_PATH . '/lf-templates');
-        // Get View Paths
-        $paths = Directory::scanRecursive($files, true, 'php');
-        $models = [];
+        $base = APP_PATH . '/lf-templates';
+        $paths = Directory::scanRecursive($base, true, 'php');
+        $templates = [];
         foreach ($paths as $path) {
             if (is_file($path)) {
-                $models[] = str_replace(["{$files}\\", '/'], ['', '\\'], $path);
+                $relative = ltrim(str_replace($base, '', $path), '/\\');
+                $templates[] = str_replace(['/', '\\'], ['\\', '\\'], $relative);
             }
         }
-        return $models;
+        return $templates;
     }
 }

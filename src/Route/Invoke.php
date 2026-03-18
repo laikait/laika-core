@@ -51,14 +51,19 @@ class Invoke
                         $params = \array_merge($params, $args);
                     }
 
+                    // FIX 1: return null after report_bug() — report_bug() renders and returns,
+                    // it does NOT exit. Without return, execution falls through to `new $middleware`
+                    // on an unresolvable class, causing a fatal error.
                     if (!\class_exists($middleware)) {
                         \report_bug(new \RuntimeException("Invalid Middleware: [{$middleware}]"));
+                        return null;
                     }
 
                     $obj = new $middleware;
 
                     if (!\method_exists($obj, 'handle')) {
                         \report_bug(new \RuntimeException("Method Not Found: [{$middleware}::handle()]"));
+                        return null;
                     }
 
                     try {
@@ -66,6 +71,7 @@ class Invoke
                     } catch (\Throwable $th) {
                         \report_bug($th);
                     }
+                    return null;
                 };
             },
             function ($params) use ($controller) {
@@ -109,14 +115,17 @@ class Invoke
                         $params = \array_merge($params, $args);
                     }
 
+                    // FIX 1 (same as middleware): return null after report_bug() to halt execution.
                     if (!\class_exists($afterware)) {
                         \report_bug(new \RuntimeException("Invalid Afterware: [{$afterware}]"));
+                        return null;
                     }
 
                     $obj = new $afterware;
 
                     if (!\method_exists($obj, 'terminate')) {
                         \report_bug(new \RuntimeException("Method Not Found: [{$afterware}::terminate()]"));
+                        return null;
                     }
 
                     try {
@@ -132,6 +141,7 @@ class Invoke
                     } catch (\Throwable $th) {
                         \report_bug($th);
                     }
+                    return null;
                 };
             },
             fn($output) => $output
@@ -141,19 +151,29 @@ class Invoke
     }
 
     /**
-     * @param callable|string|null $handler Controller. Example: HomeController@index or Closure or null or Function
+     * @param callable|string|array|null|object $handler Controller. Example: HomeController@index or Closure or null or Function
      * @param array $args Args to Pass to Controller
      * @throws RuntimeException
      * @return ?string
      */
-    public static function controller(callable|string|null $handler, array $args): ?string
+    public static function controller(callable|string|array|null|object $handler, array $args): ?string
     {
         // Execute Null
         if (\is_null($handler)) {
             return null;
         }
 
-        // Execute Callable
+        // FIX 2: Normalise array format before is_callable() check.
+        // ['HomeController', 'index'] must get the namespace prefix just like the
+        // string format 'HomeController@index' does. Without this, array-format
+        // controllers require a fully qualified class name while string-format does not.
+        if (\is_array($handler) && isset($handler[0], $handler[1]) && \is_string($handler[0])) {
+            $handler[0] = \class_exists($handler[0])
+                ? $handler[0]
+                : "Laika\\App\\Controller\\{$handler[0]}";
+        }
+
+        // Execute Callable (closures, functions, and now namespace-resolved array callables)
         if (\is_callable($handler)) {
             $reflection = new Reflection($handler, $args);
             try {
@@ -166,12 +186,14 @@ class Invoke
 
         // Execute String
         if (\is_string($handler)) {
-            // Get Controler Class & Method Name
-            try {
-                [$controller, $method] = \explode('@', $handler);
-            } catch (\Throwable $th) {
-                throw new \RuntimeException("Invalid Controller Assigned: [{$handler}]", (int) $th->getCode(), $th);
+            // FIX 3: Explicit @ check before explode() to give a clear error message.
+            // Without this, explode('@', 'HomeController') returns a single-element array,
+            // and [$controller, $method] destructuring silently sets $method to null.
+            if (!\str_contains($handler, '@')) {
+                throw new \RuntimeException("Invalid Controller Assigned: [{$handler}]. Expected 'ControllerClass@method' format.");
             }
+
+            [$controller, $method] = \explode('@', $handler, 2);
 
             $controller = "Laika\\App\\Controller\\{$controller}";
 
@@ -181,7 +203,7 @@ class Invoke
             }
             // Check Method Exists
             if (!\method_exists($controller, $method)) {
-                throw new \RuntimeException("Invalid Method: [{$method}]");
+                throw new \RuntimeException("Invalid Method: [{$method}] on [{$controller}]");
             }
             // Call Controller
             $obj = new $controller();

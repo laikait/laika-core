@@ -174,11 +174,13 @@ class Router
      * Register Fallback
      * @param callable|string|array|null|object $callable Register Router Fallnack Controller.
      * Example: 'Sample/Namespace/CallableClass@index' or ['Sample/Namespace/CallableClass','index'] or new Sample/Namespace/CallableClass() (it will call 'index' method)
+     * @param ?string $group Falback Group Name. Default is null for '/'
      * @return void
      */
-    public static function fallback(callable|string|array|null|object $callable = null, string $group = '/'): void
+    public static function fallback(?string $group = null, callable|string|array|null|object $callable = null, string|array $middlewares = []): void
     {
-        Handler::registerFallback($callable, $group);
+        Handler::registerFallback($group, $callable, $middlewares);
+        return;
     }
 
     /**
