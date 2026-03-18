@@ -11,12 +11,12 @@ final class MemoryManager
     public function __construct()
     {
         // DEFINE HTTP LIMIT IF NOT DEFINED
-        if (!defined('LAIKA_MEMORY_LIMIT')) {
-            define('LAIKA_MEMORY_LIMIT', '256M');
+        if (!defined('MEMORY_LIMIT')) {
+            define('MEMORY_LIMIT', '256M');
         }
         // DEFINE CLI LIMIT IF NOT DEFINED
-        if (!defined('LAIKA_CLI_MEMORY_LIMIT')) {
-            define('LAIKA_CLI_MEMORY_LIMIT', '512M');
+        if (!defined('CLI_MEMORY_LIMIT')) {
+            define('CLI_MEMORY_LIMIT', '512M');
         }
     }
 
@@ -27,11 +27,11 @@ final class MemoryManager
     public function apply(): void
     {
         // Check Argumentrs are Valid
-        if (!preg_match('/^\d+[kmg]$/i', LAIKA_MEMORY_LIMIT)) {
-            throw new \InvalidArgumentException("Invalid LAIKA_MEMORY_LIMIT: " . LAIKA_MEMORY_LIMIT . ". Valid Format: '256M', '512K', '1G'.");
+        if (!preg_match('/^\d+[kmg]$/i', MEMORY_LIMIT)) {
+            throw new \InvalidArgumentException("Invalid MEMORY_LIMIT: " . MEMORY_LIMIT . ". Valid Format: '256M', '512K', '1G'.");
         }
-        if (!preg_match('/^\d+[kmg]$/i', LAIKA_CLI_MEMORY_LIMIT)) {
-            throw new \InvalidArgumentException("Invalid LAIKA_CLI_MEMORY_LIMIT: " . LAIKA_CLI_MEMORY_LIMIT . ". Valid Format: '256M', '512K', '1G'.");
+        if (!preg_match('/^\d+[kmg]$/i', CLI_MEMORY_LIMIT)) {
+            throw new \InvalidArgumentException("Invalid CLI_MEMORY_LIMIT: " . CLI_MEMORY_LIMIT . ". Valid Format: '256M', '512K', '1G'.");
         }
 
         $current = ini_get('memory_limit');
@@ -39,7 +39,7 @@ final class MemoryManager
             return;
         }
 
-        $target = $this->isCli() ? LAIKA_CLI_MEMORY_LIMIT : LAIKA_MEMORY_LIMIT;
+        $target = $this->isCli() ? CLI_MEMORY_LIMIT : MEMORY_LIMIT;
 
         $this->setMemoryLimitSafely($target);
         return;
