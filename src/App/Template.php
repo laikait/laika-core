@@ -17,6 +17,7 @@ use Twig\Loader\FilesystemLoader as Engine;
 use Laika\Core\Helper\Directory;
 use Laika\Core\Helper\Local;
 use Laika\Core\Helper\File;
+use Laika\Core\Helper\Url;
 use Twig\Environment;
 use Twig\TwigFilter;
 
@@ -65,10 +66,13 @@ class Template
         // Assign Template Default Vars
         $this->assign('local', Local::get());
         // Assign Template Default Filters
+        $url = new Url();
+        $this->addFilter('slug', function (int $index) use($url) { return $url->segment($index); });
+        $this->addFilter('query', function (string $key) use($url) { return $url->query($key); });
         $this->addFilter('hook', 'do_hook');
         $this->addFilter('named', function(string $name, array $params = []){
-                return \named($name, $params, true);
-            });
+            return \named($name, $params, true);
+        });
 
         // Load Template Functions File
         $file = new File("{$this->templateDirectory}/functions.php");
