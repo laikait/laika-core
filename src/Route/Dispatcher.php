@@ -1,11 +1,11 @@
 <?php
 
 /**
- * Laika PHP Micro Framework
+ * Laika PHP MVC Framework
  * Author: Showket Ahmed
  * Email: riyadhtayf@gmail.com
  * License: MIT
- * This file is part of the Laika PHP Micro Framework.
+ * This file is part of the Laika PHP MVC Framework.
  * For the full copyright and license information, please view the LICENSE file that was distributed with this source code.
  */
 
@@ -89,7 +89,8 @@ class Dispatcher
         );
 
         try {
-            echo empty($afterwares) ? $output : Invoke::afterware($afterwares, $output, $params, $request, $response);
+            echo Invoke::afterware($afterwares, $output, $params, $request, $response);
+            // echo empty($afterwares) ? $output : Invoke::afterware($afterwares, $output, $params, $request, $response);
         } catch (\Throwable $e) {
             throw new \RuntimeException($e->getMessage(), (int) $e->getCode(), $e);
         }
