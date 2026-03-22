@@ -42,36 +42,14 @@ class Dispatcher
         $asset = new Asset();
         $isWebUrl = !str_starts_with($res['route'] ?? '', $asset->app) && !str_starts_with($res['route'] ?? '', $asset->template);
 
+        $request  = new Request;
+        $response = new Response;
+
         // FIX 1: Execute 404 check BEFORE RegisterInitiators().
         // When route is null, $isWebUrl is always true ('' does not start with asset prefixes),
         // so without this reorder, DB/session/hooks boot on every 404 request unnecessarily.
         if ($res['route'] === null) {
-
-            // 404 Response
-            call_user_func([new Response, 'code'], 404);
-
-            $fallbacks = Handler::getFallbacks();
-
-            uksort($fallbacks, fn($a, $b) => strlen($b) - strlen($a));
-            foreach ($fallbacks as $key => $fallback) {
-                if (\str_starts_with(Url::normalizeFallbackKey($requestUrl), $key)) {
-                    $request  = new Request;
-                    $response = new Response;
-                    try {
-                        echo Invoke::middleware(
-                            $fallback['middlewares'],
-                            empty($fallback['controller']) ? function () { return _404::show(); } : $fallback['controller'],
-                            $params,
-                            $request,
-                            $response
-                        );
-                    } catch (\Throwable $e) {
-                        \report_bug($e);
-                    }
-                    return;
-                }
-            }
-            echo _404::show();
+            self::handleFallback($requestUrl, $params, $request, $response);
             return;
         }
 
@@ -97,10 +75,6 @@ class Dispatcher
             $route['middlewares']['route']
         );
 
-        // Run Middlewares -> Controller
-        $request  = new Request;
-        $response = new Response;
-
         try {
             $output = Invoke::middleware($middlewares, $route['controller'], $params, $request, $response);
         } catch (\Throwable $e) {
@@ -123,6 +97,38 @@ class Dispatcher
     }
 
     /*================================= PRIVATE API =================================*/
+
+    /**
+     * Handle Fallback
+     * @return void
+     */
+    private static function handleFallback(string $requestUrl, array $params, Request $request, Response $response): void
+    {
+        // 404 Response
+        $response->code(404);
+
+        $fallbacks = Handler::getFallbacks();
+
+        uksort($fallbacks, fn($a, $b) => strlen($b) - strlen($a));
+        foreach ($fallbacks as $key => $fallback) {
+            if (\str_starts_with(Url::normalizeFallbackKey($requestUrl), $key)) {
+                try {
+                    echo Invoke::middleware(
+                        $fallback['middlewares'],
+                        empty($fallback['controller']) ? function () { return _404::show(); } : $fallback['controller'],
+                        $params,
+                        $request,
+                        $response
+                    );
+                } catch (\Throwable $e) {
+                    \report_bug($e);
+                }
+                return;
+            }
+        }
+        echo _404::show();
+        return;
+    }
 
     /**
      * Set framework request headers
