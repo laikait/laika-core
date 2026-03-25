@@ -23,6 +23,9 @@ class {{NAME}} extends Model
     // Table Name
     protected string $table = '{{TABLE}}';
 
+    // Primary Column Name
+    protected string $id = '{{ID}}';
+
     // Cast Columns
     protected array $casts = []; // Example: ['col_1' => 'int', 'col_2' => 'string', ....]
 

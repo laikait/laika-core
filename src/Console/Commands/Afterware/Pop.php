@@ -62,6 +62,6 @@ class Pop extends Command
             return;
         }
 
-        $this->info("Afterware [{$params[0]}] Removed Successfully!");
+        $this->success("Afterware [{$params[0]}] Removed Successfully!");
     }
 }

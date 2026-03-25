@@ -46,11 +46,12 @@ class Pop extends Command
 
         // Model Name
         $model = $params[0];
-        // Table Name
-        $table = strtolower($params[1] ?? $model);
 
         $file = "{$this->path}/{$model}.php";
-        $migrationFile = "{$this->migrationPath}/{$model}.php";
+
+        // Migration File
+        $schemaName = preg_replace('/model/i', '', $model) . 'Schema';
+        $migrationFile = "{$this->migrationPath}/{$schemaName}.php";
 
         if (!\is_file($file)) {
             $this->error("Model [{$params[0]}] Doesn't Exist!");
@@ -67,7 +68,7 @@ class Pop extends Command
             return;
         }
 
-        $this->info("Model [{$params[0]}] Removed Successfully!");
+        $this->success("Model [{$params[0]}] Removed Successfully!");
         return;
     }
 }

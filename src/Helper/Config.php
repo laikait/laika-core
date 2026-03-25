@@ -117,9 +117,9 @@ class Config
         $name = strtolower($name);
         if ($key !== null) {
             $key = strtolower($key);
-            return isset($obj->config[$name][$key]) && $obj->config[$name][$key];
+            return array_key_exists($key, $obj->config[$name]);
         }
-        return isset($obj->config[$name]);
+        return array_key_exists($name, $obj->config);
     }
 
     // Delete a Config Key

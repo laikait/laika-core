@@ -41,7 +41,7 @@ class Generate extends Command
         // Create Secret Key Value
         Config::set('secret', 'key', \bin2hex(\random_bytes($byte)));
         // Set Message
-        $this->info("{$byte} Byte Secret Key Generated Successfully");
+        $this->success("{$byte} Byte Secret Key Generated Successfully");
         return;
     }
 }

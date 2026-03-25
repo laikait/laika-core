@@ -27,7 +27,7 @@ class Lists extends Command
      */
     public function run(array $params, array $options = []): void
     {
-        $afterwares = \call_user_func([new \Laika\Core\App\Infra(), 'getAfterwares']);
+        $afterwares = \call_user_func([new \Laika\Core\App\Infra(), 'getAfterwareClasses']);
 
         // Header
         $headers = ['#', 'Afterwares'];

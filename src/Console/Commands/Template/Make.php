@@ -11,21 +11,22 @@
 
 declare(strict_types=1);
 
-namespace Laika\Core\Console\Commands\Middleware;
+namespace Laika\Core\Console\Commands\Template;
 
 use Laika\Core\Helper\Directory;
 use Laika\Core\Console\Command;
 
-// Make Middleware Class
 class Make extends Command
 {
-    // App Middleware Path
-    protected string $path = APP_PATH . '/lf-app/Middleware';
+    // App View Path
+    protected string $path = APP_PATH . '/lf-templates';
 
     // Accepted Regular Expresion
-    private string $exp = '/^[a-zA-Z_\/][a-zA-Z0-9_\/]+$/';
+    private string $exp = '/^[a-zA-Z0-9_\-]+$/';
 
     /**
+     * Run the command to create a new controller.
+     *
      * @param array $params
      * @return void
      */
@@ -33,45 +34,44 @@ class Make extends Command
     {
         // Check Parameters
         if (\count($params) < 1) {
-            $this->error("USAGE: php laika make:middleware <name>");
+            $this->error("USAGE: php laika make:template <name>");
             return;
         }
+
+        // Get Extension
+        $ext = strtolower($params[0] ?? 'twig');
 
         if (!\preg_match($this->exp, $params[0])) {
             // Invalid Name
-            $this->error("Invalid Middleware Name: [{$params[0]}]!");
+            $this->error("Invalid Template Name: '{$params[0]}'");
             return;
         }
+        // $parts = $this->parts($params[0], false);
 
-        // Get Parts
-        $parts = $this->parts($params[0]);
+        $name = trim($params[0]);
 
-        //Get Path
-        $this->path .=  $parts['path'];
-
-        // Make Directory if Not Exists
+        // Make Directory if Not Exist
         if (!Directory::exists($this->path)) {
             Directory::make($this->path);
         }
 
-        $file = "{$this->path}/{$parts['name']}.php";
+        $file = "{$this->path}/{$name}.{$ext}";
 
         if (\is_file($file)) {
-            $this->error("Middleware [{$file}] Already Exist!");
+            $this->error("Template Already Exist: {$file}");
             return;
         }
 
         // Get Sample Content
-        $content = \file_get_contents(__DIR__ . '/../../Samples/Middleware.sample');
+        $content = \file_get_contents(__DIR__ . '/../../Samples/Template.sample');
 
         // Replace Placeholders
-        $content = \str_replace(['{{NAMESPACE}}','{{NAME}}'], [$parts['namespace'],$parts['name']], $content);
-
         if (\file_put_contents($file, $content) === false) {
-            $this->error("Failed to Create Middleware: [{$file}]!");
+            $this->error("Failed to Create Template: {$file}");
             return;
         }
 
-        $this->success("Middleware [{$params[0]}] Created Successfully!");
+        $this->success("Template Created Successfully: {$params[0]}");
+        return;
     }
 }

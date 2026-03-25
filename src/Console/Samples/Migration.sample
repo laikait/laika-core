@@ -8,6 +8,8 @@ namespace Laika\App\Migration;
 // Deny Direct Access
 defined('APP_PATH') || http_response_code(403).die('403 Direct Access Denied!');
 
+use Laika\Core\Exceptions\MigrationException;
+use Laika\App\Model\{{MODEL}};
 use Laika\Model\Schema\Blueprint;
 use Laika\Model\Schema\Schema;
 
@@ -19,12 +21,33 @@ class {{NAME}}
     public function migrate()
     {
         Schema::on()->createIfNotExists('{{TABLE}}', function (Blueprint $t) {
-            $t->id();
+            $t->id('{{ID}}');
             $t->uid();
-            $t->string('status', 50);
+            $t->string('status', 50)->comment('This is {{TABLE}} Status');
             $t->deleted();
-            $t->string('status')->comment('This is {{TABLE}} Status');
-            $t->unique('uid');
+            
+            $t->index('status');
         });
+    }
+
+    /**
+     * Default Values to Insert
+     * @return void
+     */
+    public function default(): void
+    {
+        // $model = new {{MODEL}}();
+        // $model->transaction(function ({{MODEL}} $m) {
+        //     try {
+        //         $default = [
+        //             'uid' => $m->uid(),
+        //             'status' => 'active'
+        //         ];
+        //         $m->insert($default);
+        //     } catch (\Throwable $e) {
+        //         throw new MigrationException("Unable to Insert Into '{{TABLE}}'. {$e->getMessage()}", (int) $e->getCode(), $e);
+        //     }
+        // });
+        return;
     }
 }

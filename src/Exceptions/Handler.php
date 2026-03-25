@@ -24,7 +24,10 @@ class Handler
 
     public function __construct()
     {
-        $this->debug = (bool) Config::get('env', 'debug', false);
+        if (!defined('DEBUG')) {
+            throw new \Exception("'DEBUG' Not Defined!");
+        }
+        $this->debug = (bool) DEBUG;
     }
 
     /**

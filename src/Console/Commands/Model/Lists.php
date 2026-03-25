@@ -24,7 +24,7 @@ class Lists extends Command
      */
     public function run(array $params, array $options = []): void
     {
-        $models = \call_user_func([new \Laika\Core\App\Infra(), 'getModels']);
+        $models = \call_user_func([new \Laika\Core\App\Infra(), 'getModelCLasses']);
 
         // Header
         $headers = ['#', 'Models'];

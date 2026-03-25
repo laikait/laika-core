@@ -1,11 +1,11 @@
 <?php
 
 /**
- * Laika PHP MVC Framework
+ * Laika PHP Micro Framework
  * Author: Showket Ahmed
  * Email: riyadhtayf@gmail.com
  * License: MIT
- * This file is part of the Laika PHP MVC Framework.
+ * This file is part of the Laika PHP Micro Framework.
  * For the full copyright and license information, please view the LICENSE file that was distributed with this source code.
  */
 
@@ -13,40 +13,34 @@ declare(strict_types=1);
 
 namespace Laika\Core\Auth;
 
-use Laika\Model\Blueprint;
-use Laika\Session\Session;
-use Laika\Model\Schema;
 use Laika\Model\Model;
+use Laika\Session\Session;
+use Laika\Model\Schema\Schema;
+use Laika\Model\Schema\Blueprint;
 // use PDO;
 
 class Auth extends Model
 {
-    // Session For
-    private string $type;
+    /** @var string $type Session For */
+    protected string $type;
 
-    // DB Table Name
+    /** @var string $table DB Table Name */
     protected string $table;
 
-    // Table ID Column
-    public string $id;
+    /** @var string $cookie Cookie Name */
+    protected string $cookie;
 
-    // Table UUID Column
-    public string $uuid;
+    /** @var int $ttl Cookie Expire After TTL */
+    protected int $ttl;
 
-    // Cookie Name
-    private string $cookie;
+    /** @var ?array $user User Data */
+    protected ?array $user;
 
-    // Cookie Expire After TTL
-    private int $ttl;
+    /** @var string $event Event ID */
+    protected ?string $event;
 
-    // User Data
-    private ?array $user;
-
-    // Event ID
-    private ?string $event;
-
-    // Real Time
-    private int $time;
+    /** @var int $time Real Time */
+    protected int $time;
 
     /**
      * Initiate Auth Session
@@ -57,8 +51,6 @@ class Auth extends Model
     {
         $this->type = \strtolower($type);
         $this->table = "laika_auth_{$this->type}";
-        $this->id = "event";
-        $this->uuid = "uuid";
         $this->cookie = \strtoupper($type) . "_AUTH_TOKEN";
         $this->ttl = 1800;
         $this->user = null;
@@ -70,13 +62,19 @@ class Auth extends Model
         $this->event = Session::get($this->cookie, $this->type);
         $this->time = \time();
 
-        Schema::table($this->table, $connection)->create(function(Blueprint $table){
-            $table->column($this->id)->varchar()->length(64)->index();
-            $table->column('data')->blob();
-            $table->column('expire')->int()->index();
-            $table->column('created')->int()->index();
-        })->execute();
+        if (!Schema::on()->hasTable($this->table)) {
+            Schema::on()->create($this->table, function (Blueprint $t) {
+                $t->string($this->id);
+                $t->binary('data');
+                $t->unsignedInteger('expire');
+                $t->unsignedInteger('created');
 
+                // Indexes
+                $t->unique($this->id);
+                $t->index('expire');
+                $t->index('created');
+            });
+        }
     }
 
     /**
@@ -104,12 +102,14 @@ class Auth extends Model
         $expire = $this->time + $this->ttl;
         
         // Create User Session
-        $this->insert([
-            $this->id   =>  $this->event,
-            'data'      =>  \json_encode($user),
-            'expire'    =>  $expire,
-            'created'   =>  $this->time,
-        ]);
+        $this->transaction(function ($m) use($user,$expire) {
+            $m->insert([
+                $this->id   =>  $this->event,
+                'data'      =>  \json_encode($user),
+                'expire'    =>  $expire,
+                'created'   =>  $this->time,
+            ]);
+        });
 
         // Set Session
         Session::set($this->cookie, $this->event, $this->type);
@@ -176,9 +176,9 @@ class Auth extends Model
      */
     private function generateEventKey(): string
     {
-        $uid = \bin2hex(random_bytes(32));
+        $key = \bin2hex(random_bytes(32));
         // Check Already Exist & Return
-        $row = $this->where(['event' => $this->event])->get();
-        return empty($row) ? $uid : $this->generateEventKey();
+        $rows = $this->select($this->id)->where([$this->id => $key])->count();
+        return ($rows === 0) ? $key : $this->generateEventKey();
     }
 }

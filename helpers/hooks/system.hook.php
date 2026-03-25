@@ -176,8 +176,7 @@ add_hook('page.title', function(string $title): string {
  * Page Number
  */
 add_hook('page.number', function(): int {
-    $number = (int) do_hook('request.input', 'page', 1);
-    return $number < 1 ? 1 : $number;
+    return max(1, (int) do_hook('request.input', 'page', 1));
 }, 1000);
 
 /**
@@ -262,9 +261,12 @@ add_hook('tpl.scripts', function(): string{
 }, 1000);
 
 /*================================== COMMON HOOKS ==================================*/
-/**
- * Date Format
- */
-add_hook('date.format', function () {
-    return date('Y-m-d H:i:s');
+/** Get All Timezones */
+add_hook('time.zones', function () {
+    return \DateTimeZone::listIdentifiers(DateTimeZone::ALL);
+}, 1000);
+
+/** Time Local Format */
+add_hook('time.local.format', function (string $time, string $format = 'Y-m-d H:i:s', string $timezone = 'UTC') {
+    return (new \Laika\Core\Helper\Date($time, $format))->toLocal($timezone)->format();
 }, 1000);

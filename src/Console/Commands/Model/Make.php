@@ -46,16 +46,29 @@ class Make extends Command
         }
 
         // Model Name
-        $name = $params[0];
+        $model = $params[0];
         // Table Name
-        $table = strtolower($params[1] ?? $name);
+        $table = $options['long']['table'] ?? $options['short']['t'] ?? $model;
+        $id = $options['long']['primary'] ?? $options['short']['p'] ?? 'id';
+
+        // Check Table Name Is Valid
+        if (!preg_match('/^[a-zA-Z_]+$/', $table)) {
+            $this->error("Table Name Should Contains Only a-z, A-Z & _");
+            return;
+        }
+
+        // Check Primary Key Name Is Valid
+        if (!preg_match('/^[a-zA-Z_]+$/', $id)) {
+            $this->error("Primary Column Name Should Contains Only a-z, A-Z & _");
+            return;
+        }
 
         // Make Directory if Not Exist
         if (!Directory::exists($this->path)) {
             Directory::make($this->path);
         }
 
-        $file = "{$this->path}/{$name}.php";
+        $file = "{$this->path}/{$model}.php";
 
         if (\is_file($file)) {
             $this->error("Model [{$params[0]}] Already Exists!");
@@ -66,7 +79,7 @@ class Make extends Command
         $content = \file_get_contents(__DIR__ . '/../../Samples/Model.sample');
 
         // Replace Placeholders
-        $content = \str_replace(['{{NAME}}','{{TABLE}}'], [$name, $table], $content);
+        $content = \str_replace(['{{NAME}}','{{TABLE}}', '{{ID}}'], [$model, $table, $id], $content);
 
         // Create Model File
         if (\file_put_contents($file, $content) === false) {
@@ -75,13 +88,14 @@ class Make extends Command
         }
 
         // Migration File
-        $migrationFile = "{$this->migrationPath}/{$name}.php";
+        $schemaName = preg_replace('/model/i', '', $model) . 'Schema';
+        $migrationFile = "{$this->migrationPath}/{$schemaName}.php";
 
         // Get Sample Migration Content
         $migrationContent = \file_get_contents(__DIR__ . '/../../Samples/Migration.sample');
 
         // Replace Placeholders in Migration File
-        $migrationContent = \str_replace(['{{NAME}}','{{TABLE}}'], [$name, $table], $migrationContent);
+        $migrationContent = \str_replace(['{{NAME}}','{{TABLE}}', '{{ID}}', '{{MODEL}}'], [$schemaName, $table, $id, $model], $migrationContent);
 
         // Create Migration File
         if (\file_put_contents($migrationFile, $migrationContent) === false) {
@@ -89,7 +103,7 @@ class Make extends Command
             return;
         }
 
-        $this->info("Model [{$params[0]}] Created Successfully!");
+        $this->success("Model [{$params[0]}] Created Successfully!");
         return;
     }
 }

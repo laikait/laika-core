@@ -1,29 +1,38 @@
 <?php
 
 /**
- * Laika PHP Micro Framework
+ * Laika PHP MVC Framework
  * Author: Showket Ahmed
  * Email: riyadhtayf@gmail.com
  * License: MIT
- * This file is part of the Laika PHP Micro Framework.
+ * This file is part of the Laika PHP MVC Framework.
  * For the full copyright and license information, please view the LICENSE file that was distributed with this source code.
  */
 
 declare(strict_types=1);
 
-namespace Laika\Core\App\Route;
+namespace Laika\Core\Route;
 
 use RuntimeException;
 
 class Handler
 {
     /**
+     * Current active group prefix
      * @var string $group
      */
     private static string $group = '';
 
     /**
-     * @var string $group
+     * FIX 3: Stack of parent group prefixes for nested group support.
+     * Each Router::group() call pushes the current prefix onto the stack
+     * and pops it back when the callback finishes, allowing unlimited nesting.
+     * @var array $groupStack
+     */
+    private static array $groupStack = [];
+
+    /**
+     * @var array $groups
      */
     private static array $groups = [];
 
@@ -38,14 +47,17 @@ class Handler
     private static array $onlyRoutes = [];
 
     /**
+     * FIX 4: Initialize with empty string to prevent fatal errors if
+     * Router::middleware() or Router::afterware() is called before any route is registered.
      * @var string $lastMethod
      */
-    private static string $lastMethod;
+    private static string $lastMethod = '';
 
     /**
+     * FIX 4: Same as $lastMethod — initialized to prevent undefined property access.
      * @var string $lastUri
      */
-    private static string $lastUri;
+    private static string $lastUri = '';
 
     /**
      * @var array $namedRoutes
@@ -87,7 +99,7 @@ class Handler
      * @param string $method Request Method. Example: 'get'
      * @param string $uri Request Url. Example: '/user' or 'user'
      * @param callable|string|array|null|object $controller Controller
-     * @param string|array $middlewares Register Miidleware for Route
+     * @param string|array $middlewares Register Middleware for Route
      */
     public static function register(
         string $method,
@@ -96,36 +108,50 @@ class Handler
         string|array $middlewares = []
     ): void
     {
-        // Capitalize Method
         self::$lastMethod = \strtoupper($method);
-        // Create Uri
-        self::$lastUri = Url::normalize(self::$group . Url::normalize($uri));
+        self::$lastUri    = Url::normalize(self::$group . Url::normalize($uri));
+
         self::$onlyRoutes[self::$lastMethod][] = self::$lastUri;
-        // Set Route
+
         self::$routes[self::$lastMethod][self::$lastUri]['controller'] = $controller;
-        // Set Middlewares
+
         self::$routes[self::$lastMethod][self::$lastUri]['middlewares'] = [
-            'global'    =>  self::$globalMiddlewares,
-            'group'     =>  self::$groupMiddlewares,
-            'route'     =>  (array) $middlewares
+            'global' => self::$globalMiddlewares,
+            'group'  => self::$groupMiddlewares,
+            'route'  => (array) $middlewares
         ];
-        // Set Afterwares
+
         self::$routes[self::$lastMethod][self::$lastUri]['afterwares'] = [
-            'global'    =>  self::$globalAfterwares,
-            'group'     =>  self::$groupAfterwares,
-            'route'     =>  (array) self::$afterwares
+            'global' => self::$globalAfterwares,
+            'group'  => self::$groupAfterwares,
+            'route'  => (array) self::$afterwares
         ];
-        // Reset Afterwares
+
         self::$afterwares = [];
         return;
     }
 
     /**
-     * Register Group of Route
+     * Register Group of Routes
+     *
+     * FIX 3: Uses a group stack so nested groups correctly accumulate prefixes.
+     *
+     * Before (broken):
+     *   Router::group('/admin', function() {
+     *       Router::group('/users', function() {
+     *           Router::get('/list', ...); // was: /users/list  (lost /admin)
+     *       });
+     *       Router::get('/dashboard', ...); // was: /dashboard (lost /admin)
+     *   });
+     *
+     * After (correct):
+     *   /admin/users/list
+     *   /admin/dashboard
+     *
      * @param string $prefix Route Prefix. Example: '/admin' or 'admin'
-     * @param callable $callback Register Router Under Group
-     * @param string|array $middlewares Register Miidleware for Route
-     * @param string|array $afterwares Register Afterware for Route
+     * @param callable $callback Register Routes Under Group
+     * @param string|array $middlewares Middlewares for all routes in this group
+     * @param string|array $afterwares Afterwares for all routes in this group
      */
     public static function registerGroup(
         string $prefix,
@@ -134,33 +160,45 @@ class Handler
         string|array $afterwares
     ): void
     {
-        // push normalized prefix fragment onto stack (ensures leading slash, no trailing)
-        self::$group = Url::normalize($prefix);
-        $gkey = \trim($prefix, '/');
+        // Snapshot current state onto the stack before entering nested group
+        self::$groupStack[] = [
+            'group'             => self::$group,
+            'groupMiddlewares'  => self::$groupMiddlewares,
+            'groupAfterwares'   => self::$groupAfterwares,
+        ];
+
+        // Accumulate prefix on top of any existing group prefix
+        self::$group            = Url::normalize(self::$group . Url::normalize($prefix));
+        self::$groupMiddlewares = (array) $middlewares;
+        self::$groupAfterwares  = (array) $afterwares;
+
+        $gkey = \trim(self::$group, '/');
         self::$groups = \array_merge(self::$groups, [$gkey => $gkey]);
 
-        self::$groupMiddlewares = (array) $middlewares;
-        self::$groupAfterwares = (array) $afterwares;
-
-        // call user callback (allows Http::get() calls inside)
+        // Register all routes inside this group
         $callback();
 
-        // Reset Group, Middleware & Afterwares
-        self::$group = '';
-        self::$groupMiddlewares = [];
-        self::$groupAfterwares = [];
+        // Restore previous state from stack
+        $previous               = \array_pop(self::$groupStack);
+        self::$group            = $previous['group'];
+        self::$groupMiddlewares = $previous['groupMiddlewares'];
+        self::$groupAfterwares  = $previous['groupAfterwares'];
+
         return;
     }
 
     /**
      * Register Fallback
      * @param callable|string|array|null|object $callable Controller
-     * @param ?string $group Register Fallback for Group or Global. Default is null for Global
+     * @param ?string $group Fallback scope. Default '/' for global.
      */
-    public static function registerFallback(callable|string|array|null|object $callable = null, ?string $group = null): void
+    public static function registerFallback(?string $group = null, callable|string|array|null|object $callable = null, string|array $middlewares = []): void
     {
         $group = Url::normalizeFallbackKey($group);
-        self::$fallbacks[$group] = $callable;
+        self::$fallbacks[$group] = [
+            'controller'  => $callable,
+            'middlewares' => (array) $middlewares,
+        ];
         return;
     }
 
@@ -180,7 +218,7 @@ class Handler
 
     /**
      * Global Afterware Register
-     * @param string|array $afterwares Afterware to Register
+     * @param string|array $afterwares Afterwares to Register
      * @return void
      */
     public static function globalAfterwareRegister(string|array $afterwares): void
@@ -193,28 +231,28 @@ class Handler
     }
 
     /**
-     * Middleware Register
-     * @param string|array $middleware Middleware to Register
+     * Route-level Middleware Register
+     * @param string|array $middlewares Middleware to Register
      * @return void
      */
     public static function middlewareRegister(string|array $middlewares): void
     {
         self::$routes[self::$lastMethod][self::$lastUri]['middlewares']['route'] = \array_merge(
-            self::$routes[self::$lastMethod][self::$lastUri]['middlewares']['route'],
+            self::$routes[self::$lastMethod][self::$lastUri]['middlewares']['route'] ?? [],
             (array) $middlewares
         );
         return;
     }
 
     /**
-     * Afterware Register
+     * Route-level Afterware Register
      * @param string|array $afterwares Afterware to Register
      * @return void
      */
     public static function afterwareRegister(string|array $afterwares): void
     {
         self::$routes[self::$lastMethod][self::$lastUri]['afterwares']['route'] = \array_merge(
-            self::$routes[self::$lastMethod][self::$lastUri]['afterwares']['route'],
+            self::$routes[self::$lastMethod][self::$lastUri]['afterwares']['route'] ?? [],
             (array) $afterwares
         );
         return;
@@ -235,8 +273,8 @@ class Handler
     }
 
     /**
-     * Get All Registered Routes Urls Only
-     * @param ?string $method Routes Url for Request Method. Example: 'get' or 'post'
+     * Get All Registered Route URLs Only
+     * @param ?string $method Routes for Request Method
      * @return array
      */
     public static function getOnlyRoutes(?string $method = null): array
@@ -256,7 +294,7 @@ class Handler
     {
         return self::$namedRoutes;
     }
-    
+
     /**
      * Get All Groups
      * @return array
@@ -291,7 +329,7 @@ class Handler
     }
 
     /**
-     * Get Named Route Url
+     * Get Named Route URL
      * @param string $name Route Name. Example: 'page' or 'post.id'
      * @param array $params Route Named Parameters. Example: ['id'=>34, 'action'=>'delete']
      * @return string
@@ -300,11 +338,11 @@ class Handler
     {
         $namedRoutes = self::getNamedRoutes();
         $uri = $namedRoutes[$name] ?? \trim($name, '/');
-        // Replace {param} placeholders
+
         foreach ($params as $key => $value) {
-            $uri = \preg_replace('/\{' . $key . '(:[^}]*)?\}/', (string) \trim($value, '/'), $uri);
+            $uri = \preg_replace('/\{' . $key . '(:[^}]*)?\}/', trim((string) $value, '/'), $uri);
         }
-        // Remove unreplaced params
+
         $uri = \preg_replace('/\{[^}]+\}/', '', $uri);
 
         return Url::normalize($uri);

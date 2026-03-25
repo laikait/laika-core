@@ -13,9 +13,9 @@ declare(strict_types=1);
 
 namespace Laika\Core\Console\Commands\Route;
 
-use Laika\Core\App\Route\Url;
+use Laika\Core\Route\Url;
 use Laika\Core\Console\Command;
-use Laika\Core\App\Route\Handler as Router;
+use Laika\Core\Route\Handler as Router;
 
 // Make Controller Class
 class Lists extends Command

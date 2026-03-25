@@ -72,6 +72,6 @@ class Make extends Command
             return;
         }
 
-        $this->info("Afterware [{$params[0]}] Created Successfully!");
+        $this->success("Afterware [{$params[0]}] Created Successfully!");
     }
 }

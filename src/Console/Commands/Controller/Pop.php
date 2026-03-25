@@ -61,7 +61,7 @@ class Pop extends Command
             return;
         }
 
-        $this->info("Controller [{$params[0]}] Removed Successfully!");
+        $this->success("Controller [{$params[0]}] Removed Successfully!");
         return;
     }
 }

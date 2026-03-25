@@ -17,7 +17,6 @@ use Laika\Core\Helper\Config;
 use Laika\Core\Http\Response;
 use Laika\Core\Exceptions\Handler;
 use Laika\Core\Exceptions\HttpException;
-use Laika\Core\Api\Response as ApiResponse;
 
 // Dump Data & Die
 /**
@@ -30,7 +29,7 @@ function dd(mixed $data, bool $die = false): void
     echo '<pre style="background-color:#000;color:#fff;">';
     var_dump($data);
     echo '</pre>';
-    $die ? die() : $die;
+    if ($die) die();
 }
 
 // Show Data & Die
@@ -44,7 +43,7 @@ function show(mixed $data, bool $die = false): void
     echo '<pre style="background-color:#000;color:#fff;">';
     print_r($data);
     echo '</pre>';
-    $die ? die() : $die;
+    if ($die) die();
 }
 
 // Purify Arry Values

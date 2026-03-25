@@ -1,17 +1,17 @@
 <?php
 
 /**
- * Laika PHP Micro Framework
+ * Laika PHP MVC Framework
  * Author: Showket Ahmed
  * Email: riyadhtayf@gmail.com
  * License: MIT
- * This file is part of the Laika PHP Micro Framework.
+ * This file is part of the Laika PHP MVC Framework.
  * For the full copyright and license information, please view the LICENSE file that was distributed with this source code.
  */
 
 declare(strict_types=1);
 
-namespace Laika\Core\App\Route;
+namespace Laika\Core\Route;
 
 class _404
 {
@@ -29,8 +29,8 @@ class _404
                         margin: 0;
                         padding: 0;
                         font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-                        background: #f5f7fa;
-                        color: #333;
+                        background: #000000;
+                        color: #c2c2c2;
                         display: flex;
                         align-items: center;
                         justify-content: center;
@@ -43,30 +43,16 @@ class _404
                     }
 
                     .error-code {
-                        font-size: 8rem;
+                        font-size: 3rem;
                         font-weight: bold;
-                        color: #0b5394;
+                        color: #501f1f;
                         margin: 0;
-                    }
-
-                    .message {
-                        font-size: 1.5rem;
-                        color: #555;
-                        margin: 1rem 0;
-                    }
-
-                    .note {
-                        margin-top: 1rem;
-                        font-size: 0.9rem;
-                        color: #999;
                     }
                 </style>
             </head>
             <body>
                 <div class="container">
-                    <div class="error-code">404</div>
-                    <div class="message">Oops! The page you're looking for doesn't exist.</div>
-                    <div class="note">If you believe this is an error, please contact the site administrator.</div>
+                    <div class="error-code">!404</div>
                 </div>
             </body>
         </html>

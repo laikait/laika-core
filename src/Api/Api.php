@@ -114,7 +114,7 @@ class Api
      */
     public function body(): array
     {
-        return call_user_func([new Request], 'all');
+        return call_user_func([new Request(), 'all']);
     }
 
     /**
@@ -129,29 +129,23 @@ class Api
             ?? null;
 
         // Handle missing header
-        if (!$header) {
+        if ($header === null || $header === '') {
             $this->message('Missing Authorization Header');
-            $this->send([], 203);
+            return $this->send([], 401);
         }
 
         // Validate Bearer pattern
         if (!preg_match('/^Bearer\s+(\S+)$/i', trim($header), $matches)) {
             $this->message('Invalid Authorization Header Format');
-            $this->send([], 400);
+            return $this->send([], 400);
         }
 
-        $token = $matches[1] ?? '';
-
-        // Handle empty token
-        if (empty($token)) {
-            $this->message('Empty Bearer Token');
-            $this->send([], 203);
-        }
+        $token = $matches[1];
 
         $obj = new Token();
         if (!$obj->validateToken($token)) {
             $this->message('Token Expired');
-            $this->send([], 401);
+            return $this->send([], 401);
         }
 
         return $token;

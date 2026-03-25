@@ -119,7 +119,7 @@ class Rename extends Command
             return;
         }
 
-        $this->info("Model [$old] Renamed to [{$new}] Successfully!");
+        $this->success("Model [$old] Renamed to [{$new}] Successfully!");
         return;
     }
 }

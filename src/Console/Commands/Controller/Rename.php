@@ -117,7 +117,7 @@ class Rename extends Command
             return;
         }
 
-        $this->info("Controller [{$old}] Renamed to [{$new}] Successfully!");
+        $this->success("Controller [{$old}] Renamed to [{$new}] Successfully!");
         return;
     }
 }

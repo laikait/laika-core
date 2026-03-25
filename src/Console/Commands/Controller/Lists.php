@@ -24,7 +24,7 @@ class Lists extends Command
      */
     public function run(array $params, array $options = []): void
     {
-        $controllers = \call_user_func([new \Laika\Core\App\Infra(), 'getControllers']);
+        $controllers = \call_user_func([new \Laika\Core\App\Infra(), 'getControllerClasses']);
 
         // Header
         $headers = ['#', 'Controllers'];

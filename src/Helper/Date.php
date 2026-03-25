@@ -36,7 +36,7 @@ class Date
      */
     public function __construct(string $time = 'now', ?string $format = null, ?string $timezone = null)
     {
-        $this->timezone = $timezone ?: 'Europe/London';
+        $this->timezone = $timezone ?: 'UTC';
         $this->format = $format ?: 'Y-m-d H:i:s';
         $this->dateTime = new DateTime($time, new DateTimeZone($this->timezone));
     }
@@ -96,9 +96,9 @@ class Date
     /**
      * Set Timestamp
      * @param int $timestamp Required Argument.
-     * @return self
+     * @return static
      */
-    public function setTimestamp(int $timestamp): self
+    public function setTimestamp(int $timestamp): static
     {
         $this->dateTime->setTimestamp($timestamp);
         return $this;
@@ -107,7 +107,7 @@ class Date
     /**
      * Set Timezone
      * @param string $timezone Required Argument. Example: 'UTC'
-     * @return self
+     * @return static
      */
     public function setTimezone(string $timezone): self
     {
@@ -127,12 +127,13 @@ class Date
 
     /**
      * Get Difference Between Two Dates
-     * @param Date $other Required Argument.
+     * @param Date|DateTime $other Required Argument.
      * @return DateInterval
      */
-    public function diff(Date $other): DateInterval
+    public function diff(Date|DateTime $other): DateInterval
     {
-        return $this->dateTime->diff($other->dateTime);
+        $dt = $other instanceof Date ? $other->getDateTime() : $other;
+        return $this->dateTime->diff($dt);
     }
 
     /**
@@ -145,8 +146,24 @@ class Date
     }
 
     /**
+     * Get ISO 8601 Formatted DateTime
+     * @param bool $convertToUtc Optional. If true, converts to UTC before formatting. Default is false.
+     * @return string Example: 2024-01-01T12:00:00+00:00 or 2024-01-01T12:00:00Z
+     */
+    public function toIso8601(bool $convertToUtc = false): string
+    {
+        if ($convertToUtc) {
+            return (clone $this->dateTime)
+                ->setTimezone(new DateTimeZone('UTC'))
+                ->format('Y-m-d\TH:i:s\Z');
+        }
+
+        return $this->dateTime->format(\DateTime::ATOM);
+    }
+
+    /**
      * Convert to UTC
-     * @return self
+     * @return static
      */
     public function toUtc(): static
     {
@@ -156,7 +173,7 @@ class Date
     /**
      * Convert to Local Timezone
      * @param string $timezone Required Argument. Example: 'America/New_York'
-     * @return self
+     * @return static
      */
     public function toLocal(string $timezone): static
     {
@@ -183,12 +200,12 @@ class Date
 
     /**
      * Get Human Readable Difference
-     * @param Date|null $other Optional Argument. Default is null.
+     * @param Date|DateTime|null $other Optional Argument. Default is null.
      * @return string
      */
-    public function humanDiff(?Date $other = null): string
+    public function humanDiff(Date|DateTime|null $other): string
     {
-        $other = $other ?: Date::now($this->format, $this->timezone);
+        $other = $other ?? Date::now($this->format, $this->timezone);
         $diff = $this->diff($other);
 
         $units = [
@@ -248,9 +265,10 @@ class Date
      * Create Date from Format
      * @param string $format Required Argument. Example: 'Y-m-d H:i:s'
      * @param string $time Required Argument. Example: '2024-01-01 12:00:00'
-     * @param ?string $outputFormat Optional Argument. Default is 'Y-m-d H:i:s'.
-     * @param ?string $timezone Optional Argument. Default is 'UTC'.
+     * @param ?string $outputFormat Optional Argument. Default is null.
+     * @param ?string $timezone Optional Argument. Default is null.
      * @return self
+     * @throws \InvalidArgumentException
      */
     public static function fromFormat(
         string $format,
@@ -258,11 +276,17 @@ class Date
         ?string $outputFormat = null,
         ?string $timezone = null
     ): self {
-        $format = $format ?: 'Y-m-d H:i:s';
-        $tz = new DateTimeZone($timezone);
+        $tz = new DateTimeZone($timezone ?: 'UTC');
         $dt = DateTime::createFromFormat($format, $time, $tz);
+
+        if (!$dt instanceof DateTime) {
+            throw new \InvalidArgumentException(
+                "Failed to parse '{$time}' using format '{$format}'"
+            );
+        }
+
         $instance = new self('now', $outputFormat, $timezone);
-        $instance->dateTime = $dt instanceof DateTime ? $dt : new DateTime('now', $tz);
+        $instance->dateTime = $dt;
         return $instance;
     }
 

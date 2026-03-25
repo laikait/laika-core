@@ -11,7 +11,7 @@
 
 declare(strict_types=1);
 
-namespace Laika\Core\Console\Commands\View;
+namespace Laika\Core\Console\Commands\Template;
 
 use Laika\Core\Helper\Directory;
 use Laika\Core\Console\Command;
@@ -106,7 +106,7 @@ class Rename extends Command
             return;
         }
 
-        $this->info("View Renamed Successfully: '{$old}'->'{$new}'");
+        $this->success("View Renamed Successfully: '{$old}'->'{$new}'");
         return;
     }
 }

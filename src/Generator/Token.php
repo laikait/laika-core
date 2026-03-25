@@ -11,15 +11,15 @@
 
 declare(strict_types=1);
 
-namespace Laika\Core\Helper;
+namespace Laika\Core\Generator;
 
 use Firebase\JWT\JWT;
 use Firebase\JWT\Key;
+use Laika\Core\Helper\Url;
+use Laika\Core\Helper\Date;
+use Laika\Core\Helper\Config;
 use Exception;
 
-/*======================================================================================*/
-/*================================= MOVED TO GENERATOR =================================*/
-/*======================================================================================*/
 class Token
 {
     /**
