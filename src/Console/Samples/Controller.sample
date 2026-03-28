@@ -16,7 +16,9 @@ namespace Laika\App\Controller{{NAMESPACE}};
 // Deny Direct Access
 defined('APP_PATH') || http_response_code(403).die('403 Direct Access Denied!');
 
-class {{NAME}}
+use Laika\Core\App\Template;
+
+class {{NAME}} extends Template
 {
     /**
      * Args contains Request Object and Other Route Parameters
