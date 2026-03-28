@@ -54,42 +54,48 @@ class Lists extends Command
             return;
         }
 
-        $paths = Directory::files($this->path);
+        $paths = array_merge(Directory::files($this->path, 'html'), Directory::files($this->path, 'twig'));
         $items = [];
+        $count = 0;
         foreach ($paths as $file) {
-            if (\is_file($file)) {
-                $file = \str_replace("{$this->path}/", '', $file);
+            if (is_file($file)) {
+                $file = str_replace("{$this->path}/", '', $file);
                 $name = pathinfo($file, PATHINFO_FILENAME);
                 if ($name != 'functions') {
                     $items[] = $name;
+                    $count++;
                 }
             }
         }
 
+        // Check Has Items
+        if (empty($items)) {
+            echo "\n{$this->bg_red(' 0 Template Found! ')}\n\n";
+            return;
+        }
         // Header
         $headers = ['#', 'Templates'];
 
         // Find max width for "File Path" column
-        $maxLength = \max(\array_map('strlen', $items));
-        $col2Width = \max(\strlen($headers[1]), $maxLength);
+        $maxLength = max(array_map('strlen', $items));
+        $col2Width = max(strlen($headers[1]), $maxLength);
 
         // Table width
-        $line = '+' . \str_repeat('-', 5) . '+' . \str_repeat('-', $col2Width + 2) . "+\n";
+        $line = '+' . str_repeat('-', 5) . '+' . str_repeat('-', $col2Width + 2) . "+\n";
 
         // Print Header
         echo $line;
         \printf("| %-3s | %-{$col2Width}s |\n", $headers[0], $headers[1]);
         echo $line;
 
-        $count = 0;
+        // $count = 0;
         // Print Rows
-        foreach ($items as $item) {
-            \printf("| %-3d | %-{$col2Width}s |\n", $count, $item);
-            $count++;
+        foreach ($items as $k => $item) {
+            \printf("| %-3d | %-{$col2Width}s |\n", $k + 1, $item);
         }
 
         echo $line;
-        echo "Total: {$count}\n\n";
+        echo $this->bg_green("Total: {$count}");
         return;
     }
 }
