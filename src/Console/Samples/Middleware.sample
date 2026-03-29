@@ -16,8 +16,18 @@ namespace Laika\App\Middleware{{NAMESPACE}};
 // Deny Direct Access
 defined('APP_PATH') || http_response_code(403).die('403 Direct Access Denied!');
 
+use Laika\Core\Http\Redirect;
+
 class {{NAME}}
 {
+    /** @var $redirect */
+    private Redirect $redirect;
+
+    public function __construct()
+    {
+        $this->redirect = new Redirect();
+    }
+
     /**
      * @param $next Pass Parameters to Next Middleware or Controller
      * @param $request Request Object
