@@ -77,6 +77,10 @@ class Redirect
      */
     private function send(string $to, int $code = 302): never
     {
+        // Check Valid Redirect Code
+        if (!in_array($code, [301,302])) {
+            throw new HttpException(500, "Invalid Redirect Code: {$code}", 500);
+        }
         \header("Location:{$to}", true, $code);
         exit();
     }
