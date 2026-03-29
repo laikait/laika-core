@@ -116,10 +116,10 @@ class CSRF
     }
 
     /**
-     * Validate Form Token
+     * Check CSRF Form Token is Valid
      * @return bool
      */
-    public function validate(): bool
+    public function is_valid(): bool
     {
         // If CSRF Request Key Missing or Blank, Return false
         $request_token = (string) \call_user_func([new Request, 'input'], $this->key);
