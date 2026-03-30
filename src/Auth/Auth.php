@@ -13,10 +13,11 @@ declare(strict_types=1);
 
 namespace Laika\Core\Auth;
 
-use Laika\Model\Schema\Blueprint;
-use Laika\Model\Schema\Schema;
-use Laika\Session\Session;
 use Laika\Model\Model;
+use Laika\Session\Session;
+use Laika\Model\Schema\Schema;
+use Laika\Model\Schema\Blueprint;
+// use PDO;
 
 class Auth extends Model
 {
@@ -142,7 +143,7 @@ class Auth extends Model
 
         // Regenerate Cookie if Session Expired
         if (($row['expire'] - $this->time) < ($this->ttl / 2)) {
-            self::regenerate();
+            $this->regenerate();
         }
 
         return $this->user;
@@ -153,22 +154,25 @@ class Auth extends Model
      * @return string
      */
     public function regenerate(): string
-    {
-        $this->destroy();
-        return $this->create($this->user);
-    }
+{
+    $this->destroy(true);
+    return $this->create($this->user);
+}
 
     /**
      * Destroy Auth Event ID
+     * @param bool $soft. If True, Only Destroy Current Session, But Not End Session. Default is False.
      * @return void
      */
-    public function destroy(): void
+    public function destroy(bool $soft = false): void
     {
-        // Remove Event & Session Cookie
         $this->where([$this->id => $this->event])->delete();
         Session::pop($this->cookie, $this->type);
-        // Destroy Session
-        Session::end();
+        $this->event = null;
+
+        if (!$soft) {
+            Session::end();
+        }
     }
 
     /**
