@@ -67,9 +67,9 @@ class Request
         $this->get = purify($_GET ?? []);
         $this->post = purify($_POST ?? []);
         $this->files = $_FILES ?? [];
-        $this->rawBody = \file_get_contents('php://input');
-        $this->json = \purify($this->decode($this->rawBody));
-        $this->method = \strtoupper($this->post['_method'] ?? $_SERVER['REQUEST_METHOD'] ?? 'GET');
+        $this->rawBody = file_get_contents('php://input');
+        $this->json = purify($this->decode($this->rawBody));
+        $this->method = strtoupper($this->post['_method'] ?? $_SERVER['REQUEST_METHOD'] ?? 'GET');
         $this->errors = [];
     }
 
@@ -91,8 +91,8 @@ class Request
     {
         $headers = [];
         foreach ($_SERVER as $key => $value) {
-            if (\str_starts_with($key, 'HTTP_')) {
-                $headers[\strtolower(\str_replace('_', '-', \substr($key, 5)))] = $value;
+            if (str_starts_with($key, 'HTTP_')) {
+                $headers[strtolower(str_replace('_', '-', substr($key, 5)))] = $value;
             }
         }
         return $headers;
@@ -105,7 +105,7 @@ class Request
      */
     public function header(string $key): ?string
     {
-        return $this->headers()[\strtolower($key)] ?? null;
+        return $this->headers()[strtolower($key)] ?? null;
     }
 
     /**
@@ -159,7 +159,7 @@ class Request
      */
     public function isAjax(): bool
     {
-        return \strtolower($this->header('X-Requested-With')) === 'xmlhttprequest';
+        return strtolower($this->header('X-Requested-With')) === 'xmlhttprequest';
     }
 
     /**
@@ -179,7 +179,7 @@ class Request
      */
     public function inputs(): array
     {
-        return \array_merge($this->json, $this->post, $this->get);
+        return array_merge($this->json, $this->post, $this->get);
     }
 
     // Get Selected Key Values
@@ -199,16 +199,18 @@ class Request
      */
     public function has(string $key): bool
     {
-        return \array_key_exists($key, $this->post) || \array_key_exists($key, $this->get) || \array_key_exists($key, $this->json);
+        return array_key_exists($key, $this->post) || array_key_exists($key, $this->get) || array_key_exists($key, $this->json);
     }
 
     /**
      * Get JSON Body
-     * @return array
+     * @param bool $force_object Force JSON Object Instead of Array. Default is False.
+     * @return string
      */
-    public function json(): array
+    public function json(bool $force_object = false): string
     {
-        return $this->json;
+        $options = $force_object ? JSON_FORCE_OBJECT : 0;
+        return json_encode($this->json, $options);
     }
 
     /**
@@ -287,9 +289,9 @@ class Request
     public function decode(string $rawBody): array
     {
         $contentType = $_SERVER['CONTENT_TYPE'] ?? '';
-        if (\str_starts_with(\strtolower($contentType), 'application/json')) {
-            $decoded = \json_decode($rawBody, true);
-            return \is_array($decoded) ? $decoded : [];
+        if (str_starts_with(strtolower($contentType), 'application/json')) {
+            $decoded = json_decode($rawBody, true);
+            return is_array($decoded) ? $decoded : [];
         }
         return [];
     }

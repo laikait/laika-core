@@ -84,11 +84,12 @@ class Api
     /**
      * Set Message
      * @param string $message
-     * @return void
+     * @return self
      */
-    public function message(string $message): void
+    public function message(string $message): self
     {
         $this->message = htmlspecialchars(trim($message));
+        return $this;
     }
 
     /**
@@ -114,14 +115,14 @@ class Api
      */
     public function body(): array
     {
-        return call_user_func([new Request(), 'all']);
+        return call_user_func([new Request(), 'inputs']);
     }
 
     /**
      * Get Bearer Token from Authorization Header
      * @return string Bearer Token
      */
-    public function bearer(): string
+    public function bearerToken(): string
     {
         // Try to fetch the Authorization header
         $header = $_SERVER['HTTP_AUTHORIZATION']
