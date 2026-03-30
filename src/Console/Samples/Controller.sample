@@ -29,7 +29,7 @@ class {{NAME}}
         $tpl = new Template();
 
         // Default Template Extension is .twig
-        // $tpl->extension('html);
+        // $tpl->extension('html');
 
         // Assign Variable
         $tpl->assign('title', '{{NAME}} Page');
