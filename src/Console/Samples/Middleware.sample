@@ -22,7 +22,7 @@ use Closure;
 
 class {{NAME}}
 {
-    /** @var $redirect */
+    /** @var Redirect $redirect */
     private Redirect $redirect;
 
     public function __construct()
