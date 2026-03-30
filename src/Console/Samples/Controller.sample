@@ -16,7 +16,7 @@ namespace Laika\App\Controller{{NAMESPACE}};
 // Deny Direct Access
 defined('APP_PATH') || http_response_code(403).die('403 Direct Access Denied!');
 
-// use Laika\Core\App\Template;
+use Laika\Core\App\Template;
 
 class {{NAME}}
 {
@@ -25,17 +25,15 @@ class {{NAME}}
      */
     public function index()
     {
-        /**
-         * To use Template Use Laika\Core\App\Template
-         * $tpl = new Template();
-         * 
-         * Assign Data
-         * $this->assign('title', '{{NAME}} Controller Page');
-         * 
-         * // load View File
-         * return $this->view('home');
-         */
+        // Load Template Engine
+        $tpl = new Template();
 
-        return "<h1>This is '{{NAME}}' Controller</h1>";
+        // Assign Variable
+        $tpl->assign('title', '{{NAME}} Page');
+
+        // Assign Filter
+        $tpl->addFilter('upper', 'strtoupper');
+
+        return $tpl->view('home');
     }
 }
