@@ -46,7 +46,7 @@ function show(mixed $data, bool $die = false): void
     if ($die) die();
 }
 
-// Purify Arry Values
+// Purify Array Values
 /**
  * @param array $data Array Data to Purify
  * @return array
@@ -56,7 +56,7 @@ function purify(array $data): array
     return array_map(function($val){
         return is_array($val)
             ? purify($val)
-            : htmlspecialchars(trim($val), ENT_QUOTES, 'UTF-8');
+            : htmlspecialchars(trim(urldecode((string) $val)), ENT_QUOTES, 'UTF-8');
     }, $data);
 }
 
