@@ -32,10 +32,10 @@ class {{NAME}}
     }
 
     /**
-     * @param $next Pass Parameters to Next Middleware or Controller
-     * @param $request Request Object
-     * @param $response Response Object
-     * @param $params Parameters
+     * @param Closure $next Pass Parameters to Next Middleware or Controller
+     * @param Request $request Request Object
+     * @param Response $response Response Object
+     * @param array $params Parameters
      */
     public function handle(Closure $next, Request $request, Response $response, array $params)
     {

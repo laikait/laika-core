@@ -13,11 +13,10 @@ declare(strict_types=1);
 
 namespace Laika\Core\Auth;
 
-use Laika\Model\Model;
-use Laika\Session\Session;
-use Laika\Model\Schema\Schema;
 use Laika\Model\Schema\Blueprint;
-// use PDO;
+use Laika\Model\Schema\Schema;
+use Laika\Session\Session;
+use Laika\Model\Model;
 
 class Auth extends Model
 {
@@ -49,9 +48,9 @@ class Auth extends Model
      */
     public function __construct(string $type = 'APP', string $connection = 'default')
     {
-        $this->type = \strtolower($type);
+        $this->type = strtolower($type);
         $this->table = "laika_auth_{$this->type}";
-        $this->cookie = \strtoupper($type) . "_AUTH_TOKEN";
+        $this->cookie = strtoupper($type) . "_AUTH_TOKEN";
         $this->ttl = 1800;
         $this->user = null;
 
@@ -60,7 +59,7 @@ class Auth extends Model
 
         // Get Existing Event
         $this->event = Session::get($this->cookie, $this->type);
-        $this->time = \time();
+        $this->time = time();
 
         if (!Schema::on()->hasTable($this->table)) {
             Schema::on()->create($this->table, function (Blueprint $t) {
@@ -105,7 +104,7 @@ class Auth extends Model
         $this->transaction(function ($m) use($user,$expire) {
             $m->insert([
                 $this->id   =>  $this->event,
-                'data'      =>  \json_encode($user),
+                'data'      =>  json_encode($user),
                 'expire'    =>  $expire,
                 'created'   =>  $this->time,
             ]);
@@ -139,7 +138,7 @@ class Auth extends Model
             return null;
         }
 
-        $this->user = \json_decode($row['data'], true);
+        $this->user = json_decode($row['data'], true);
 
         // Regenerate Cookie if Session Expired
         if (($row['expire'] - $this->time) < ($this->ttl / 2)) {
@@ -168,6 +167,8 @@ class Auth extends Model
         // Remove Event & Session Cookie
         $this->where([$this->id => $this->event])->delete();
         Session::pop($this->cookie, $this->type);
+        // Destroy Session
+        Session::end();
     }
 
     /**
@@ -176,7 +177,7 @@ class Auth extends Model
      */
     private function generateEventKey(): string
     {
-        $key = \bin2hex(random_bytes(32));
+        $key = bin2hex(random_bytes(32));
         // Check Already Exist & Return
         $rows = $this->select($this->id)->where([$this->id => $key])->count();
         return ($rows === 0) ? $key : $this->generateEventKey();
