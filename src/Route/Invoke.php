@@ -1,5 +1,4 @@
 <?php
-
 /**
  * Laika PHP MVC Framework
  * Author: Showket Ahmed
@@ -29,23 +28,23 @@ class Invoke
      */
     public static function middleware(array $middlewares, callable|string|array|null|object $controller, array $params = [], ?Request $request = null, ?Response $response = null): ?string
     {
-        $request  ??= new \Laika\Core\Http\Request();
-        $response ??= new \Laika\Core\Http\Response();
+        $request  ??= new Request();
+        $response ??= new Response();
 
         $next = array_reduce(
             array_reverse($middlewares),
             function ($next, $middleware) use ($params, $request, $response) {
                 return function ($params) use ($middleware, $next, $request, $response) {
-                    $parts    = explode('|', $middleware);
+                    $parts = explode('|', $middleware);
                     $parts[0] = trim($parts[0], '\\');
 
-                    $middleware = \class_exists($parts[0]) ? $parts[0] : "Laika\\App\\Middleware\\{$parts[0]}";
+                    $middleware = class_exists($parts[0]) ? $parts[0] : "Laika\\App\\Middleware\\{$parts[0]}";
 
                     if (isset($parts[1])) {
-                        $args       = [];
+                        $args = [];
                         $paramParts = explode(',', $parts[1]);
                         foreach ($paramParts as $paramPart) {
-                            [$k, $v]    = explode('=', $paramPart);
+                            [$k, $v] = explode('=', $paramPart);
                             $args[trim($k)] = trim($v);
                         }
                         $params = array_merge($params, $args);
@@ -68,12 +67,14 @@ class Invoke
                     try {
                         return $obj->handle($next, $request, $response, $params);
                     } catch (\Throwable $th) {
-                        report_bug($th);
+                        \report_bug($th);
                     }
                     return null;
                 };
             },
-            function ($params) use ($controller) {
+            function ($params) use ($controller, $request, $response) {
+                if (empty($params['request'])) $params['request'] = $request;
+                if (empty($params['response'])) $params['response'] = $response;
                 return self::controller($controller, $params);
             }
         );
@@ -99,30 +100,31 @@ class Invoke
             array_reverse($afterwares),
             function ($next, $afterware) use ($params, $request, $response) {
                 return function ($output) use ($afterware, $next, $params, $request, $response) {
-                    $parts    = explode('|', $afterware);
+                    $parts = explode('|', $afterware);
                     $parts[0] = trim($parts[0], '\\');
 
-                    $afterware = \class_exists($parts[0]) ? $parts[0] : "Laika\\App\\Afterware\\{$parts[0]}";
+                    $afterware = class_exists($parts[0]) ? $parts[0] : "Laika\\App\\Afterware\\{$parts[0]}";
 
                     if (isset($parts[1])) {
-                        $args       = [];
+                        $args = [];
                         $paramParts = explode(',', $parts[1]);
                         foreach ($paramParts as $paramPart) {
-                            [$k, $v]    = explode('=', $paramPart);
+                            [$k, $v]  = explode('=', $paramPart);
                             $args[trim($k)] = trim($v);
                         }
                         $params = array_merge($params, $args);
                     }
 
-                    if (!class_exists($afterware)) {
-                        report_bug(new \RuntimeException("Invalid Afterware: [{$afterware}]"));
+                    // FIX 1 (same as middleware): return null after report_bug() to halt execution.
+                    if (!\class_exists($afterware)) {
+                        \report_bug(new \RuntimeException("Invalid Afterware: [{$afterware}]"));
                         return null;
                     }
 
                     $obj = new $afterware;
 
                     if (!method_exists($obj, 'terminate')) {
-                        report_bug(new \RuntimeException("Method Not Found: [{$afterware}::terminate()]"));
+                        \report_bug(new \RuntimeException("Method Not Found: [{$afterware}::terminate()]"));
                         return null;
                     }
 
@@ -165,22 +167,25 @@ class Invoke
         // string format 'HomeController@index' does. Without this, array-format
         // controllers require a fully qualified class name while string-format does not.
         if (is_array($handler) && isset($handler[0], $handler[1]) && is_string($handler[0])) {
-            $handler[0] = class_exists($handler[0]) ? $handler[0] : "Laika\\App\\Controller\\{$handler[0]}";
+            $handler[0] = class_exists($handler[0])
+                ? $handler[0]
+                : "Laika\\App\\Controller\\{$handler[0]}";
         }
 
         // Execute Callable (closures, functions, and now namespace-resolved array callables)
         if (is_callable($handler)) {
             $reflection = new Reflection($handler, $args);
             try {
-                return \call_user_func($handler, ...$reflection->namedArgs());
+                return call_user_func($handler, ...$reflection->namedArgs());
             } catch (\Throwable $th) {
-                \report_bug($th);
+                report_bug($th);
             }
             return null;
         }
 
         // Execute String
         if (is_string($handler)) {
+            // FIX 3: Explicit @ check before explode() to give a clear error message.
             // Without this, explode('@', 'HomeController') returns a single-element array,
             // and [$controller, $method] destructuring silently sets $method to null.
             if (!str_contains($handler, '@')) {
