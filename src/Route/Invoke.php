@@ -67,7 +67,7 @@ class Invoke
                     try {
                         return $obj->handle($next, $request, $response, $params);
                     } catch (\Throwable $th) {
-                        \report_bug($th);
+                        report_bug($th);
                     }
                     return null;
                 };
