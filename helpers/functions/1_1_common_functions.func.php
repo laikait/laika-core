@@ -59,10 +59,8 @@ function purify(array $data): array
     return array_map(function($val){
         return match (true) {
             is_array($val) => purify($val),
-            is_numeric($val) => (int) $val,
-            is_null($val) => null,
             is_string($val) => htmlspecialchars(trim(urldecode((string) $val)), ENT_QUOTES, 'UTF-8'),
-            default => throw new InvalidArgumentException('Invalid Data Type For Purification!')
+            default => $val
         };
     }, $data);
 }
