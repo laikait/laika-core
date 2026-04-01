@@ -17,35 +17,19 @@ defined('APP_PATH') || http_response_code(403) . die('403 Direct Access Denied!'
 
 class FormError
 {
-    // /**
-    //  * @var FormError $formError Form Static Object
-    //  */
-    // private static FormError $formError;
-
     /**
-     * @var array $errors Form Errors
+     * @var array<string,array> $errors Form Errors
      */
     private static array $errors = [];
 
-    // /**
-    //  * Initiate Form Object
-    //  * @return FormError
-    //  */
-    // private static function instance(): FormError
-    // {
-    //     self::$formError ??= new self();
-    //     return self::$formError;
-    // }
-
     /**
      * Add Bulk Errors
-     * @param array{string:array} $errors Form Errors
+     * @param array<string,array> $errors Form Errors
      * @return void
      */
     public static function addBulk(array $errors): void
     {
-        self::$errors = \array_merge(self::$errors, $errors);
-        return;
+        self::$errors = array_merge(self::$errors, $errors);
     }
 
     /**
@@ -57,7 +41,6 @@ class FormError
     public static function add(string $key, string $error): void
     {
         self::$errors[$key][] = $error;
-        return;
     }
 
     /**
@@ -71,11 +54,20 @@ class FormError
 
     /**
      * Get Form Errors
-     * @param string|null $key Get Specific Key Errors
+     * @param ?string $key Get Specific Key Errors
      * @return array
      */
     public static function get(?string $key = null): array
     {
-        return empty($key) ? self::$errors : self::$errors[$key] ?? [];
+        return $key === null ? self::$errors : self::$errors[$key] ?? [];
+    }
+
+    /**
+     * Clear Errors
+     * @return void
+     */
+    public static function clear(): void
+    {
+        self::$errors = [];
     }
 }
