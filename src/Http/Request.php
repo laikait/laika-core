@@ -15,11 +15,6 @@ namespace Laika\Core\Http;
 class Request
 {
     /**
-     * @property Request $instance
-     */
-    protected static Request $instance;
-
-    /**
      * @property array $get
      */
     protected array $get;
@@ -52,16 +47,12 @@ class Request
     /**
      * @property array $errors Request Validation Errors
      */
-    protected array $errors;
-
+    protected array $errors = [];
 
     ##################################################################
     /*------------------------- PUBLIC API -------------------------*/
     ##################################################################
 
-    /**
-     * Start Instance
-     */
     public function __construct()
     {
         $this->get = purify($_GET ?? []);
@@ -69,8 +60,9 @@ class Request
         $this->files = $_FILES ?? [];
         $this->rawBody = file_get_contents('php://input');
         $this->json = purify($this->decode($this->rawBody));
-        $this->method = strtoupper($this->post['_method'] ?? $_SERVER['REQUEST_METHOD'] ?? 'GET');
-        $this->errors = [];
+        $spoofable = ['PUT', 'PATCH', 'DELETE'];
+        $spoofed = strtoupper($this->post['_method'] ?? '');
+        $this->method = in_array($spoofed, $spoofable, true) ? $spoofed : strtoupper($_SERVER['REQUEST_METHOD'] ?? 'GET');
     }
 
     /**
@@ -204,13 +196,11 @@ class Request
 
     /**
      * Get JSON Body
-     * @param bool $force_object Force JSON Object Instead of Array. Default is False.
-     * @return string
+     * @return array
      */
-    public function json(bool $force_object = false): string
+    public function array(): array
     {
-        $options = $force_object ? JSON_FORCE_OBJECT : 0;
-        return json_encode($this->json, $options);
+        return $this->json;
     }
 
     /**
@@ -220,7 +210,7 @@ class Request
      */
     public function file(?string $key = null): ?array
     {
-        return $key ? ($this->files[$key] ?? []) : $this->files;
+        return $key ? ($this->files[$key] ?? null) : $this->files;
     }
 
     /**
@@ -230,36 +220,6 @@ class Request
     public function raw(): string
     {
         return $this->rawBody;
-    }
-
-    /**
-     * Validate Request Keys
-     * @param array $keys Request Keys. Example: ['name', 'password']
-     * @return bool
-     */
-    public function validRequestKeys(array $keys): bool
-    {
-        foreach ($keys as $key) {
-            if (!$this->has($key)) {
-                return false;
-            }
-        }
-        return true;
-    }
-
-    /**
-     * Check If Required Inputs Has Blank Value
-     * @param $keys Required Argument. Example: ['username','email','password']
-     */
-    public function hasBlankInput(array $keys): bool
-    {
-        foreach ($keys as $key) {
-            $value = $this->input($key);
-            if ($value === null || $value === '') {
-                return true;
-            }
-        }
-        return false;
     }
 
     /**
@@ -282,11 +242,14 @@ class Request
         return $this->errors;
     }
 
+    ###################################################################
+    /*------------------------- INTERNAL API -------------------------*/
+    ###################################################################
     /**
      * Decode Raw Body
      * @return array
      */
-    public function decode(string $rawBody): array
+    protected function decode(string $rawBody): array
     {
         $contentType = $_SERVER['CONTENT_TYPE'] ?? '';
         if (str_starts_with(strtolower($contentType), 'application/json')) {
