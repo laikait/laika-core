@@ -71,7 +71,6 @@ class Request
      */
     public function method(): string
     {
-        // Define $instance if Not Defined Yet
         return $this->method;
     }
 
@@ -171,10 +170,14 @@ class Request
      */
     public function inputs(): array
     {
-        return array_merge($this->json, $this->post, $this->get);
+        return array_merge($this->get, $this->json, $this->post);
     }
 
-    // Get Selected Key Values
+    /**
+     * Get Selected Key Values
+     * @param string[] $keys Array Keys to Get Values
+     * @return array
+     */
     public function only(array $keys): array
     {
         $result = [];
