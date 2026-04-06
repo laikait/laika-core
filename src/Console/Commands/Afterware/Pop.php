@@ -1,5 +1,4 @@
 <?php
-
 /**
  * Laika Framework
  * Author: Showket Ahmed
@@ -31,13 +30,13 @@ class Pop extends Command
     public function run(array $params, array $options = []): void
     {
         // Check Parameters
-        if (\count($params) < 1) {
+        if (count($params) < 1) {
             $this->error("USAGE: php laika pop:afterware <name>");
             return;
         }
 
         // Check Afterware Name is Valid
-        if (!\preg_match($this->exp, $params[0])) {
+        if (!preg_match($this->exp, $params[0])) {
             // Invalid Afterware Name
             $this->error("Invalid Afterware Name: [{$params[0]}]");
             return;
@@ -52,12 +51,12 @@ class Pop extends Command
         $file = "{$this->path}/{$parts['name']}.php";
 
         // Check Afterware Path is Valid
-        if (!\is_file($file)) {
+        if (!is_file($file)) {
             $this->error("Invalid Afterware or Path: [{$params[0]}]");
             return;
         }
 
-        if (!\unlink($file)) {
+        if (!unlink($file)) {
             $this->error("Failed to Remove Afterware: [{$file}]");
             return;
         }

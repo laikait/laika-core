@@ -10,51 +10,48 @@
 
 declare(strict_types=1);
 
-namespace Laika\Core\Console\Commands\Template;
+namespace Laika\Core\Console\Commands\Relay;
 
 use Laika\Core\Relay\Relays\Directory;
 use Laika\Core\Relay\Relays\File;
 use Laika\Core\Console\Command;
 
+// Make Relay Class
 class Make extends Command
 {
-    // App View Path
-    protected string $path = APP_PATH . '/lf-templates';
+    // App Relay Path
+    protected string $path = APP_PATH . '/lf-app/Relay';
 
     // Accepted Regular Expresion
-    private string $exp = '/^[a-zA-Z0-9_\-]+$/';
+    private string $exp = '/^[a-zA-Z_\/]+$/';
 
     /**
-     * Run the command to create a new controller.
-     *
      * @param array $params
      * @return void
      */
     public function run(array $params, array $options = []): void
     {
         // Check Parameters
-        if (count($params) < 1) {
-            $this->error("USAGE: php laika make:template <name>");
-            return;
-        }
+        $countParams = count($params);
 
-        // Get Extension
-        $ext = strtolower($params[1] ?? 'twig');
-
-        if (!in_array($ext, ['twig', 'html'])) {
-            $this->error("Invalid Template Engine: '{$ext}'. Allowed: twig, html");
+        if ($countParams != 1) {
+            $this->error("USAGE: php laika make:relay <name> <optioanl:-k|--key>");
             return;
         }
 
         if (!preg_match($this->exp, $params[0])) {
             // Invalid Name
-            $this->error("Invalid Template Name: '{$params[0]}'");
+            $this->error("Invalid Relay Name: [{$params[0]}]!");
             return;
         }
 
-        $name = trim($params[0]);
+        // Get Parts
+        $parts = $this->parts($params[0]);
 
-        // Make Directory if Not Exist
+        //Get Path
+        $this->path .=  $parts['path'];
+
+        // Make Directory if Not Exists
         try {
             Directory::make($this->path);
         } catch (\Throwable $th) {
@@ -62,27 +59,36 @@ class Make extends Command
             return;
         }
 
-        $file = "{$this->path}/{$name}.{$ext}";
+        $file = "{$this->path}/{$parts['name']}.php";
 
         if (File::exists($file)) {
-            $this->error("Template Already Exist: {$file}");
+            $this->error("Relay [{$params[0]}] Already Exist!");
             return;
         }
 
         // Get Sample Content
-        $content = File::read(__DIR__ . '/../../Samples/Template.sample');
+        $content = File::read(__DIR__ . '/../../Samples/Relay.sample');
+
         if ($content === false) {
             $this->error("Failed to Read Sample: [{$file}]!");
             return;
         }
 
+        // Get Key Name
+        $key = strtolower($options['long']['key'] ?? $options['short']['k'] ?? $parts['name']);
+
         // Replace Placeholders
+        $content = str_replace(
+            ['{{NAMESPACE}}', '{{NAME}}', '{{KEY}}'],
+            [$parts['namespace'], $parts['name'], $key],
+            $content
+        );
+
         if (File::write($content, $file) === false) {
-            $this->error("Failed to Create Template: {$file}");
+            $this->error("Failed to Create Relay: [{$file}]!");
             return;
         }
 
-        $this->success("Template Created Successfully: {$name}.{$ext}");
-        return;
+        $this->success("Relay [{$params[0]}] Created Successfully!");
     }
 }

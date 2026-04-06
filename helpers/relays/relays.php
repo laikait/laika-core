@@ -45,6 +45,7 @@ $registry->singleton('vault', Laika\Core\Helper\Vault::class);
 $registry->singleton('ip', Laika\Core\IP\IP::class);
 $registry->singleton('regex', Laika\Core\Regex\Regex::class);
 $registry->singleton('api', Laika\Core\Api\Api::class);
+$registry->singleton('infra', Laika\Core\App\Infra::class);
 
 // Binds
 $registry->bind('token', Laika\Core\Generator\Token::class);

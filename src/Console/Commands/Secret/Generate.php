@@ -1,5 +1,4 @@
 <?php
-
 /**
  * Laika Framework
  * Author: Showket Ahmed
@@ -14,7 +13,7 @@ declare(strict_types=1);
 namespace Laika\Core\Console\Commands\Secret;
 
 use Laika\Core\Console\Command;
-use Laika\Core\Helper\Config;
+use Laika\Core\Relay\Relays\Config;
 
 class Generate extends Command
 {
@@ -27,7 +26,7 @@ class Generate extends Command
     public function run(array $params, array $options = []): void
     {
         $byte = $params[0] ?? 32;
-        if (!\is_numeric($byte) || ((int) $byte < 1)) {
+        if (!is_numeric($byte) || ((int) $byte < 1)) {
             $this->error("USAGE: php laika generate:secret <byte_number::optional>");
             return;
         }
@@ -36,11 +35,11 @@ class Generate extends Command
         // Create Secret Config File if Not Exist
         $config = new Config();
         if (!Config::has('secret')) {
-            Config::create('secret', ['key' => \bin2hex(\random_bytes($byte))]);
+            Config::create('secret', ['key' => bin2hex(random_bytes($byte))]);
         }
 
         // Create Secret Key Value
-        Config::set('secret', 'key', \bin2hex(\random_bytes($byte)));
+        Config::set('secret', 'key', bin2hex(random_bytes($byte)));
         // Set Message
         $this->success("{$byte} Byte Secret Key Generated Successfully");
         return;

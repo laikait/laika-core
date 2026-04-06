@@ -11,7 +11,7 @@
 declare(strict_types=1);
 
 // Namespace
-namespace Laika\App\Migration;
+namespace App\Migration;
 
 // Deny Direct Access
 defined('APP_PATH') || http_response_code(403).die('403 Direct Access Denied!');
@@ -32,7 +32,7 @@ class {{NAME}}
             $t->id('{{ID}}');
             $t->uid();
             $t->string('status', 50)->comment('This is {{TABLE}} Status');
-            $t->deleted();
+            $t->deleted('{{DELETED_AT}}');
             
             $t->index('status');
         });

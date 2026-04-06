@@ -1,5 +1,4 @@
 <?php
-
 /**
  * Laika Framework
  * Author: Showket Ahmed
@@ -13,7 +12,8 @@ declare(strict_types=1);
 
 namespace Laika\Core\Console\Commands\Controller;
 
-use Laika\Core\Helper\Directory;
+use Laika\Core\Relay\Relays\Directory;
+use Laika\Core\Relay\Relays\File;
 use Laika\Core\Console\Command;
 
 // Make Controller Class
@@ -32,7 +32,7 @@ class Make extends Command
     public function run(array $params, array $options = []): void
     {
         // Check Parameters
-        if (\count($params) < 1) {
+        if (count($params) < 1) {
             $this->error("USAGE: php laika make:controller <name>");
             return;
         }
@@ -41,7 +41,7 @@ class Make extends Command
         $parts = $this->parts($params[0]);
 
         // Check Controller Name is Valid
-        if (!\preg_match($this->exp, $params[0])) {
+        if (!preg_match($this->exp, $params[0])) {
             $this->error("Invalid Controller Name: [{$params[0]}]");
             return;
         }
@@ -50,30 +50,36 @@ class Make extends Command
         $this->path .= $parts['path'];
 
         // Create Controller Directory if Not Exist
-        if (!Directory::exists($this->path)) {
-            try {
-                Directory::make($this->path);
-            } catch (\Throwable $th) {
-                $this->error($th->getMessage());
-                return;
-            }
+        try {
+            Directory::make($this->path);
+        } catch (\Throwable $th) {
+            $this->error($th->getMessage());
+            return;
         }
 
         $file = "{$this->path}/{$parts['name']}.php";
 
         // Check Controller Already Exist
-        if (\is_file($file)) {
+        if (File::exists($file)) {
             $this->error("Controller [{$params[0]}] Already Exist!");
             return;
         }
 
         // Get Sample Controller Content
-        $content = \file_get_contents(__DIR__ . '/../../Samples/Controller.sample');
+        $content = File::read(__DIR__ . '/../../Samples/Controller.sample');
+        if ($content === false) {
+            $this->error("Failed to Read Sample: [{$file}]!");
+            return;
+        }
 
         // Replace Placeholders
-        $content = \str_replace(['{{NAMESPACE}}', '{{NAME}}'], [$parts['namespace'], $parts['name']], $content);
+        $content = str_replace(
+            ['{{NAMESPACE}}', '{{NAME}}'],
+            [$parts['namespace'], $parts['name']],
+            $content
+        );
 
-        if (\file_put_contents($file, $content) === false) {
+        if (File::write($content, $file) === false) {
             $this->error("Failed to Create Controller: [{$file}]!");
             return;
         }

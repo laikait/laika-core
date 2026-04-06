@@ -10,23 +10,23 @@
 
 declare(strict_types=1);
 
-namespace Laika\Core\Console\Commands\Controller;
+namespace Laika\Core\Console\Commands\Relay;
 
 use Laika\Core\Relay\Relays\Directory;
 use Laika\Core\Relay\Relays\File;
 use Laika\Core\Console\Command;
 
-// Rename Controller Class
+// Rename Relay Class
 class Rename extends Command
 {
-    // App Controller Old Path
-    protected string $old_path = APP_PATH . '/lf-app/Controller';
+    // App Relay Old Path
+    protected string $old_path = APP_PATH . '/lf-app/Relay';
 
-    // App Controller New Path
-    protected string $new_path = APP_PATH . '/lf-app/Controller';
+    // App Relay New Path
+    protected string $new_path = APP_PATH . '/lf-app/Relay';
 
     // Accepted Regular Expresion
-    private string $exp = '/^[a-zA-Z_\/][a-zA-Z0-9_\/]+$/';
+    private string $exp = '/^[a-zA-Z_\/]+$/';
 
     /**
      * @param array $params
@@ -35,8 +35,8 @@ class Rename extends Command
     public function run(array $params, array $options = []): void
     {
         // Check Parameters
-        if (count($params) < 2) {
-            $this->error("USAGE: php laika rename:controller <old_name> <new_name>");
+        if (count($params) != 2) {
+            $this->error("Usage: php laika rename:relay <old_name> <new_name>");
             return;
         }
 
@@ -44,14 +44,16 @@ class Rename extends Command
         $old = $params[0];
         $new = $params[1];
 
-        // Check Old Controller Name is Valid
+        // Check Old Relay Name is Valid
         if (!preg_match($this->exp, $old)) {
-            $this->error("Invalid Old Controller Name: [{$old}]");
+            // Invalid Relay Name
+            $this->error("Invalid Old Relay Name: [{$old}]!");
             return;
         }
-        // Check New Controller Name is Valid
+        // Check New Relay Name is Valid
         if (!preg_match($this->exp, $new)) {
-            $this->error("Invalid New Controller Name: [{$new}]!");
+            // Invalid Relay Name
+            $this->error("Invalid New Relay Name: [{$new}]!");
             return;
         }
 
@@ -64,21 +66,21 @@ class Rename extends Command
         $this->new_path .= $new_parts['path'];
 
         // Old and New Namespace
-        $old_namespace = "namespace App\\Controller{$old_parts['namespace']}";
-        $new_namespace = "namespace App\\Controller{$new_parts['namespace']}";
+        $old_namespace = "namespace App\\Relay{$old_parts['namespace']}";
+        $new_namespace = "namespace App\\Relay{$new_parts['namespace']}";
 
         $old_file = "{$this->old_path}/{$old_parts['name']}.php";
         $new_file = "{$this->new_path}/{$new_parts['name']}.php";
 
-        // Check Old Controller is Valid
+        // Check Old Relay is Valid
         if (!File::exists($old_file)) {
-            $this->error("Old Controller [{$old}] Doesn't Exists!");
+            $this->error("Old Relay [{$old}] Doesn't Exists!");
             return;
         }
 
-        // Check New Controller is Valid
+        // Check New Relay is Valid
         if (File::exists($new_file)) {
-            $this->error("New Controller [{$new}] Already Exist!");
+            $this->error("New Relay [{$new}] Doesn't Exists!");
             return;
         }
 
@@ -93,7 +95,7 @@ class Rename extends Command
         // Get Contents
         $content = File::read($old_file);
         if ($content === false) {
-            $this->error("Failed to Read Controller: [{$old}]!");
+            $this->error("Failed to Read Old Relay: [{$old}]");
             return;
         }
 
@@ -105,20 +107,19 @@ class Rename extends Command
         // Replace Class Name
         $content = preg_replace("/class {$old_parts['name']}/i", "class {$new_parts['name']}", $content);
 
-        // Create New Controller File
+        // Create New Relay File
         if (File::write($content, $new_file) === false) {
-            $this->error("Failed to Create Controller: [$new]!");
+            $this->error("Failed to Create Relay: [{$new}]");
             return;
         }
 
-        // Remove Old Controller File
+        // Remove Old Relay File
 
         if (!File::pop($old_file)) {
-            $this->error("Failed to Remove Controller: [$old_file]!");
+            $this->error("Failed to Remove Old Relay: [$old_file]!");
             return;
         }
 
-        $this->success("Controller [{$old}] Renamed to [{$new}] Successfully!");
-        return;
+        $this->success("Relay [{$old}] Renamed to [{$new}] Successfully!");
     }
 }

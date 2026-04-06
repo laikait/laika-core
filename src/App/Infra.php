@@ -12,7 +12,8 @@ declare(strict_types=1);
 
 namespace Laika\Core\App;
 
-use Laika\Core\Helper\Directory;
+use Laika\Core\Relay\Relays\Directory;
+use Laika\Core\Relay\Relay;
 
 // Application Infrastructure Info
 class Infra
@@ -33,7 +34,7 @@ class Infra
                 // Strip base path, normalise to forward slashes, remove extension
                 $relative = ltrim(str_replace($base, '', $path), '/\\');
                 $class = str_replace(['/', '\\', '.php'], ['\\', '\\', ''], $relative);
-                $models[] = 'Laika\\App\\Model\\' . $class;
+                $models[] = 'App\\Model\\' . $class;
             }
         }
         return $models;
@@ -54,7 +55,7 @@ class Infra
                 // Strip base path, normalise to forward slashes, remove extension
                 $relative = ltrim(str_replace($base, '', $path), '/\\');
                 $class = str_replace(['/', '\\', '.php'], ['\\', '\\', ''], $relative);
-                $schemas[] = 'Laika\\App\\Migration\\' . $class;
+                $schemas[] = 'App\\Migration\\' . $class;
             }
         }
         return $schemas;
@@ -68,7 +69,7 @@ class Infra
     public function getControllerClasses(): array
     {
         $base = str_replace('/', '\\', APP_PATH . '/lf-app/Controller');
-        $paths = Directory::scanRecursive($base, true, 'php');
+        $paths = Directory::scan($base, true, 'php');
         $controllers = [];
         foreach ($paths as $path) {
             if (is_file($path)) {
@@ -76,7 +77,7 @@ class Infra
                 // Strip base path, normalise to forward slashes, remove extension
                 $relative = ltrim(str_replace($base, '', $path), '/\\');
                 $class = str_replace(['/', '\\', '.php'], ['\\', '\\', ''], $relative);
-                $controllers[] = 'Laika\\App\\Controller\\' . $class;
+                $controllers[] = 'App\\Controller\\' . $class;
             }
         }
         return $controllers;
@@ -90,14 +91,14 @@ class Infra
     public function getMiddlewareClasses(): array
     {
         $base = str_replace('/', '\\', APP_PATH . '/lf-app/Middleware');
-        $paths = Directory::scanRecursive($base, true, 'php');
+        $paths = Directory::scan($base, true, 'php');
         $middlewares = [];
         foreach ($paths as $path) {
             if (is_file($path)) {
                 $path = str_replace('/', '\\', $path);
                 $relative = ltrim(str_replace($base, '', $path), '/\\');
                 $class = str_replace(['/', '\\', '.php'], ['\\', '\\', ''], $relative);
-                $middlewares[] = 'Laika\\App\\Middleware\\' . $class;
+                $middlewares[] = 'App\\Middleware\\' . $class;
             }
         }
         return $middlewares;
@@ -111,20 +112,20 @@ class Infra
     public function getAfterwareClasses(): array
     {
         $base = str_replace('/', '\\', APP_PATH . '/lf-app/Afterware');
-        $paths = Directory::scanRecursive($base, true, 'php');
+        $paths = Directory::scan($base, true, 'php');
         $afterwares = [];
         foreach ($paths as $path) {
             if (is_file($path)) {
                 $path = str_replace('/', '\\', $path);
                 $relative = ltrim(str_replace($base, '', $path), '/\\');
                 $class = str_replace(['/', '\\', '.php'], ['\\', '\\', ''], $relative);
-                $afterwares[] = 'Laika\\App\\Afterware\\' . $class;
+                $afterwares[] = 'App\\Afterware\\' . $class;
             }
         }
         return $afterwares;
     }
 
-    /*============================ Views Info ============================*/
+    /*============================ Template Info ============================*/
     /**
      * Get Template Names
      * @return array
@@ -132,7 +133,7 @@ class Infra
     public function getTemplateNames(): array
     {
         $base = str_replace('/', '\\', APP_PATH . '/lf-templates');
-        $paths = Directory::scanRecursive($base, true, 'php');
+        $paths = Directory::scan($base, true, 'php');
         print_r($paths);
         $templates = [];
         foreach ($paths as $path) {
@@ -143,5 +144,41 @@ class Infra
             }
         }
         return $templates;
+    }
+
+    /*============================ Relay Info ============================*/
+    /**
+     * Get Relay Names
+     * @return array
+     */
+    public function getRelayClasses(): array
+    {
+        $relays = ['system' => [], 'user' => []];
+        // System Generated
+        $systemBase = str_replace('/', '\\', realpath(__DIR__ . '/../Relay/Relays'));
+        $systemRelayPaths = Directory::scan($systemBase, true, 'php');
+
+        foreach ($systemRelayPaths as $sPath) {
+            if (is_file($sPath)) {
+                $sPath = str_replace('/', '\\', $sPath);
+                $relative = ltrim(str_replace($systemBase, '', $sPath), '/\\');
+                $sClass = str_replace(['/', '\\', '.php'], ['\\', '\\', ''], $relative);
+                $relays['system'][] = 'Laika\\Core\\Relay\\Relays\\' . $sClass;
+            }
+        }
+
+        // User Generated
+        $userBase = str_replace('/', '\\', APP_PATH . '/lf-app/Relay');
+        $userRelayPaths = Directory::scan($userBase, true, 'php');
+
+        foreach ($userRelayPaths as $uPath) {
+            if (is_file($uPath)) {
+                $uPath = str_replace('/', '\\', $uPath);
+                $uRelative = ltrim(str_replace($userBase, '', $uPath), '/\\');
+                $uClass = str_replace(['/', '\\', '.php'], ['\\', '\\', ''], $uRelative);
+                $relays['user'][] = 'App\\Relay\\' . $uClass;
+            }
+        }
+        return $relays;
     }
 }

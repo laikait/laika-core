@@ -1,5 +1,4 @@
 <?php
-
 /**
  * Laika Framework
  * Author: Showket Ahmed
@@ -13,7 +12,8 @@ declare(strict_types=1);
 
 namespace Laika\Core\Console\Commands\Model;
 
-use Laika\Core\Helper\Directory;
+use Laika\Core\Relay\Relays\Directory;
+use Laika\Core\Relay\Relays\File;
 use Laika\Core\Console\Command;
 
 // Rename Model Class
@@ -38,7 +38,7 @@ class Rename extends Command
     public function run(array $params, array $options = []): void
     {
         // Check Parameters
-        if (\count($params) < 2) {
+        if (count($params) < 2) {
             $this->error("Usage: php laika rename:model <old_name> <new_name>");
             return;
         }
@@ -48,13 +48,13 @@ class Rename extends Command
         $new = $params[1];
 
         // Check Old Model Name is Valid
-        if (!\preg_match($this->exp, $old)) {
+        if (!preg_match($this->exp, $old)) {
             // Invalid Model Name
             $this->error("Invalid Old Model Name: [{$old}]!");
             return;
         }
         // Check New Model Name is Valid
-        if (!\preg_match($this->exp, $new)) {
+        if (!preg_match($this->exp, $new)) {
             // Invalid Model Name
             $this->error("Invalid New Model Name: '{$new}'");
             return;
@@ -69,52 +69,55 @@ class Rename extends Command
         $this->new_path .= $new_parts['path'];
 
         // Old and New Namespace
-        $old_namespace = "namespace Laika\\App\\Model{$old_parts['namespace']}";
-        $new_namespace = "namespace Laika\\App\\Model{$new_parts['namespace']}";
+        $old_namespace = "namespace App\\Model{$old_parts['namespace']}";
+        $new_namespace = "namespace App\\Model{$new_parts['namespace']}";
 
         $old_file = "{$this->old_path}/{$old_parts['name']}.php";
         $new_file = "{$this->new_path}/{$new_parts['name']}.php";
 
         // Check Old Model is Valid
-        if (!\is_file($old_file)) {
+        if (!File::exists($old_file)) {
             $this->error("Model [$old] Doesn't Exists!");
             return;
         }
 
         // Check New Model is Valid
-        if (\is_file($new_file)) {
+        if (File::exists($new_file)) {
             $this->error("New Model [{$old}] Already Exist!");
             return;
         }
 
         // Check New Path Exist
-        if (!Directory::exists($this->new_path)) {
+        try {
             Directory::make($this->new_path);
+        } catch (\Throwable $th) {
+            $this->error($th->getMessage());
+            return;
         }
 
         // Get Contents
-        $content = \file_get_contents($old_file);
+        $content = File::read($old_file);
         if ($content === false) {
-            $this->error("Failed to Read Model: [{$old}]");
+            $this->error("Failed to Read Old File: [{$old_file}]!");
             return;
         }
 
         // Replace Namespace if Not Same
         if ($old_namespace != $new_namespace) {
-            $content = \preg_replace('/' . \preg_quote($old_namespace, '/') . '/', $new_namespace, $content);
+            $content = preg_replace('/' . preg_quote($old_namespace, '/') . '/', $new_namespace, $content);
         }
 
         // Replace Class Name
-        $content = \preg_replace("/class {$old_parts['name']}/i", "class {$new_parts['name']}", $content);
+        $content = preg_replace("/class {$old_parts['name']}/i", "class {$new_parts['name']}", $content);
 
         // Create New Model File
-        if (\file_put_contents($new_file, $content) === false) {
+        if (File::write($content, $new_file) === false) {
             $this->error("Failed to Create Model: [{$new}]!");
             return;
         }
 
         // Remove Old Model File
-        if (!\unlink($old_file)) {
+        if (!File::pop($old_file)) {
             $this->error("Failed to Remove Model: [{$old_file}]!");
             return;
         }
