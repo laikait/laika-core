@@ -155,6 +155,7 @@ class Dispatcher
             APP_PATH . '/lf-app/Afterware',
             APP_PATH . '/lf-app/Migration',
             APP_PATH . '/lf-app/Relay',
+            APP_PATH . '/lf-hooks',
         ];
 
         foreach ($dirs as $dir) {
