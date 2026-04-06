@@ -10,8 +10,6 @@
 
 declare(strict_types=1);
 
-defined('APP_PATH') || define('APP_PATH', realpath(__DIR__ . '/../../../../'));
-
 use Laika\Core\Relay\RelayRegistry;
 use Laika\Core\Relay\Relay;
 
@@ -56,7 +54,7 @@ $registry->bind('token', Laika\Core\Generator\Token::class);
 /**
  * Require Custom Relays
  */
-require_once APP_PATH . '/lf-inc/relays.php';
+try { require_once APP_PATH . '/lf-inc/relays.php'; } catch (\Throwable $th) {}
 
 /**
  * Register All Relays
