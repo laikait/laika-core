@@ -33,7 +33,7 @@
     "require": {
         "php": ">=8.1",
         "laikait/laika-model": "^3",
-        "laikait/laika-session": "^1",
+        "laikait/laika-session": "^2",
         "laikait/laika-shield": "^1",
         "twig/twig": "^3",
         "firebase/php-jwt": "^7",
