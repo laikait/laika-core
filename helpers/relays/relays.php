@@ -10,6 +10,8 @@
 
 declare(strict_types=1);
 
+defined('APP_PATH') || define('APP_PATH', realpath(__DIR__ . '/../../../../'));
+
 use Laika\Core\Relay\RelayRegistry;
 use Laika\Core\Relay\Relay;
 
