@@ -1,5 +1,4 @@
 <?php
-
 /**
  * Laika PHP MVC Framework
  * Author: Showket Ahmed
@@ -13,80 +12,56 @@ declare(strict_types=1);
 
 namespace Laika\Core\Api;
 
-use Laika\Core\Http\Response;
-use Laika\Core\Http\Request;
-use Laika\Core\Helper\Token;
+use Laika\Core\Relay\Relays\Header;
+use Laika\Core\Relay\Relays\Request;
+use Laika\Core\Relay\Relays\Token;
 
 class Api
 {
-    /**
-     * @var array $accepted Application Types
-     */
+    /** @var array $accepted Application Types */
     protected array $accepted;
 
-    /**
-     * @var string $contentType Content Type
-     */
+    /** @var string $contentType Content Type */
     protected string $contentType;
 
-    /**
-     * @var string $method Request Method
-     */
+    /** @var string $method Request Method */
     protected string $method;
 
-    /**
-     * @var ?string $message Message to Send
-     */
+    /** @var ?string $message Message to Send */
     protected ?string $message;
 
-    /**
-     * @var array $acceptableMethods Acceptable Request Methods
-     */
+    /** @var array $acceptableMethods Acceptable Request Methods */
     protected array $acceptableMethods;
 
-    /**
-     * @var string $allowedOrigin Request Method
-     */
+    /** @var string $allowedOrigin Request Method */
     protected string $allowedOrigin;
 
-    /**
-     * @var Response $response Response Object
-     */
-    protected Response $response;
-
+    ################################################################################
+    /*=============================== INTERNAL API ===============================*/
+    ################################################################################
     // Initiate API Object
     public function __construct()
     {
-        $this->accepted             =   ['application/json', 'application/x-www-form-urlencoded'];
-        $this->contentType          =   strtolower(strtok($_SERVER['CONTENT_TYPE'] ?? 'application/json', ';'));
-        $this->method               =   call_user_func([new Request, 'method']);
-        $this->message              =   null;
-        $this->acceptableMethods    =   ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'];
-        $this->allowedOrigin        =   '*';
-        $this->response             =   new Response();
-
-        // Handle CORS preflight
-        if ($this->method === 'OPTIONS') {
-            $this->handlePreflight();
-        }
+        $this->reset();
     }
 
     /**
      * Set Allowed Origin
      * @param string $origin
-     * @return void
+     * @return static
      */
-    public function setAllowedOrigin(string $origin): void
+    public function setAllowedOrigin(string $origin = '*'): static
     {
         $this->allowedOrigin = $origin;
+        return $this;
     }
 
     /**
      * Set Message
      * @param string $message
-     * @return self
+     * @return static
      */
-    public function message(string $message): self
+    public function setMessage(string $message): static
     {
         $this->message = htmlspecialchars(trim($message));
         return $this;
@@ -96,7 +71,7 @@ class Api
      * Content-Type
      * @return string
      */
-    public function type(): string
+    public function getContentType(): string
     {
         return $this->contentType;
     }
@@ -105,22 +80,23 @@ class Api
      * Request Method
      * @return string
      */
-    public function method(): string
+    public function getMethod(): string
     {
         return $this->method;
     }
 
     /**
-     * @return array Request Body
+     * Request Body
+     * @return array
      */
     public function body(): array
     {
-        return call_user_func([new Request(), 'inputs']);
+        return Request::inputs();
     }
 
     /**
      * Get Bearer Token from Authorization Header
-     * @return string Bearer Token
+     * @return string
      */
     public function bearerToken(): string
     {
@@ -131,21 +107,20 @@ class Api
 
         // Handle missing header
         if ($header === null || $header === '') {
-            $this->message('Missing Authorization Header');
+            $this->setMessage('Missing Authorization Header');
             return $this->send([], 401);
         }
 
         // Validate Bearer pattern
         if (!preg_match('/^Bearer\s+(\S+)$/i', trim($header), $matches)) {
-            $this->message('Invalid Authorization Header Format');
+            $this->setMessage('Invalid Authorization Header Format');
             return $this->send([], 400);
         }
 
         $token = $matches[1];
 
-        $obj = new Token();
-        if (!$obj->validateToken($token)) {
-            $this->message('Token Expired');
+        if (!Token::validateToken($token)) {
+            $this->setMessage('Token Expired');
             return $this->send([], 401);
         }
 
@@ -176,7 +151,7 @@ class Api
                 "status"    =>  $status,
                 "data"      =>  $payload,
                 "message"   =>  $this->message ?: "Success",
-                "context"   =>  $this->response->codes()[$status]['message'] ?? 'Unassigned',
+                "context"   =>  Header::codes()[$status]['message'] ?? 'Unassigned',
                 "timestamp" =>  date('c')
             ], $additional);
         }
@@ -187,8 +162,8 @@ class Api
         $charset  = $this->detectCharset();
 
         // Set Headers
-        $this->response->code($status);
-        $this->response->setHeader([
+        Header::code($status);
+        Header::set([
             "Content-Type"  =>  "application/json; charset={$charset}",
             "Vary"          =>  "Accept, Accept-Charset"
         ]);
@@ -196,26 +171,29 @@ class Api
         $this->applyCors();
 
         echo $body;
+        $this->reset();
         exit;
     }
 
-    ###############################################################
-    /*----------------------- PRIVATE API -----------------------*/
-    ###############################################################
+    ################################################################################
+    /*=============================== INTERNAL API ===============================*/
+    ################################################################################
 
     /**
      * Handle CORS preflight requests
+     * @return never
      */
     private function handlePreflight(): never
     {
         $this->applyCors();
         header('Access-Control-Max-Age: 86400');
-        http_response_code(204);
+        Header::code(204);
         exit;
     }
 
     /**
      * Apply CORS headers
+     * @return void
      */
     private function applyCors(): void
     {
@@ -229,11 +207,12 @@ class Api
             "Access-Control-Allow-Headers"  =>  "Content-Type, Authorization, X-Requested-With, Accept, Accept-Encoding, Accept-Charset",
             "Access-Control-Expose-Headers" =>  "Content-Encoding, Content-Type, Content-Length"
         ];
-        call_user_func([$this->response, 'setHeader'], $headers);
+        Header::set($headers);
     }
 
     /**
      * Detect preferred charset from Accept-Charset
+     * @return string
      */
     private function detectCharset(): string
     {
@@ -250,5 +229,24 @@ class Api
 
         arsort($parsed, SORT_NUMERIC);
         return array_key_first($parsed) ?: 'utf-8';
+    }
+
+    /**
+     * Reset
+     * @return void
+     */
+    protected function reset()
+    {
+        $this->accepted             =   ['application/json', 'application/x-www-form-urlencoded'];
+        $this->contentType          =   strtolower(strtok($_SERVER['CONTENT_TYPE'] ?? 'application/json', ';'));
+        $this->method               =   Request::method();
+        $this->message              =   null;
+        $this->acceptableMethods    =   ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'];
+        $this->allowedOrigin        =   '*';
+
+        // Handle CORS preflight
+        if ($this->method === 'OPTIONS') {
+            $this->handlePreflight();
+        }
     }
 }

@@ -25,9 +25,9 @@ class Redirect
      * Set Flass Message
      * @param string $message Message to set.
      * @param bool $status
-     * @return self
+     * @return static
      */
-    public function with(string $message, bool $status): self
+    public function with(string $message, bool $status): static
     {
         Session::set('message', ['info'=>$message,'status'=>$status]);
         return $this;
@@ -36,9 +36,9 @@ class Redirect
     /**
      * Redirect Back to The Previous Link
      * @param int $code Response Code. Default is 302
-     * @return self
+     * @return static
      */
-    public function back(int $code = 302): self
+    public function back(int $code = 302): static
     {
         $this->send($_SERVER['HTTP_REFERER'] ?? '/', $code);
         return $this;
@@ -49,9 +49,9 @@ class Redirect
      * @param string $to Named/URL to Redirect.
      * @param array $params Named Route Parameters.
      * @param int $code HTTP Status Code. Default is 302.
-     * @return self
+     * @return static
      */
-    public function to(string $to, array $params = [], int $code = 302): self
+    public function to(string $to, array $params = [], int $code = 302): static
     {
         if (!\in_array($code, [301,302])) {
             throw new HttpException(500, "Invelid Redirect Code: {$code}", 500);

@@ -4,20 +4,23 @@ declare(strict_types=1);
 
 namespace Laika\Core\System;
 
+use Laika\Core\Relay\Relays\Config;
+
 final class MemoryManager
 {
+    /** @var bool $monitorRegistered */
     private static bool $monitorRegistered = false;
+
+    /** @var string $memory_limit */
+    private string $memory_limit;
+
+    /** @var string $cli_memory_limit */
+    private string $cli_memory_limit;
 
     public function __construct()
     {
-        // DEFINE HTTP LIMIT IF NOT DEFINED
-        if (!defined('MEMORY_LIMIT')) {
-            define('MEMORY_LIMIT', '256M');
-        }
-        // DEFINE CLI LIMIT IF NOT DEFINED
-        if (!defined('CLI_MEMORY_LIMIT')) {
-            define('CLI_MEMORY_LIMIT', '512M');
-        }
+        $this->memory_limit = Config::get('env', 'memory.limit', '256M');
+        $this->cli_memory_limit = Config::get('env', 'cli.memory.limit', '256M');
     }
 
     /**
@@ -27,11 +30,11 @@ final class MemoryManager
     public function apply(): void
     {
         // Check Argumentrs are Valid
-        if (!preg_match('/^\d+[kmg]$/i', MEMORY_LIMIT)) {
-            throw new \InvalidArgumentException("Invalid MEMORY_LIMIT: " . MEMORY_LIMIT . ". Valid Format: '256M', '512K', '1G'.");
+        if (!preg_match('/^\d+[kmg]$/i', $this->memory_limit)) {
+            throw new \InvalidArgumentException("Invalid Memory Limit Parameter: [{$this->memory_limit}]. Valid Format: '256M', '512K', '1G'.");
         }
-        if (!preg_match('/^\d+[kmg]$/i', CLI_MEMORY_LIMIT)) {
-            throw new \InvalidArgumentException("Invalid CLI_MEMORY_LIMIT: " . CLI_MEMORY_LIMIT . ". Valid Format: '256M', '512K', '1G'.");
+        if (!preg_match('/^\d+[kmg]$/i', $this->cli_memory_limit)) {
+            throw new \InvalidArgumentException("Invalid CLI Memory Limit Parameter: [{$this->cli_memory_limit}]. Valid Format: '256M', '512K', '1G'.");
         }
 
         $current = ini_get('memory_limit');
@@ -39,7 +42,7 @@ final class MemoryManager
             return;
         }
 
-        $target = $this->isCli() ? CLI_MEMORY_LIMIT : MEMORY_LIMIT;
+        $target = $this->isCli() ? $this->cli_memory_limit : $this->memory_limit;
 
         $this->setMemoryLimitSafely($target);
         return;

@@ -24,7 +24,9 @@ class IPv6
     private string $broadcastBin; // 128-bit binary string (last address)
     private int    $prefix;       // /0 – /128
 
-    // ── Construction ──────────────────────────────────────────────────────────
+    /*##################################################################*/
+    /*=========================== PUBLIC API ===========================*/
+    /*##################################################################*/
 
     public function __construct(string $cidr)
     {
@@ -206,7 +208,7 @@ class IPv6
 
     /**
      * Generate IPs from the block.
-     * ⚠️  IPv6 blocks are enormous — always use $limit!
+     * IPv6 blocks are enormous — always use $limit!
      *
      * @param int $limit  Max IPs to yield (0 = unlimited — dangerous for large prefixes!)
      * @return \Generator<string>
@@ -231,7 +233,7 @@ class IPv6
 
     /**
      * Return IPs as an array.
-     * ⚠️  Only safe for very small blocks like /120 – /128.
+     * Only safe for very small blocks like /120 – /128.
      */
     public function toArray(int $limit = 256): array
     {
@@ -298,7 +300,7 @@ class IPv6
 
     // ── Summary ───────────────────────────────────────────────────────────────
 
-    public function toArray_info(): array
+    public function info(): array
     {
         return [
             'cidr'                  => $this->getCidr(),
@@ -322,7 +324,9 @@ class IPv6
         return $this->getCidr();
     }
 
-    // ── Internal Helpers ──────────────────────────────────────────────────────
+    /*##################################################################*/
+    /*========================== INTERNAL API ==========================*/
+    /*##################################################################*/
 
     /** Convert IPv6 string to raw 16-byte binary string */
     private static function ip2bin(string $ip): string

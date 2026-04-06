@@ -1,5 +1,4 @@
 <?php
-
 /**
  * Laika PHP MVC Framework
  * Author: Showket Ahmed
@@ -13,40 +12,42 @@ declare(strict_types=1);
 
 namespace Laika\Core\Helper;
 
-use InvalidArgumentException;
+use RuntimeException;
 
 class Directory
 {
-    // Get Directories List From Directory
     /**
+     * Directories List From Directory
      * @param string $path Directory path
      * @return array
-     * @throws InvalidArgumentException
+     * @throws RuntimeException
      */
-    public static function folders(string $path): array
+    public function folders(string $path): array
     {
-        $path = \realpath($path);
-        if (!$path || !\is_dir($path)) {
-            throw new InvalidArgumentException("Invalid directory: '{$path}'");
+        $path = realpath($path);
+        if (!$path || !is_dir($path)) {
+            throw new RuntimeException("Invalid Directory: [$path}]");
         }
-        return \glob("{$path}/*", GLOB_ONLYDIR) ?: [];
+        return glob("{$path}/*", GLOB_ONLYDIR) ?: [];
     }
 
-    // Get Files List From Directory
     /**
+     * Files List From Directory
      * @param string $path Directory path
      * @param string $ext File extension(s) to filter (e.g., 'php' or ['php','json']), or '*' for all
      * @return array
-     * @throws InvalidArgumentException
+     * @throws RuntimeException
      */
-    public static function files(string $path, string $ext = '*'): array
+    public function files(string $path, string|array $ext = '*'): array
     {
-        $path = \realpath($path);
-        if (!$path || !\is_dir($path)) {
-            throw new InvalidArgumentException("Invalid directory: '{$path}'");
+        $path = realpath($path);
+        if (!$path || !self::exists($path)) {
+            throw new RuntimeException("Invalid Directory: [$path}]");
         }
-        $ext = \ltrim($ext, '.');
-        return \glob("{$path}/*.{$ext}") ?: [];
+        // Collect Extensions List
+        if (is_string($ext)) $ext = [$ext];
+        $str = join(',', array_map('trim', $ext));
+        return glob("{$path}/*.{$str}") ?: [];
     }
 
     /**
@@ -54,9 +55,9 @@ class Directory
      * @param string $path Directory Path
      * @return bool
      */
-    public static function exists(string $path): bool
+    public function exists(string $path): bool
     {
-        return \is_dir($path);
+        return is_dir($path);
     }
 
     /**
@@ -66,49 +67,56 @@ class Directory
      * @param bool $recursive Make Recursive Paths. Default is true
      * @return bool
      */
-    public static function make(string $path, int $permissions = 0755, bool $recursive = true): bool
+    public function make(string $path, int $permissions = 0755, bool $recursive = true): bool
     {
         // Check Already Exists
         if (self::exists($path)) {
             return true;
         }
-        return \mkdir($path, $permissions, $recursive);
+        return mkdir($path, $permissions, $recursive);
     }
 
     /**
      * Delete Directories
-     * @param $path Directory to Remove
+     * @param $path
      * @return bool
+     * @throws RuntimeException
      */
-    public static function pop(string $path): bool
+    public function pop(string $path): bool
     {
         // Return if Not Exists
         if (!self::exists($path)) {
-            return true;
+            throw new RuntimeException("Invalid Directory: [{$path}]");
         }
 
         // Empty the Directory
         if (!self::empty($path)) {
-            return false;
+            throw new RuntimeException("Unable To Make Directory Empty: [{$path}]");
         }
 
         // Remove Directory
-        return \rmdir($path);
+        return rmdir($path);
     }
 
-    public static function empty(string $path): bool
+    /**
+     * Make Directory Empty
+     * @param string $path
+     * @return bool
+     * @throws RuntimeException
+     */
+    public function empty(string $path): bool
     {
         if (!self::exists($path)) {
-            return true;
+            throw new RuntimeException("Invalid Directory [{$path}]");
         }
 
-        $files = \array_diff(scandir($path), ['.', '..']);
+        $files = array_diff(scandir($path), ['.', '..']);
         foreach ($files as $file) {
             $fullPath = "{$path}/{$file}";
-            if (\is_writable($fullPath)) {
-                \is_file($fullPath) ? \unlink($fullPath) : self::empty($fullPath);
-            } else {
-                return false;
+            try {
+                is_file($fullPath) ? unlink($fullPath) : self::empty($fullPath);
+            } catch (\Throwable $th) {
+                throw new RuntimeException($th->getMessage(), (int) $th->getCode(), $th);
             }
         }
         return true;
@@ -120,13 +128,13 @@ class Directory
      * @param bool $includeDirs Whether to include directories in the result
      * @param string|array $ext File extension(s) to filter (e.g., 'php' or ['php','json']), or '*' for all
      * @return array
-     * @throws InvalidArgumentException
+     * @throws RuntimeException
      */
-    public static function scanRecursive(string $path, bool $includeDirs = true, string|array $ext = '*'): array
+    public function scan(string $path, bool $includeDirs = true, string|array $ext = '*'): array
     {
-        $path = \realpath($path);
+        $path = realpath($path);
         if (!$path || !is_dir($path)) {
-            throw new InvalidArgumentException("Invalid directory: '{$path}'");
+            throw new RuntimeException("Invalid Directory: [$path}]");
         }
 
         $result = [];
@@ -136,8 +144,8 @@ class Directory
         );
 
         // Normalize extension filter
-        $extList = \is_array($ext) ? \array_map('strtolower', $ext) : [$ext];
-        $extList = \array_map(fn ($e) => \ltrim($e, '.'), $extList);
+        $extList = is_array($ext) ? array_map('strtolower', $ext) : [$ext];
+        $extList = array_map(fn ($e) => ltrim($e, '.'), $extList);
 
         foreach ($iterator as $item) {
             if ($item->isDir()) {
@@ -146,8 +154,8 @@ class Directory
                 }
             } else {
                 if ($extList !== ['*']) {
-                    $fileExt = \strtolower(\pathinfo($item->getFilename(), PATHINFO_EXTENSION));
-                    if (!\in_array($fileExt, $extList, true)) {
+                    $fileExt = strtolower(pathinfo($item->getFilename(), PATHINFO_EXTENSION));
+                    if (!in_array($fileExt, $extList, true)) {
                         continue;
                     }
                 }

@@ -34,6 +34,7 @@ class Generate extends Command
 
         $byte = (int) $byte;
         // Create Secret Config File if Not Exist
+        $config = new Config();
         if (!Config::has('secret')) {
             Config::create('secret', ['key' => \bin2hex(\random_bytes($byte))]);
         }

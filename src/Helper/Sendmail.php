@@ -1,5 +1,4 @@
 <?php
-
 /**
  * Laika PHP MVC Framework
  * Author: Showket Ahmed
@@ -13,34 +12,44 @@ declare(strict_types=1);
 
 namespace Laika\Core\Helper;
 
+use Laika\Core\Relay\Relays\Config;
+use Laika\Core\Relay\Relays\File;
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
+use Laika\Core\Relay\Relays\Url;
 use PHPMailer\PHPMailer\SMTP;
+use Throwable;
 
 class Sendmail
 {
-    /**
-     * @var ?PHPMailer $mailer The PHPMailer instance
-     */
+    /** @var ?PHPMailer $mailer The PHPMailer instance */
     protected ?PHPMailer $mailer;
 
-    /**
-     * @var array $config Mail configuration settings
-     */
+    /** @var array $config Mail configuration settings */
     private array $config;
 
-    /**
-     * @var int $maxAttachmentSize Max Attachment Size
-     */
+    /** @var int $maxAttachmentSize Max Attachment Size */
     protected int $maxAttachmentSize;
 
-    public function __construct(?array $config = null)
+    /** @var array $supported_drivers Max Attachment Size */
+    protected array $supported_drivers = ['smtp', 'sendmail', 'qmail', 'mail'];
+
+    /*================================================================================*/
+    /*================================= EXTERNAL API =================================*/
+    /*================================================================================*/
+    /**
+     * @param ?array $config
+     */
+    public function init(?array $config): static
     {
+        $this->close();
+        $this->mailer = null;
+
         // Set Config
-        $this->config = $config ?: \do_hook('config.mail') ?: [];
+        $this->config = $config ?? Config::get('mail');
 
         // Check Driver is Set in Mail Config File
-        if (!isset($this->config['driver'])) {
+        if (!isset($this->config['mail.driver'])) {
             throw new Exception("Mail Driver Not Specified in Mail Config File.");
         }
         // Load Mailer
@@ -51,84 +60,151 @@ class Sendmail
         $this->maxAttachmentSize = 5 * 1024 * 1024; // 5MB
 
         // Check Driver is Supported
-        $this->loadDriver($this->config['driver']);
+        $this->loadDriver($this->config['mail.driver']);
+
+        // Set Charset
+        $this->setCharset($this->config['mail.charset'] ?? 'UTF-8');
         
         // Set Sender Info
-        if (isset($this->config['from.email']) && !empty($this->config['from.email'])) {
-            if (isset($this->config['from.name']) && !empty($this->config['from.name'])) {
-                $this->setFrom($this->config['from.email'], $this->config['from.name']);
-            } else {
-                $this->setFrom($this->config['from.email']);
-            }
-        }
+        $from_email = (empty($this->config['from.email']) && filter_var($this->config['from.email'], FILTER_VALIDATE_EMAIL)) ? Url::host() : $this->config['from.email'];
+        $from_name = $this->config['from.name'] ?? 'Laika App';
+        $this->addFrom($from_email, $from_name);
+
+        return $this;
     }
 
-    public function isHTML(bool $isHtml = true): self
+    /**
+     * Email is HTML
+     * @param bool $isHtml Set Email is HTML
+     * @return static
+     */
+    public function isHTML(bool $isHtml = true): static
     {
         $this->mailer->isHTML($isHtml);
         return $this;
     }
 
-    public function setFrom(string $email, ?string $name = null): self
+    /**
+     * Email Character Set
+     * @param string $charset
+     * @return static
+     */
+    public function setCharset(string $charset): static
+    {
+        $this->mailer->CharSet = $charset;
+        return $this;
+    }
+
+    /**
+     * Add From Email
+     * @param string $email
+     * @param string $name Default is ''
+     * @return static
+     */
+    public function addFrom(string $email, string $name = ''): static
     {
         $this->mailer->setFrom($email, $name);
         return $this;
     }
 
-    public function addTo(string $email, ?string $name = null): self
+    /**
+     * Add To Email
+     * @param string $email
+     * @param string $name Default is ''
+     * @return static
+     */
+    public function addTo(string $email, string $name = ''): static
     {
         $this->mailer->addAddress($email, $name);
         return $this;
     }
 
-    public function addReplyTo(string $email, ?string $name = null): self
+    /**
+     * Add Reply To
+     * @param string $email
+     * @param ?string $name
+     * @return static
+     */
+    public function addReplyTo(string $email, ?string $name = null): static
     {
         $this->mailer->addReplyTo($email, $name);
         return $this;
     }
 
-    public function addCC(string $email): self
+    /**
+     * Add CC
+     * @param string $email
+     * @param string $name Default is ''
+     * @return static
+     */
+    public function addCC(string $email, string $name = ''): static
     {
-        $this->mailer->addCC($email);
+        $this->mailer->addCC($email, $name);
         return $this;
     }
 
-    public function addBCC(string $email): self
+    /**
+     * Add BCC
+     * @param string $email
+     * @param string $name Default is ''
+     * @return static
+     */
+    public function addBCC(string $email, string $name = ''): static
     {
-        $this->mailer->addBCC($email);
+        $this->mailer->addBCC($email, $name);
         return $this;
     }
 
-    public function maxAttachmentSize(int $size): self // In MB
+    /**
+     * Max Attachment Size
+     * @param int $size in MB
+     * @return static
+     */
+    public function maxAttachmentSize(int $size): static // In MB
     {
         $this->maxAttachmentSize = $size * 1024 * 1024;
         return $this;
     }
-    public function attach(string $filePath, ?string $name = null): self
+
+    /**
+     * Attach File
+     * @param string $filePath
+     * @param string $name  Default is ''
+     * @return static
+     */
+    public function attach(string $filePath, string $name = ''): static
     {
         // Normalize path to avoid issues on Windows vs Linux
-        $path = \realpath($filePath);
+        $path = realpath($filePath);
 
         // Check File is Valid
-        if ($path === false || !\is_file($path)) {
+        if ($path === false || !is_file($path)) {
             throw new Exception("Invalid file path: [{$filePath}]", 404);
         }
 
         // Check File is Readable
-        if (!\is_readable($path)) {
+        if (!is_readable($path)) {
             throw new Exception("File is not readable: [{$filePath}]", 403);
         }
 
-        $name = $name ?: '';
-        $this->mailer->addAttachment($path, $name);
+        if (filesize($path) > $this->maxAttachmentSize) {
+            throw new Exception("Attachment exceeds max size limit: [{$filePath}]", 413);
+        }
+
+        $this->mailer->addAttachment($path, $name ?: File::name($path));
         return $this;
     }
 
-    public function attachMultiple(array $files): self
+    /**
+     * Attach Multiple File
+     * @param array $files
+     * @return static
+     */
+    public function attachMultiple(array $files): static
     {
         foreach ($files as $file) {
             // Normalize path to avoid issues on Windows vs Linux
-            $path = \realpath($file);
+            $path = realpath($file);
 
             // Check File is Valid
             if ($path === false || !is_file($path)) {
@@ -136,24 +212,38 @@ class Sendmail
             }
 
             // Check File is Readable
-            if (!\is_readable($path)) {
+            if (!is_readable($path)) {
                 throw new Exception("File is not readable: [{$file}]", 403);
             }
 
-            $this->mailer->addAttachment($path);
+            if (filesize($path) > $this->maxAttachmentSize) {
+                throw new Exception("Attachment exceeds max size limit: [{$file}]", 413);
+            }
+
+            $this->mailer->addAttachment($path, File::name($path));
         }
         return $this;
     }
 
-    public function attachFromString(string $content, string $name, ?string $mime = null): self
+    /**
+     * Attach From String
+     * @param string $content
+     * @param string $name
+     * @param ?string $mime Default is null
+     * @return static
+     */
+    public function attachFromString(string $content, string $name, ?string $mime = null): static
     {
         if (empty($name)) {
             throw new Exception("Attachment filename cannot be empty.", 422);
         }
 
         // Try to detect MIME if not provided
-        $mime = $mime ?: \mime_content_type($name) ?: 'application/octet-stream';
+        $mime = $mime ?: guess_mime_from_name($name);
 
+        if (strlen($content) > $this->maxAttachmentSize) {
+            throw new Exception("Attachment exceeds max size limit!", 413);
+        }
         if (!$this->mailer->addStringAttachment($content, $name, 'base64', $mime)) {
             throw new Exception("Failed to Attach String Content: [{$name}]", 500);
         }
@@ -161,27 +251,45 @@ class Sendmail
         return $this;
     }
 
-    public function subject(string $subject): self
+    /**
+     * Add Subject
+     * @param string $subject
+     * @return static
+     */
+    public function addSubject(string $subject): static
     {
         $this->mailer->Subject = $subject;
         return $this;
     }
 
-    public function body(string $body): self
+    /**
+     * Add Body
+     * @param string $body
+     * @return static
+     */
+    public function body(string $body): static
     {
         $this->mailer->Body = $body;
         return $this;
     }
 
-    public function altBody(string $text): self
+    /**
+     * Add Alt Body
+     * @param string $body
+     * @return static
+     */
+    public function altBody(string $text): static
     {
         $this->mailer->AltBody = $text;
         return $this;
     }
 
-    public function send(): bool
+    /**
+     * Send Email
+     * @return void
+     */
+    public function send(): void
     {
-        $status = false;
         try {
             if ($this->mailer->Subject === '') {
                 throw new Exception("Email Subject Cannot be Empty.");
@@ -189,81 +297,114 @@ class Sendmail
             if ($this->mailer->Body === '') {
                 throw new Exception("Email Body Cannot be Empty.");
             }
-            // Send Mail & Get Status
-            $status = $this->mailer->send();
-        } catch (Exception $e) {
-            \report_bug($e);
+            
+            $this->mailer->send();
+        } catch (Throwable $e) {
+            throw new Exception($e->getMessage(), (int) $e->getCode(), $e);
         } finally {
             // Clear Mailer Data
             $this->clear();
         }
-        return $status;
     }
 
-    public function clearAddresses(): self
+    /**
+     * Clear Addresses
+     * @return static
+     */
+    public function clearAddresses(): static
     {
         $this->mailer->clearAddresses();
         return $this;
     }
 
-    public function clearAttachments(): self
+    /**
+     * Clear Attachments
+     * @return static
+     */
+    public function clearAttachments(): static
     {
         $this->mailer->clearAttachments();
         return $this;
     }
 
-    public function clearCCs(): self
+    /**
+     * Clear CCs
+     * @return static
+     */
+    public function clearCCs(): static
     {
         $this->mailer->clearCCs();
         return $this;
     }
 
-    public function clearBCCs(): self
+    /**
+     * Clear BCCs
+     * @return static
+     */
+    public function clearBCCs(): static
     {
         $this->mailer->clearBCCs();
         return $this;
     }
 
-    public function clearReplyTos(): self
+    /**
+     * Clear Reply Tos
+     * @return static
+     */
+    public function clearReplyTos(): static
     {
         $this->mailer->clearReplyTos();
         return $this;
     }
 
-    public function clear(): self
+    /**
+     * Clear All
+     * @return static
+     */
+    public function clear(): static
     {
         $this->mailer->clearAddresses();
         $this->mailer->clearAttachments();
         $this->mailer->clearCCs();
         $this->mailer->clearBCCs();
         $this->mailer->clearReplyTos();
+        $this->mailer->Subject = '';
+        $this->mailer->Body    = '';
+        $this->mailer->AltBody = '';
+        $this->mailer->isHTML(false);
         return $this;
     }
 
+    /**
+     * Get Mailer
+     * @return PHPMailer
+     */
     public function getMailer(): PHPMailer
     {
         return $this->mailer;
     }
 
-    public function getConfig(): array
-    {
-        return $this->config;
-    }
-
-    public function close()
+    /**
+     * Close Connection
+     * @return void
+     */
+    public function close(): void
     {
         if ($this->mailer && $this->mailer->SMTPKeepAlive) {
             $this->mailer->smtpClose();
         }
     }
 
-    ##################################################################
-    /*------------------------ INTERNAL API ------------------------*/
-    ##################################################################
-
-    private function loadDriver(string $driver): self
+    /*================================================================================*/
+    /*================================= INTERNAL API =================================*/
+    /*================================================================================*/
+    /**
+     * Load Driver
+     * @return static
+     */
+    private function loadDriver(): static
     {
-        switch (\strtolower($driver)) {
+        switch (strtolower($this->config['mail.driver'])) {
             case 'smtp':
                 $this->useSmtp();
                 break;
@@ -277,37 +418,39 @@ class Sendmail
                 $this->useMail();
                 break;            
             default:
-                throw new Exception("Unsupported Mail Driver: [{$driver}]");
-                break;
+                throw new Exception("Unsupported Mail Driver: [{$this->config['mail.driver']}]. Sendmail Only Supports " . join(', ', $this->supported_drivers));
         }
         return $this;
     }
 
-    // Use SMTP
-    private function useSmtp(): self
+    /**
+     * Use SMTP
+     * @return static
+     */
+    private function useSmtp(): static
     {
-        if (!isset($this->config['host']) || empty($this->config['host'])) {
+        if (!isset($this->config['smtp.host']) || empty($this->config['smtp.host'])) {
             throw new Exception("SMTP Config Key 'host' is Not Configured.");
         }
-        if (!isset($this->config['username']) || empty($this->config['username'])) {
+        if (!isset($this->config['smtp.username']) || empty($this->config['smtp.username'])) {
             throw new Exception("SMTP Config Key 'username' is Not Configured.");
         }
-        if (!isset($this->config['password']) || empty($this->config['password'])) {
+        if (!isset($this->config['smtp.password']) || empty($this->config['smtp.password'])) {
             throw new Exception("SMTP Config Key 'password' is Not Configured.");
         }
-        if (!isset($this->config['port']) || empty($this->config['port'])) {
+        if (!isset($this->config['smtp.port']) || empty($this->config['smtp.port'])) {
             throw new Exception("SMTP Config Key 'port' is Not Configured.");
         }
 
         $this->mailer->isSMTP();
-        $this->mailer->Host     =   $this->config['host'];
-        $this->mailer->SMTPAuth =   $this->config['auth'] ?? true;
-        $this->mailer->Username =   $this->config['username'];
-        $this->mailer->Password =   $this->config['password'];
-        $this->mailer->Port     =   (int) ($this->config['port'] ?? 587);
+        $this->mailer->Host     =   $this->config['smtp.host'];
+        $this->mailer->SMTPAuth =   $this->config['smtp.auth'] ?? true;
+        $this->mailer->Username =   $this->config['smtp.username'];
+        $this->mailer->Password =   $this->config['smtp.password']; // Decrypt Before Use. Require Edit This Line
+        $this->mailer->Port     =   (int) ($this->config['smtp.port'] ?? 587);
         $this->mailer->SMTPKeepAlive = true;
         // Check SMTP Secure Type
-        $secure = \strtolower($this->config['secure'] ?? '');
+        $secure = strtolower($this->config['smtp.secure'] ?? '');
         $map = [
             'starttls' => PHPMailer::ENCRYPTION_STARTTLS,
             'tls'      => PHPMailer::ENCRYPTION_STARTTLS,
@@ -315,27 +458,30 @@ class Sendmail
             ''         => '',
         ];
 
-        if (!\array_key_exists($secure, $map)) {
+        if (!array_key_exists($secure, $map)) {
             throw new Exception("Invalid SMTP Secure Type: {$secure}");
         }
 
         $this->mailer->SMTPSecure = $map[$secure];
         // Advanced SMTP Options
-        if (isset($this->config['options'])) {
-            $this->mailer->SMTPOptions = $this->config['options'];
+        if (isset($this->config['smtp.options'])) {
+            $this->mailer->SMTPOptions = $this->config['smtp.options'];
         }
         // Debug level
-        if (isset($this->config['debug']) && $this->config['debug'] === true) {
+        if (isset($this->config['mail.debug']) && $this->config['mail.debug'] === true) {
             $this->mailer->SMTPDebug = SMTP::DEBUG_SERVER;
         }
         return $this;
     }
 
-    // Use Sendmail
-    private function useSendmail(): self
+    /**
+     * Use Sendmail
+     * @return static
+     */
+    private function useSendmail(): static
     {
         // Windows Fallback
-        if (\stripos(PHP_OS, 'WIN') === 0) {
+        if (stripos(PHP_OS, 'WIN') === 0) {
             return $this->useMail();
         }
 
@@ -343,11 +489,14 @@ class Sendmail
         return $this;
     }
 
-    // Use Qmail
-    private function useQmail(): self
+    /**
+     * Use Qmail
+     * @return static
+     */
+    private function useQmail(): static
     {
         // Windows Fallback
-        if (\stripos(PHP_OS, 'WIN') === 0) {
+        if (stripos(PHP_OS, 'WIN') === 0) {
             return $this->useMail();
         }
 
@@ -355,13 +504,19 @@ class Sendmail
         return $this;
     }
 
-    // Use PHP Mail
-    private function useMail(): self
+    /**
+     * Use PHP Mail
+     * @return static
+     */
+    private function useMail(): static
     {
         $this->mailer->isMail();
         return $this;
     }
 
+    /**
+     * Close Mailer Connection
+     */
     public function __destruct()
     {
         $this->close();

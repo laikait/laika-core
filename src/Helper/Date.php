@@ -1,5 +1,4 @@
 <?php
-
 /**
  * Laika PHP MVC Framework
  * Author: Showket Ahmed
@@ -19,42 +18,100 @@ use DateTime;
 
 class Date
 {
-    // DateTime Object
+    /** @var DateTime $dateTime Object */
     protected DateTime $dateTime;
 
-    // Date Format
-    protected string $format;
+    /** @var string $time Time String */
+    protected string $time = 'now';
 
-    // Timezone
-    protected string $timezone;
+    /** @var string $format Time Format */
+    protected string $format = 'Y-m-d H:i:s';
+
+    /** @var string $timezone Timezone */
+    protected string $timezone = 'UTC';
+
+    public function __construct()
+    {
+        $this->dateTime = new DateTime($this->time, new DateTimeZone($this->timezone));
+    }
 
     /**
-     * Initiate Date Class
-     * @param string $time Optional Argument. Default is 'now'.
-     * @param ?string $format Optional Argument. Default is null.
-     * @param ?string $timezone Optional Argument. Default is null.
+     * Set Time String
+     * @param string $time Required Argument. Example: '2024-01-01 12:00:00' or 'now'
+     * @return static
      */
-    public function __construct(string $time = 'now', ?string $format = null, ?string $timezone = null)
+    public function setTime(string $time): static
     {
-        $this->timezone = $timezone ?: 'UTC';
-        $this->format = $format ?: 'Y-m-d H:i:s';
-        $this->dateTime = new DateTime($time, new DateTimeZone($this->timezone));
+        $this->time = $time;
+        return $this;
+    }
+
+    /**
+     * Set DateTime Format
+     * @param string $format Required Argument. Example: 'Y-m-d H:i:s'
+     * @return static
+     */
+    public function setFormat(string $format): static
+    {
+        $this->format = $format;
+        return $this;
+    }
+
+    /**
+     * Set Timezone
+     * @param string $timezone Required Argument. Example: 'UTC'
+     * @return static
+     */
+    public function setTimezone(string $timezone): static
+    {
+        $this->timezone = $timezone;
+        if (isset($this->dateTime)) {
+            $this->dateTime->setTimezone(new DateTimeZone($this->timezone));
+        }
+        return $this;
+    }
+
+    /**
+     * Bootstrap the DateTime Object
+     * Must be called after setTime(), setFormat(), setTimezone()
+     * @return static
+     */
+    public function init(): static
+    {
+        $this->dateTime = new DateTime($this->time, new DateTimeZone($this->timezone));
+        return $this;
+    }
+
+    /**
+     * Get Date Instance
+     * @return static
+     */
+    public function instance(): static
+    {
+        return $this;
     }
 
     /**
      * This Time
      * @param ?string $format Optional Argument. Default is null.
      * @param ?string $timezone Optional Argument. Default is null.
-     * @return self
+     * @return static
      */
-    public static function now(?string $format = null, ?string $timezone = null): self
+    public static function now(?string $format = null, ?string $timezone = null): static
     {
-        return new self('now', $format, $timezone);
+        $instance = new static();
+        if ($format) {
+            $instance->setFormat($format);
+        }
+        if ($timezone) {
+            $instance->setTimezone($timezone);
+        }
+        return $instance->init();
     }
 
     /**
-     * Get Formated DateTime
-     * @param string Optional Argument. Default is null
+     * Get Formatted DateTime
+     * @param string|null $format Optional Argument. Default is null
      * @return string
      */
     public function format(?string $format = null): string
@@ -64,23 +121,12 @@ class Date
 
     /**
      * Modify DateTime
-     * @param $modifier Required Argument. Example: '+1 day'
-     * @return object
+     * @param string $modifier Required Argument. Example: '+1 day'
+     * @return static
      */
     public function modify(string $modifier): static
     {
         $this->dateTime->modify($modifier);
-        return $this;
-    }
-
-    /**
-     * Set DateTime Format
-     * @param $format Required Argument. Example: 'Y-m-d H:i:s'
-     * @return object
-     */
-    public function setFormat(string $format): static
-    {
-        $this->format = $format;
         return $this;
     }
 
@@ -101,18 +147,6 @@ class Date
     public function setTimestamp(int $timestamp): static
     {
         $this->dateTime->setTimestamp($timestamp);
-        return $this;
-    }
-
-    /**
-     * Set Timezone
-     * @param string $timezone Required Argument. Example: 'UTC'
-     * @return static
-     */
-    public function setTimezone(string $timezone): self
-    {
-        $this->timezone = $timezone;
-        $this->dateTime->setTimezone(new DateTimeZone($this->timezone));
         return $this;
     }
 
@@ -158,7 +192,7 @@ class Date
                 ->format('Y-m-d\TH:i:s\Z');
         }
 
-        return $this->dateTime->format(\DateTime::ATOM);
+        return $this->dateTime->format(DateTime::ATOM);
     }
 
     /**
@@ -187,12 +221,12 @@ class Date
     public function toArray(): array
     {
         return [
-            'year'      =>  (int)$this->dateTime->format('Y'),
-            'month'     =>  (int)$this->dateTime->format('m'),
-            'day'       =>  (int)$this->dateTime->format('d'),
-            'hour'      =>  (int)$this->dateTime->format('H'),
-            'minute'    =>  (int)$this->dateTime->format('i'),
-            'second'    =>  (int)$this->dateTime->format('s'),
+            'year'      =>  (int) $this->dateTime->format('Y'),
+            'month'     =>  (int) $this->dateTime->format('m'),
+            'day'       =>  (int) $this->dateTime->format('d'),
+            'hour'      =>  (int) $this->dateTime->format('H'),
+            'minute'    =>  (int) $this->dateTime->format('i'),
+            'second'    =>  (int) $this->dateTime->format('s'),
             'timezone'  =>  $this->timezone,
             'timestamp' =>  $this->getTimestamp()
         ];
@@ -203,7 +237,7 @@ class Date
      * @param Date|DateTime|null $other Optional Argument. Default is null.
      * @return string
      */
-    public function humanDiff(Date|DateTime|null $other): string
+    public function humanDiff(Date|DateTime|null $other = null): string
     {
         $other = $other ?? Date::now($this->format, $this->timezone);
         $diff = $this->diff($other);
@@ -267,7 +301,7 @@ class Date
      * @param string $time Required Argument. Example: '2024-01-01 12:00:00'
      * @param ?string $outputFormat Optional Argument. Default is null.
      * @param ?string $timezone Optional Argument. Default is null.
-     * @return self
+     * @return static
      * @throws \InvalidArgumentException
      */
     public static function fromFormat(
@@ -275,17 +309,23 @@ class Date
         string $time,
         ?string $outputFormat = null,
         ?string $timezone = null
-    ): self {
+    ): static {
         $tz = new DateTimeZone($timezone ?: 'UTC');
         $dt = DateTime::createFromFormat($format, $time, $tz);
 
         if (!$dt instanceof DateTime) {
             throw new \InvalidArgumentException(
-                "Failed to parse '{$time}' using format '{$format}'"
+                "Failed to parse [{$time}] using format [{$format}]"
             );
         }
 
-        $instance = new self('now', $outputFormat, $timezone);
+        $instance = new static();
+        if ($outputFormat) {
+            $instance->setFormat($outputFormat);
+        }
+        if ($timezone) {
+            $instance->setTimezone($timezone);
+        }
         $instance->dateTime = $dt;
         return $instance;
     }

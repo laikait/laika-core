@@ -1,5 +1,4 @@
 <?php
-
 /**
  * Laika PHP MVC Framework
  * Author: Showket Ahmed
@@ -31,11 +30,7 @@ use Laika\Core\Exceptions\IPException;
  *   echo $net6->getNetworkAddress();
  */
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Unified Façade
-// ─────────────────────────────────────────────────────────────────────────────
-
-class Cidr
+class IP
 {
     /**
      * Auto-detect address family and return the appropriate CIDR object.
@@ -54,7 +49,7 @@ class Cidr
             return new IPv6($cidr);
         }
 
-        throw new IPException("Cannot detect address family for: $cidr");
+        throw new IPException("Cannot detect address family for: {$cidr}");
     }
 
     /**

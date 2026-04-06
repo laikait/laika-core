@@ -1,5 +1,4 @@
 <?php
-
 /**
  * Laika PHP Micro Framework
  * Author: Showket Ahmed

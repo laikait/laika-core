@@ -11,68 +11,27 @@
 
 namespace Laika\Core\Helper;
 
+use Laika\Core\Relay\Relays\Url;
+
 class Page
 {
     /**
-     * Total Results
-     * @var int $totalResults
-     */
-    private int $totalElements;
-
-    /**
-     * Total Pages
-     * @var int $totalPages
-     */
-    private int $totalPages;
-
-    ##################################################################
-    /* ------------------------ PUBLIC API ------------------------ */
-    ##################################################################
-    /**
-     * Total Elements
-     * @param int $totalElements Total Elements
-     * @param int|string $limit Data Limits to Show. Default is 20
-     */
-    public function __construct(int $totalElements = 0, int|string $limit = 20)
-    {
-        $this->totalElements = $totalElements < 1  ? 1 : $totalElements;
-        $this->totalPages = (int) \ceil($this->totalElements / (int) $limit);
-    }
-
-    /**
-     * Total Pages Exists
-     * @return int
-     */
-    public function totalPages(): int
-    {
-        return $this->totalPages;
-    }
-
-    /**
-     * Total Pages Results
-     * @param int $totalResults
-     * @return int
-     */
-    public function totalElements(): int
-    {
-        return $this->totalElements;
-    }
-
-    /**
      * Next Page Url
+     * @param ?string $key Request Key. Page Key Query String. Example: 'page'
      * @return string
      */
-    public function next(): string
+    public function next(?string $key = null): string
     {
-        return \call_user_func([new Url, 'incrementQuery']);
+        return Url::incrementQuery($key);
     }
 
     /**
      * Previous Page Url
+     * @param ?string $key Request Key. Page Key Query String. Example: 'page'
      * @return string
      */
-    public function previous()
+    public function previous(?string $key = null): string
     {
-        return \call_user_func([new Url, 'decrementQuery']);
+        return Url::decrementQuery($key);
     }
 }
