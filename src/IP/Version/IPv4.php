@@ -1,5 +1,4 @@
 <?php
-
 /**
  * Laika PHP MVC Framework
  * Author: Showket Ahmed
@@ -26,7 +25,9 @@ class IPv4
     private int    $prefix;       // /0 – /32
     private int    $maskInt;      // subnet mask as 32-bit unsigned int
 
-    // ── Construction ──────────────────────────────────────────────────────────
+    /*##################################################################*/
+    /*=========================== PUBLIC API ===========================*/
+    /*##################################################################*/
 
     public function __construct(string $cidr)
     {
@@ -277,7 +278,7 @@ class IPv4
 
     /**
      * Return all IPs as an array.
-     * ⚠️  Use only for small subnets (e.g. /24 and smaller).
+     * Use only for small subnets (e.g. /24 and smaller).
      */
     public function toArray(bool $usableOnly = true): array
     {
@@ -315,23 +316,25 @@ class IPv4
 
     /**
      * Get the parent (supernet) of this CIDR.
+     * @return static
      */
-    public function supernet(): self
+    public function supernet(): static
     {
         if ($this->prefix === 0) {
             throw new IPException("Already at /0, no supernet available");
         }
-        return new self($this->getNetworkAddress() . '/' . ($this->prefix - 1));
+        return new static($this->getNetworkAddress() . '/' . ($this->prefix - 1));
     }
 
     /**
      * Get the sibling CIDR block (same size, adjacent).
+     * @return static
      */
-    public function sibling(): self
+    public function sibling(): static
     {
         $blockSize  = $this->getTotalAddresses();
         $siblingInt = $this->networkInt ^ $blockSize; // XOR flips the bit
-        return new self(self::int2ip($siblingInt) . "/{$this->prefix}");
+        return new static(self::int2ip($siblingInt) . "/{$this->prefix}");
     }
 
     // ── Summarisation ─────────────────────────────────────────────────────────
@@ -340,7 +343,7 @@ class IPv4
      * Summarise a list of IPv4 CIDR strings into the minimal covering set.
      *
      * @param  string[] $cidrs
-     * @return self[]
+     * @return static[]
      */
     public static function summarise(array $cidrs): array
     {
@@ -389,7 +392,7 @@ class IPv4
 
     // ── Summary ───────────────────────────────────────────────────────────────
 
-    public function toArray_info(): array
+    public function info(): array
     {
         return [
             'cidr'              => $this->getCidr(),
@@ -415,7 +418,9 @@ class IPv4
         return $this->getCidr();
     }
 
-    // ── Internal Helpers ──────────────────────────────────────────────────────
+    /*##################################################################*/
+    /*========================== INTERNAL API ==========================*/
+    /*##################################################################*/
 
     private static function ip2int(string $ip): int
     {

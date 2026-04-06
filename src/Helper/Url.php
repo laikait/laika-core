@@ -1,5 +1,4 @@
 <?php
-
 /**
  * Laika PHP MVC Framework
  * Author: Showket Ahmed
@@ -15,64 +14,36 @@ namespace Laika\Core\Helper;
 
 class Url
 {
-    /**
-     * Singleton Object
-     * @var Url $instance
-     */
-    private static Url $instance;
-
-    /**
-     * Scheme
-     * @var string
-     */
+    /** @var string $scheme */
     protected string $scheme;
 
-    /**
-     * Host
-     * @var string
-     */
+    /** @var string $host */
     protected string $host;
 
-    /**
-     * Path
-     * @var string
-     */
-
+    /** @var string $path */
     protected string $path;
 
-    /**
-     * Query string
-     * @var string
-     */
+    /** @var string $queryString */
     protected string $queryString;
 
-    /**
-     * Base URL
-     * @var string
-     */
+    /** @var string $baseUrl */
     protected string $baseUrl;
 
-    /**
-     * Script name
-     * @var string
-     */
+    /** @var string $scriptName */
     protected string $scriptName;
 
-    /**
-     * Script directory
-     * @var string
-     */
+    /** @var string $directory */
     protected string $directory;
 
     public function __construct()
     {
         $this->scheme = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off' ? 'https' : 'http';
         $host = $_SERVER['HTTP_HOST'] ?? $_SERVER['SERVER_NAME'] ?? 'localhost';
-        $this->host = \strtolower(\explode(':', $host)[0]);
-        $this->path = \parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?? '/';
+        $this->host = strtolower(explode(':', $host)[0]);
+        $this->path = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?? '/';
         $this->queryString = $_SERVER['QUERY_STRING'] ?? '';
         $this->scriptName = $_SERVER['SCRIPT_NAME'] ?? ($_SERVER['PHP_SELF'] ?? '/index.php');
-        $this->directory = \rtrim(\str_replace('\\', '/', \dirname($this->scriptName)), '/');
+        $this->directory = rtrim(str_replace('\\', '/', dirname($this->scriptName)), '/');
         $this->baseUrl = $this->scheme . '://' . $this->host . $this->directory . '/';
     }
 
@@ -86,7 +57,7 @@ class Url
      */
     public function current(): string
     {
-        return \rtrim($this->scheme . '://' . $this->host . ($_SERVER['REQUEST_URI'] ?? '/'), '/');
+        return rtrim($this->scheme . '://' . $this->host . ($_SERVER['REQUEST_URI'] ?? '/'), '/');
     }
 
     /**
@@ -104,7 +75,7 @@ class Url
      */
     public function directory(): string
     {
-        return \trim($this->directory, '/');
+        return trim($this->directory, '/');
     }
 
     /**
@@ -113,17 +84,17 @@ class Url
      */
     public function path(): string
     {
-        return \trim(\str_replace($this->directory, '', $this->path), '/');
+        return trim(str_replace($this->directory, '', $this->path), '/');
     }
 
     /**
      * Get Query Strings
-     * * @return array<string,string>
+     * * @return array{string:string}
      */
     public function queries(): array
     {
-        \parse_str($this->queryString, $queries);
-        return \purify($queries);
+        parse_str($this->queryString, $queries);
+        return purify($queries);
     }
 
     /**
@@ -140,15 +111,15 @@ class Url
     /**
      * Build URL From Args
      * @param string $path Required Argument as String.
-     * @param array<string,int|string> $params Optional Argument as Array. Example ['key' => 'value']
+     * @param array{string:int|string} $params Optional Argument as Array. Example ['key' => 'value']
      * @return string Absolute URL
      */
     public function build(string $path, array $params = []): string
     {
-        $path = \trim($path, '/');
+        $path = trim($path, '/');
         $url = $this->base() . $path;
         if (!empty($params)) {
-            $url .= '?' . \http_build_query($params);
+            $url .= '?' . http_build_query($params);
         }
         return $url;
     }
@@ -160,7 +131,7 @@ class Url
      */
     public function segment(int $index): ?string
     {
-        $segments = \explode('/', \trim($this->path(), '/'));
+        $segments = explode('/', trim($this->path(), '/'));
         return $segments[$index - 1] ?? null;
     }
 
@@ -170,7 +141,7 @@ class Url
      */
     public function segments(): array
     {
-        $segments = \explode('/', \trim($this->path(), '/'));
+        $segments = explode('/', trim($this->path(), '/'));
         return $segments[0] ? $segments : [];
     }
 
@@ -181,8 +152,8 @@ class Url
      */
     public function withQuery(array $params): string
     {
-        $queries = \array_merge($this->queries(), $params);
-        return $this->base() . $this->path() . '?' . \http_build_query($queries);
+        $queries = array_merge($this->queries(), $params);
+        return $this->base() . $this->path() . '?' . http_build_query($queries);
     }
 
     /**
@@ -196,7 +167,7 @@ class Url
         foreach ($keys as $key) {
             unset($queries[$key]);
         }
-        return $this->base() . $this->path() . (empty($queries) ? '' : '?' . \http_build_query($queries));
+        return $this->base() . $this->path() . (empty($queries) ? '' : '?' . http_build_query($queries));
     }
 
     /**
@@ -206,12 +177,11 @@ class Url
      */
     public function incrementQuery(?string $key = null): string
     {
-        $key = $key ?: 'page';
+        $key = strtolower($key ?: 'page');
         $queries = $this->queries();
-        $queries[$key] = isset($queries[$key]) && \is_numeric($queries[$key]) && (int) $queries[$key] > 1
-            ? (int) $queries[$key] + 1 : 2;
+        $queries[$key] = max(1, (int) ($queries[$key] ?? 1)) + 1;
 
-        return $this->base() . $this->path() . '?' . \http_build_query($queries);
+        return $this->base() . $this->path() . '?' . http_build_query($queries);
     }
 
     /**
@@ -221,12 +191,11 @@ class Url
      */
     public function decrementQuery(?string $key = null): string
     {
-        $key = $key ?: 'page';
+        $key = strtolower($key ?: 'page');
         $queries = $this->queries();
-        $queries[$key] = isset($queries[$key]) && \is_numeric($queries[$key]) && (int) $queries[$key] > 1
-            ? (int) $queries[$key] - 1 : 1;
+        $queries[$key] = max(1, ((int) ($queries[$key] ?? 1)) -1);
 
-        return $this->base() . $this->path() . '?' . \http_build_query($queries);
+        return $this->base() . $this->path() . '?' . http_build_query($queries);
     }
 
     /**

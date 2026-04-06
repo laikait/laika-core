@@ -10,18 +10,18 @@
 
 declare(strict_types=1);
 
-use Laika\Core\Helper\Url;
 use Laika\Core\App\Router;
 use Laika\Core\Helper\Filter;
-use Laika\Core\Helper\Config;
-use Laika\Core\Http\Response;
+use Laika\Core\Relay\Relays\Url;
+use Laika\Core\Relay\Relays\Header;
 use Laika\Core\Exceptions\Handler;
+use Laika\Core\Relay\Relays\Config;
 use Laika\Core\Exceptions\HttpException;
 
-// Dump Data & Die
 /**
- * @param mixed $data - Required Argument
- * @param bool $die - Default is false
+ * Dump Data & Die
+ * @param mixed $data Data to Dump
+ * @param bool $die Default is false
  * @return void
 */
 function dd(mixed $data, bool $die = false): void
@@ -32,10 +32,10 @@ function dd(mixed $data, bool $die = false): void
     if ($die) die();
 }
 
-// Show Data & Die
 /**
- * @param mixed $data - Required Argument
- * @param bool $die - Default is false
+ * Show Data & Die
+ * @param mixed $data Data to Show
+ * @param bool $die Default is false
  * @return void
 */
 function show(mixed $data, bool $die = false): void
@@ -46,17 +46,22 @@ function show(mixed $data, bool $die = false): void
     if ($die) die();
 }
 
-// Purify Arry Values
 /**
+ * Purify Array Values
  * @param array $data Array Data to Purify
  * @return array
  */
 function purify(array $data): array
 {
+    if (empty($data)) {
+        return $data;
+    }
     return array_map(function($val){
-        return is_array($val)
-            ? purify($val)
-            : htmlspecialchars(trim($val), ENT_QUOTES, 'UTF-8');
+        return match (true) {
+            is_array($val) => purify($val),
+            is_string($val) => htmlspecialchars(trim(urldecode((string) $val)), ENT_QUOTES, 'UTF-8'),
+            default => $val
+        };
     }, $data);
 }
 
@@ -111,7 +116,7 @@ function named(string $name, array $params = [], bool $url = false): string
     $path = trim(Router::url($named, $params), '/');
     $path = $qstring ? "{$path}?{$qstring}" : $path;
     // Return Named Path/URL
-    return $url ? rtrim(call_user_func([new Url, 'base']), '/') . "/{$path}" : $path;
+    return $url ? rtrim(Url::base(), '/') . "/{$path}" : $path;
 }
 
 /**
@@ -122,7 +127,7 @@ function named(string $name, array $params = [], bool $url = false): string
  */
 function http_exception(int $code = 500, ?string $message = null): void
 {
-    $message = $message ?: (call_user_func([new Response, 'codes'])[$code] ?? 'Unknown Error!');
+    $message = $message ?: (Header::statusCodes()[$code] ?? 'Unknown Error!');
     throw new HttpException($code, $message);
 }
 
@@ -146,4 +151,64 @@ function report_bug(Throwable $th): void
 function config(string $name, ?string $key = null, mixed $default = null): mixed
 {
     return Config::get($name, $key, $default);
+}
+
+/**
+ * Get Mime Type Name
+ * @return string
+ */
+function guess_mime_from_name(string $name): string
+{
+    $ext = strtolower(pathinfo($name, PATHINFO_EXTENSION));
+
+    $map = [
+        // Documents
+        'pdf'  => 'application/pdf',
+        'doc'  => 'application/msword',
+        'docx' => 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+        'xls'  => 'application/vnd.ms-excel',
+        'xlsx' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        'ppt'  => 'application/vnd.ms-powerpoint',
+        'pptx' => 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+        'txt'  => 'text/plain',
+        'csv'  => 'text/csv',
+        'rtf'  => 'application/rtf',
+        // Images
+        'jpg'  => 'image/jpeg',
+        'jpeg' => 'image/jpeg',
+        'png'  => 'image/png',
+        'gif'  => 'image/gif',
+        'webp' => 'image/webp',
+        'svg'  => 'image/svg+xml',
+        // Archives
+        'zip'  => 'application/zip',
+        'gz'   => 'application/gzip',
+        'tar'  => 'application/x-tar',
+        'rar'  => 'application/vnd.rar',
+        '7z'   => 'application/x-7z-compressed',
+        // Data
+        'json' => 'application/json',
+        'xml'  => 'application/xml',
+        // Audio / Video
+        'mp3'  => 'audio/mpeg',
+        'mp4'  => 'video/mp4',
+    ];
+
+    return $map[$ext] ?? 'application/octet-stream';
+}
+
+/**
+ * Make Slug From Name
+ * @return string
+ */
+function slugify(string $name): string
+{
+    $parts = explode('.', $name);
+    $name = $parts[0];
+    $name = preg_replace('~[^\pL\d]+~u', '-', $name);
+    $name = iconv('UTF-8', 'ASCII//TRANSLIT//IGNORE', $name) ?: $name;
+    $name = preg_replace('~[^-\w]+~', '', $name);
+    $name = trim($name, '-');
+    $name = preg_replace('~-+~', '-', $name);
+    return strtolower($name) ?: 'file-' . uniqid() . '-' . time();
 }

@@ -43,7 +43,12 @@ class Pop extends Command
         }
 
         // Get Extension
-        $ext = strtolower($params[0] ?? 'twig');
+        $ext = strtolower($params[1] ?? 'twig');
+
+        if (!in_array($ext, ['twig', 'html'])) {
+            $this->error("Invalid Template Engine: '{$ext}'. Allowed: twig, html");
+            return;
+        }
 
         // Get Name
         $name = trim($params[0]);
@@ -60,7 +65,7 @@ class Pop extends Command
             return;
         }
 
-        $this->success("Template Created Successfully: {$params[0]}");
+        $this->success("Template Removed Successfully: {$name}.{$ext}");
         return;
     }
 }

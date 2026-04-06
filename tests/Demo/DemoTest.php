@@ -5,8 +5,8 @@ namespace Laika\Tests\Unit;
 
 use PHPUnit\Framework\TestCase;
 use Laika\Core\App\Router;
-use Laika\Core\Http\Request;
-use Laika\Core\Helper\Date;
+use Laika\Core\Relay\Relays\Request;
+use Laika\Core\Relay\Relays\Date;
 
 final class DemoTest extends TestCase
 {
@@ -21,12 +21,11 @@ final class DemoTest extends TestCase
 
     public function testDate(): void
     {
-        $date = new Date('1 day', 'Y-M-d H:i:s', 'Europe/London');
-        $this->assertIsInt($date->getTimeStamp(), "Failed to Initialize Date or Get Timestamp");
+        $this->assertIsInt(Date::getTimeStamp(), "Failed to Initialize Date or Get Timestamp");
     }
 
     public function testRequest(): void
     {
-        $this->assertTrue(call_user_func([new Request, 'isGet']), "Failed to Detect GET Request");
+        $this->assertTrue(Request::isGet(), "Failed to Detect GET Request");
     }
 }

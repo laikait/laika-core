@@ -156,8 +156,18 @@ add_hook('message.set', function(string $message, bool $status): void {
 
 /**
  * Get Notification Message
+ * @deprecated This Hook is Deprecated. Use 'message.get' Hook Instead.
  */
 add_hook('message.show', function(): array {
+    $message = Session::get('message');
+    Session::pop('message');
+    return $message ?: [];
+}, 1000);
+
+/**
+ * Get Alert Message
+ */
+add_hook('message.get', function(): array {
     $message = Session::get('message');
     Session::pop('message');
     return $message ?: [];

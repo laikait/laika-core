@@ -1,5 +1,4 @@
 <?php
-
 /**
  * Laika PHP MVC Framework
  * Author: Showket Ahmed
@@ -11,6 +10,9 @@
 
 namespace Laika\Core\Helper;
 
+use Laika\Core\Relay\Relays\Directory;
+use RuntimeException;
+
 class File
 {
     // Path
@@ -19,210 +21,224 @@ class File
      */
     protected string $file;
 
-    public function __construct(string $file)
-    {
-        $this->file = $file;
-    }
-
     ##################################################################
     /* ----------------------- EXTERNAL API ----------------------- */
     ##################################################################
+
     /**
      * Check Path Exist
+     * @param string $file
      * @return bool
      */
-    public function exists(): bool
+    public function exists(string $file): bool
     {
-        return \file_exists($this->file);
+        return file_exists($file);
     }
 
     /**
      * Check Path is Readable
+     * @param string $file
      * @return bool
      */
-    public function readable(): bool
+    public function readable( string $file): bool
     {
-        return \is_readable($this->file);
+        return is_readable($file);
     }
 
     /**
      * Check Path is Writable
+     * @param string $file
      * @return bool
      */
-    public function writable(): bool
+    public function writable(string $file): bool
     {
-        return \is_writable($this->file);
+        return is_writable($file);
     }
 
     /**
      * Get File Size
+     * @param string $file
      * @return int|false Output will be in byte
      */
-    public function size(): int|false
+    public function size(string $file): int|false
     {
-        return $this->exists() ? \filesize($this->file) : false;
+        return $this->exists($file) ? filesize($file) : false;
     }
 
     /**
      * Get File Info
-     * @return string
+     * @param string $file
+     * @return array
      */
-    public function info(): array
+    public function info(string $file): array
     {
-        return \pathinfo($this->file);
+        return pathinfo($file);
     }
 
     /**
      * Get Mime Type
+     * @param string $file
      * @return string|false Mime Type of File on Success and false on Fail
      */
-    public function mime(): string|false
+    public function mime(string $file): string|false
     {
-        $finfo = \finfo_open(FILEINFO_MIME_TYPE);
-        $mime = \finfo_file($finfo, $this->file);
-        \finfo_close($finfo);
+        $finfo = finfo_open(FILEINFO_MIME_TYPE);
+        $mime = finfo_file($finfo, $file);
+        finfo_close($finfo);
         return $mime;
     }
 
     /**
      * Get Mime Extension
+     * @param string $file
      * @return string
      */
-    public function extension(): string
+    public function extension(string $file): string
     {
-        return \pathinfo($this->file, PATHINFO_EXTENSION);
+        return pathinfo($file, PATHINFO_EXTENSION);
     }
 
     /**
      * Get File Name
+     * @param string $file
      * @return string
      */
-    public function name(): string
+    public function name(string $file): string
     {
-        return \pathinfo($this->file, PATHINFO_FILENAME);
+        return pathinfo($file, PATHINFO_FILENAME);
     }
 
     /**
      * Get File Base Name
+     * @param string $file
      * @return string
      */
-    public function base(): string
+    public function base(string $file): string
     {
-        return \pathinfo($this->file, PATHINFO_BASENAME);
+        return pathinfo($file, PATHINFO_BASENAME);
     }
 
     /**
      * Get Path
+     * @param string $file
      * @return string Path
      */
-    public function path(): string
+    public function path(string $file): string
     {
-        return \pathinfo($this->file, PATHINFO_DIRNAME);
+        return pathinfo($file, PATHINFO_DIRNAME);
     }
 
     /**
      * Get File Content
+     * @param string $file
      * @return string|false
      */
-    public function read(): string|false
+    public function read(string $file): string|false
     {
-        return \file_get_contents($this->file);
+        return file_get_contents($file);
     }
 
     /**
      * Write Content in File
      * @param string $str Required Argument
+     * @param string $file
      * @return bool
      */
-    public function write(string $str): bool
+    public function write(string $str, string $file): bool
     {
         // Make Directory if Not Exists
-        Directory::make($this->path());
+        Directory::make($this->path($file));
         // Write Contents
-        return \file_put_contents($this->file, $str) !== false;
+        return file_put_contents($file, $str) !== false;
     }
 
     /**
      * Add New Content in File
      * @param string $str Content to append
+     * @param string $file
      * @return bool
      */
-    public function append(string $str): bool
+    public function append(string $str, string $file): bool
     {
-        return $this->writable() ? (\file_put_contents($this->file, $str, FILE_APPEND) !== false) : false;
+        return $this->writable($file) ? (file_put_contents($file, $str, FILE_APPEND) !== false) : false;
     }
 
     /**
      * Delete File
+     * @param string $file
      * @return bool
      */
-    public function pop(): bool
+    public function pop(string $file): bool
     {
-        return \unlink($this->file);
+        return unlink($file);
     }
 
     /**
      * Move File
-     * @param string $to New file name to move
+     * @param string $from Old File Path
+     * @param string $to New File Path
      * @return bool
      */
-    public function move(string $to): bool
+    public function move(string $from, string $to): bool
     {
-        $result = \rename($this->file, $to);
-        if ($result) {
-            $this->file = $to;
-        }
-        return $result;
+        return rename($from, $to);
     }
 
     /**
      * Copy File
+     * @param string $from Old File Path
      * @param string $to Destination File Name
      * @return bool
      */
-    public function copy(string $to): bool
+    public function copy(string $from, string $to): bool
     {
-        return \copy($this->file, $to);
+        return copy($from, $to);
     }
 
     /**
      * Sets Access & Modification Time of File
+     * @param string $file
      * @param ?int $mtime Modefied Time. Default is null
      * @param ?int $atime Access Time. Default is null
      * @return bool
      */
-    public function touch(?int $mtime = null, ?int $atime = null): bool
+    public function touch(string $file, ?int $mtime = null, ?int $atime = null): bool
     {
-        return \touch($this->file, $mtime, $atime);
+        return touch($file, $mtime, $atime);
     }
 
     /**
      * Require File
      * @param bool $once Require Once if true
-     * @return void
+     * @return mixed
+     * @throws RuntimeException
      */
-    public function require(bool $require_once = false): void
+    public function require(string $file, bool $require_once = false): mixed
     {
-        $require_once ? require_once $this->file : require $this->file;
-        return;
+        if (!$this->exists($file)) {
+            throw new RuntimeException("Invalid File: [{$file}]");
+        }
+        return $require_once ? require_once $file : require $file;
     }
 
     #########################################################################
     ## -------------------------- File Download -------------------------- ##
     #########################################################################
     /**
+     * Download File
+     * @param string $file
      * @param ?string $as Download As for Content Disposition
      * @return void
      */
-    public function download(?string $as = null): void
+    public function download(string $file, ?string $as = null): void
     {
-        $filename = $as ?? $this->name();
-        $mime = $this->mime() ?: 'application/octet-stream';
+        $filename = $as ?? $this->name($file);
+        $mime = $this->mime($file) ?: 'application/octet-stream';
 
-        \header("Content-Type: {$mime}");
-        \header("Content-Disposition: attachment; filename=\"{$filename}\"");
-        \header("Content-Length: {$this->size()}");
-        \readfile($this->file);
+        header("Content-Type: {$mime}");
+        header("Content-Disposition: attachment; filename=\"{$filename}\"");
+        header("Content-Length: {$this->size($file)}");
+        readfile($file);
         return;
     }
 }

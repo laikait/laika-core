@@ -97,14 +97,14 @@ $ptp  = new IPv4('10.0.0.0/31');            // point-to-point link (RFC 3021)
 
 ## IPv4 — Full Info Dump
 
-`toArray_info()` returns every property in one call — useful for APIs or debugging.
+`info()` returns every property in one call — useful for APIs or debugging.
 
 ```php
 use Laika\Core\IP\IP;
 
 $net = IP::parse('192.168.1.0/24');
 
-print_r($net->toArray_info());
+print_r($net->info());
 ```
 
 ```
@@ -562,7 +562,7 @@ use Laika\Core\IP\IP;
 
 $net = IP::parse('2001:db8::/32');
 
-print_r($net->toArray_info());
+print_r($net->info());
 ```
 
 ```
@@ -945,7 +945,7 @@ try {
 | `supernet()` | `self` | Parent block (one prefix shorter) |
 | `sibling()` | `self` | Adjacent same-size block |
 | `getReverseDnsZone()` | `string` | `*.in-addr.arpa` zone name |
-| `toArray_info()` | `array` | All properties as associative array |
+| `info()` | `array` | All properties as associative array |
 
 ### `IPv6` — `Laika\Core\IP\Version\IPv6`
 
@@ -973,7 +973,7 @@ try {
 | `split(int $count)` | `self[]` | Divide into equal sub-networks |
 | `supernet()` | `self` | Parent block |
 | `getReverseDnsZone()` | `string` | `*.ip6.arpa` nibble notation |
-| `toArray_info()` | `array` | All properties as associative array |
+| `info()` | `array` | All properties as associative array |
 
 ### `IPException` — `Laika\Core\Exceptions\IPException`
 

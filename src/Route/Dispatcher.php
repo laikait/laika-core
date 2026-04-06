@@ -1,5 +1,4 @@
 <?php
-
 /**
  * Laika PHP MVC Framework
  * Author: Showket Ahmed
@@ -14,23 +13,23 @@ declare(strict_types=1);
 namespace Laika\Core\Route;
 
 use Laika\Core\Exceptions\Handler as ErrorHandler;
-use Laika\Core\Helper\Url as UrlHelper;
+use Laika\Core\Relay\Relays\Url as UrlHelper;
 use Laika\Core\System\MemoryManager;
-use Laika\Core\Helper\Directory;
-use Laika\Core\Http\Request;
-use Laika\Core\Http\Response;
-use Laika\Core\Helper\Config;
-use Laika\Core\Helper\Token;
+use Laika\Core\Relay\Relays\Directory;
+use Laika\Core\Relay\Relays\Header;
+use Laika\Core\Relay\Relays\Config;
+use Laika\Core\Relay\Relays\Token;
+use Laika\Core\Relay\Relays\Csrf;
 
 class Dispatcher
 {
     public static function dispatch(): void
     {
         // Pre Dispatch Tasks
-        self::PreDispatcher();
+        self::preDispatcher();
 
         // Get Request Url
-        $requestUrl = Url::normalize(call_user_func([new UrlHelper, 'path']));
+        $requestUrl = Url::normalize(UrlHelper::path());
 
         // Get If Request Uri Matched With Router List
         $res = Url::matchRequestRoute($requestUrl);
@@ -42,20 +41,16 @@ class Dispatcher
         $asset = new Asset();
         $isWebUrl = !str_starts_with($res['route'] ?? '', $asset->app) && !str_starts_with($res['route'] ?? '', $asset->template);
 
-        $request  = new Request;
-        $response = new Response;
-
-        // FIX 1: Execute 404 check BEFORE RegisterInitiators().
         // When route is null, $isWebUrl is always true ('' does not start with asset prefixes),
         // so without this reorder, DB/session/hooks boot on every 404 request unnecessarily.
         if ($res['route'] === null) {
-            self::handleFallback($requestUrl, $params, $request, $response);
+            self::handleFallback($requestUrl, $params);
             return;
         }
 
         // Register DB, Session, Hooks — only for valid web routes
         if ($isWebUrl) {
-            self::RegisterInitiators();
+            self::registerInitiators();
         }
 
         // Get Matched Route Info
@@ -69,28 +64,27 @@ class Dispatcher
         }
 
         // Collect middlewares in order: global → group → route
-        $middlewares = \array_merge(
+        $middlewares = array_merge(
             $route['middlewares']['global'],
             $route['middlewares']['group'],
             $route['middlewares']['route']
         );
 
         try {
-            $output = Invoke::middleware($middlewares, $route['controller'], $params, $request, $response);
+            $output = Invoke::middleware($middlewares, $route['controller'], $params);
         } catch (\Throwable $e) {
             throw new \RuntimeException($e->getMessage(), (int) $e->getCode(), $e);
         }
 
         // Run Afterwares
-        $afterwares = \array_merge(
+        $afterwares = array_merge(
             $route['afterwares']['global'],
             $route['afterwares']['group'],
             $route['afterwares']['route']
         );
 
         try {
-            echo Invoke::afterware($afterwares, $output, $params, $request, $response);
-            // echo empty($afterwares) ? $output : Invoke::afterware($afterwares, $output, $params, $request, $response);
+            echo Invoke::afterware($afterwares, $output, $params);
         } catch (\Throwable $e) {
             throw new \RuntimeException($e->getMessage(), (int) $e->getCode(), $e);
         }
@@ -103,26 +97,24 @@ class Dispatcher
      * Handle Fallback
      * @return void
      */
-    private static function handleFallback(string $requestUrl, array $params, Request $request, Response $response): void
+    private static function handleFallback(string $requestUrl, array $params): void
     {
         // 404 Response
-        $response->code(404);
+        Header::code(404);
 
         $fallbacks = Handler::getFallbacks();
 
         uksort($fallbacks, fn($a, $b) => strlen($b) - strlen($a));
         foreach ($fallbacks as $key => $fallback) {
-            if (\str_starts_with(Url::normalizeFallbackKey($requestUrl), $key)) {
+            if (str_starts_with(Url::normalizeFallbackKey($requestUrl), $key)) {
                 try {
                     echo Invoke::middleware(
                         $fallback['middlewares'],
                         empty($fallback['controller']) ? function () { return _404::show(); } : $fallback['controller'],
-                        $params,
-                        $request,
-                        $response
+                        $params
                     );
                 } catch (\Throwable $e) {
-                    \report_bug($e);
+                    throw new \RuntimeException($e->getMessage(), (int) $e->getCode(), $e);
                 }
                 return;
             }
@@ -135,18 +127,18 @@ class Dispatcher
      * Set framework request headers
      * @return void
      */
-    private static function RegisterHeaders(): void
+    private static function registerHeaders(): void
     {
-        $token   = new Token();
         $headers = [
-            "Request-Time"  =>  do_hook('config.env', 'start.time', time()),
-            "App-Name"      =>  do_hook('config.app', 'name', 'Laika Framework'),
-            "Authorization" =>  $token->generate([
-            'uid'           =>  mt_rand(100001, 999999),
-            'requestor'     =>  call_user_func([new UrlHelper, 'base'])
-            ])
+            "Request-Time"  =>  (int) Config::get('env', 'start.time', time()),
+            "App-Name"      =>  Config::get('app', 'name', 'Laika Framework'),
+            "Authorization" =>  Token::generate([
+                    'uid' =>  mt_rand(100001, 999999),
+                    'requestor' =>  UrlHelper::base()
+                ])
         ];
-        call_user_func([new Response, 'setHeader'], $headers);
+        Header::set($headers);
+        Csrf::generate();
         return;
     }
 
@@ -154,14 +146,15 @@ class Dispatcher
      * Create required application directories
      * @return void
      */
-    private static function CreateDirectories(): void
+    private static function createDirectories(): void
     {
         $dirs = [
             APP_PATH . '/lf-app/Controller',
             APP_PATH . '/lf-app/Model',
             APP_PATH . '/lf-app/Middleware',
             APP_PATH . '/lf-app/Afterware',
-            APP_PATH . '/lf-app/Migration'
+            APP_PATH . '/lf-app/Migration',
+            APP_PATH . '/lf-app/Relay',
         ];
 
         foreach ($dirs as $dir) {
@@ -178,7 +171,7 @@ class Dispatcher
      * Create secret key config file if it does not exist
      * @return void
      */
-    private static function CreateSecretKey(): void
+    private static function createSecretKey(): void
     {
         if (!Config::has('secret')) {
             Config::create('secret', ['key' => bin2hex(random_bytes(64))]);
@@ -194,13 +187,13 @@ class Dispatcher
      * Load hook files from lf-hooks directory
      * @return void
      */
-    private static function LoadHookFiles(): void
+    private static function loadHookFiles(): void
     {
         $hooks_path = APP_PATH . '/lf-hooks';
 
+        // $dir_instance = new Directory();
         Directory::make($hooks_path);
-
-        $hook_files = Directory::files($hooks_path, '.hook.php');
+        $hook_files = Directory::files($hooks_path, 'hook.php');
         foreach ($hook_files as $hook_file) {
             require $hook_file;
         }
@@ -210,10 +203,11 @@ class Dispatcher
      * Run required tasks before dispatching
      * @return void
      */
-    private static function PreDispatcher(): void
+    private static function preDispatcher(): void
     {
         // Register Error Handler
         ErrorHandler::register();
+
 
         // Apply memory limits. monitor() is intentionally called with no arguments
         // (silent / production-safe). To opt in to logging, change to:
@@ -224,13 +218,13 @@ class Dispatcher
         $manager->monitor();
 
         // Create Secret Key
-        self::CreateSecretKey();
+        self::createSecretKey();
 
         // Create Required Directories
-        self::CreateDirectories();
+        self::createDirectories();
 
-        // FIX 5: Remove trailing comma from call_user_func (was a typo).
-        call_user_func([new Response, 'register']);
+        // Set Default Headers
+        Header::register();
 
         // Load Routes
         Url::LoadRoutes();
@@ -244,11 +238,11 @@ class Dispatcher
      * Register Initiators
      * @return void
      */
-    private static function RegisterInitiators(): void
+    private static function registerInitiators(): void
     {
         // Register Headers
-        self::RegisterHeaders();
+        self::registerHeaders();
         // Load Hook Files
-        self::LoadHookFiles();
+        self::loadHookFiles();
     }
 }

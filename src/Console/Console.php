@@ -32,7 +32,7 @@ class Console extends Command
      */
     public static function addCommand(string $name, string $class): void
     {
-        self::$commands[\strtolower($name)] = $class;
+        self::$commands[strtolower($name)] = $class;
     }
 
     /*============================= INTERNAL API =============================*/

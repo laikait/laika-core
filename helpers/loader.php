@@ -14,6 +14,9 @@ declare(strict_types=1);
 /*--------------------------------- LOADER ---------------------------------*/
 ##############################################################################
 
+// Require Relays
+require_once __DIR__ . '/relays/relays.php';
+
 // Require All Functions File
 array_map(function($file) { require $file; }, glob(__DIR__ . '/functions/*.func.php'));
 

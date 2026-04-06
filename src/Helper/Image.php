@@ -1,5 +1,4 @@
 <?php
-
 /**
  * Laika PHP MVC Framework
  * Author: Showket Ahmed
@@ -9,58 +8,73 @@
  * For the full copyright and license information, please view the LICENSE file that was distributed with this source code.
  */
 
+declare(strict_types=1);
+
 namespace Laika\Core\Helper;
 
 use InvalidArgumentException;
+use RuntimeException;
 use GdImage;
 
 class Image
 {
-    /**
-     * @var string $path Image Path
-     */
-    protected string $path;
+    /** @var string $path Image Path */
+    protected ?string $path = null;
+
+    /** @var ?string $mime Image Mime Type */
+    protected ?string $mime = null;
+
+    /** @var ?int $width Image Width */
+    protected ?int $width = null;
+
+    /** @var ?int $height Image Height */
+    protected ?int $height = null;
+
+    /** @var ?GdImage $image */
+    protected ?GdImage $image = null;
 
     /**
-     * @var string $mime Image Mime Type
+     * Set File Path
+     * @param string $path Image File Path
+     * @return static
      */
-    protected string $mime;
-
-    /**
-     * @var int $width Image Width
-     */
-    protected int $width;
-
-    /**
-     * @var int $height Image Height
-     */
-    protected int $height;
-
-    /**
-     * @var GdImage $image Image Height
-     */
-    protected GdImage $image;
-
-    /**
-     * @param string $file Resource Image Filepath
-     */
-    public function __construct(string $file)
+    public function path(string $path): static // Must Run First
     {
-        if (!\file_exists($file)) {
-            throw new \InvalidArgumentException("Image File Not Found: [{$file}]");
+        // Destroy previous image if present
+        if ($this->image) {
+            imagedestroy($this->image);
+        }
+        $this->reset();
+
+        if (!file_exists($path)) {
+            throw new InvalidArgumentException("Image File Not Found: [{$path}]");
         }
 
-        $info = \getimagesize($file);
+        $info = getimagesize($path);
         if (!$info) {
-            throw new \RuntimeException("Not a Valid Image!");
+            throw new RuntimeException("Not a Valid Image!");
         }
 
-        $this->path = $file;
+        $this->path = $path;
         $this->mime = $info['mime'];
         $this->width = $info[0];
         $this->height = $info[1];
 
-        $this->load();
+        $this->image = match ($this->mime) {
+            'image/jpeg', 'image/jpg' => imagecreatefromjpeg($this->path),
+            'image/png'               => imagecreatefrompng($this->path),
+            'image/gif'               => imagecreatefromgif($this->path),
+            'image/webp'              => imagecreatefromwebp($this->path),
+            'image/bmp'               => function_exists('imagecreatefrombmp')
+                ? imagecreatefrombmp($this->path)
+                : throw new RuntimeException("BMP not supported"),
+            'image/avif'              => function_exists('imagecreatefromavif')
+                ? imagecreatefromavif($this->path)
+                : throw new RuntimeException("AVIF not supported"),
+            default                   => throw new RuntimeException("Unsupported image type: {$this->mime}")
+        };
+
+        return $this;
     }
 
     /**
@@ -68,10 +82,13 @@ class Image
      * @param int $width Required Argument. Image Width.
      * @param int $height Required Argument. Image Height.
      * @param bool $keepAspect Optional Argument. Default is true
-     * @return self
+     * @return static
      */
-    public function resize(int $width, int $height, bool $keepAspect = true): self
+    public function resize(int $width, int $height, bool $keepAspect = true): static
     {
+        // Check Resources
+        $this->checkResources();
+
         if ($keepAspect) {
             $ratio = $this->width / $this->height;
             if ($width / $height > $ratio) {
@@ -81,10 +98,10 @@ class Image
             }
         }
 
-        $resized = \imagecreatetruecolor($width, $height);
+        $resized = imagecreatetruecolor($width, $height);
         $this->preserveTransparency($resized);
 
-        \imagecopyresampled($resized, $this->image, 0, 0, 0, 0, $width, $height, $this->width, $this->height);
+        imagecopyresampled($resized, $this->image, 0, 0, 0, 0, $width, $height, $this->width, $this->height);
 
         $this->image = $resized;
         $this->width = $width;
@@ -98,11 +115,14 @@ class Image
      * @param int $y Required Argument. Position of Y.
      * @param int $width Required Argument.
      * @param int $height Required Argument.
-     * @return self
+     * @return static
      */
-    public function crop(int $x, int $y, int $width, int $height): self
+    public function crop(int $x, int $y, int $width, int $height): static
     {
-        $cropped = \imagecrop($this->image, [
+        // Check Resources
+        $this->checkResources();
+
+        $cropped = imagecrop($this->image, [
             'x' => $x,
             'y' => $y,
             'width' => $width,
@@ -110,7 +130,7 @@ class Image
         ]);
 
         if ($cropped === false) {
-            throw new \RuntimeException("Failed to crop image.");
+            throw new RuntimeException("Failed to crop image.");
         }
 
         $this->image = $cropped;
@@ -125,13 +145,16 @@ class Image
      * @param int $width Required Argument.
      * @param int $height Required Argument.
      * @param string $mode Optional Argument. Default is 'fit'. Acceptable Modes Are 'fit' and 'cover'
-     * @return self
+     * @return static
      */
     public function thumbnail(int $width, int $height, string $mode = 'fit'): static
     {
-        $mode = \strtolower($mode);
+        // Check Resources
+        $this->checkResources();
+
+        $mode = strtolower($mode);
         // Throw InvalidArgumentException if Mode is not Acceptable.
-        if (!\in_array($mode, ['fit', 'cover'])) {
+        if (!in_array($mode, ['fit', 'cover'])) {
             throw new InvalidArgumentException("Unsupported Mode: '{$mode}'");
         }
 
@@ -165,13 +188,16 @@ class Image
      * @param array $rgb Optional Argument. Default is null for [255, 255, 255]
      * @param int $x Position of X. Optional Argument. Default is 10
      * @param int $y Position of Y. Optional Argument. Default is 20
-     * @return self
+     * @return static
      */
-    public function watermark(string $text, int $gdfont = 5, ?array $rgb = null, int $x = 10, int $y = 20): self
+    public function watermark(string $text, int $gdfont = 5, ?array $rgb = null, int $x = 10, int $y = 20): static
     {
+        // Check Resources
+        $this->checkResources();
+
         $rgb = $rgb ?: [255, 255, 255];
-        $gdColor = \imagecolorallocate($this->image, ...$rgb);
-        \imagestring($this->image, \max(1, \min(5, $gdfont)), $x, $y, $text, $gdColor);
+        $gdColor = imagecolorallocate($this->image, ...$rgb);
+        imagestring($this->image, max(1, min(5, $gdfont)), $x, $y, $text, $gdColor);
         return $this;
     }
 
@@ -180,18 +206,33 @@ class Image
      * @param string $logoPath Required Argument
      * @param int $x Position of X. Optional Argument. Default is 0
      * @param int $y Position of Y. Optional Argument. Default is 0
-     * @param int $opacity Optional Argument. Default is 0
-     * @return self
+     * @param int $opacity Optional Argument. Default is 100
+     * @return static
      */
-    public function watermarkImage(string $logoPath, int $x = 0, int $y = 0, int $opacity = 100): self
+    public function watermarkImage(string $logoPath, int $x = 0, int $y = 0, int $opacity = 100): static
     {
-        if (!\file_exists($logoPath)) {
-            throw new \InvalidArgumentException("Watermark image not found: $logoPath");
+        // Check Resources
+        $this->checkResources();
+
+        if (!file_exists($logoPath)) {
+            throw new InvalidArgumentException("Watermark image not found: $logoPath");
         }
 
-        $logo = \imagecreatefromstring(\file_get_contents($logoPath));
-        \imagecopymerge($this->image, $logo, $x, $y, 0, 0, \imagesx($logo), \imagesy($logo), $opacity);
-        \imagedestroy($logo);
+        $data = file_get_contents($logoPath);
+        if ($data === false) {
+            throw new RuntimeException("Failed to read watermark image: {$logoPath}");
+        }
+        $logo = imagecreatefromstring($data);
+        if ($logo === false) {
+            throw new RuntimeException("Failed to create image resource from watermark: {$logoPath}");
+        }
+        if ($opacity === 100) {
+            imagealphablending($this->image, true);
+            imagecopy($this->image, $logo, $x, $y, 0, 0, imagesx($logo), imagesy($logo));
+        } else {
+            $this->mergeWithAlpha($this->image, $logo, $x, $y, $opacity);
+        }
+        imagedestroy($logo);
 
         return $this;
     }
@@ -199,68 +240,70 @@ class Image
     /**
      * Rotate Image
      * @param float|int $angle Required Argument
-     * @return self
+     * @return static
      */
-    public function rotate(float|int $angle): self
+    public function rotate(float|int $angle): static
     {
-        $this->image = \imagerotate($this->image, -$angle, 0);
+        // Check Resources
+        $this->checkResources();
+
+        $this->image = imagerotate($this->image, -$angle, 0);
+        // Update dimensions after rotation
+        $this->width  = imagesx($this->image);
+        $this->height = imagesy($this->image);
         return $this;
     }
 
     /**
      * Horizontal Image Flip
-     * @return self
+     * @return static
      */
-    public function flipHorizontal(): self
+    public function flipHorizontal(): static
     {
-        $width = \imagesx($this->image);
-        $height = \imagesy($this->image);
-        $flipped = \imagecreatetruecolor($width, $height);
-        $this->preserveTransparency($flipped);
-        for ($x = 0; $x < $width; $x++) {
-            \imagecopy($flipped, $this->image, $width - $x - 1, 0, $x, 0, 1, $height);
-        }
+        // Check Resources
+        $this->checkResources();
 
-        $this->image = $flipped;
+        imageflip($this->image, IMG_FLIP_HORIZONTAL);
         return $this;
     }
 
     /**
      * Vertical Image Flip
-     * @return self
+     * @return static
      */
-    public function flipVertical(): self
+    public function flipVertical(): static
     {
-        $width = \imagesx($this->image);
-        $height = \imagesy($this->image);
-        $flipped = \imagecreatetruecolor($width, $height);
-        $this->preserveTransparency($flipped);
+        // Check Resources
+        $this->checkResources();
 
-        for ($y = 0; $y < $height; $y++) {
-            \imagecopy($flipped, $this->image, 0, $height - $y - 1, 0, $y, $width, 1);
-        }
-
-        $this->image = $flipped;
+        imageflip($this->image, IMG_FLIP_VERTICAL);
         return $this;
     }
 
     /**
      * Gray Scale Image
-     * @return self
+     * @return static
      */
-    public function grayscale(): self
+    public function grayscale(): static
     {
-        \imagefilter($this->image, IMG_FILTER_GRAYSCALE);
+        // Check Resources
+        $this->checkResources();
+
+        imagefilter($this->image, IMG_FILTER_GRAYSCALE);
         return $this;
     }
 
     /**
      * Convert Image
-     * @return self
+     * @param string $format File Format
+     * @return static
      */
-    public function convertTo(string $format): self
+    public function convertTo(string $format): static
     {
-        $format = \strtolower($format);
+        // Check Resources
+        $this->checkResources();
+
+        $format = strtolower($format);
 
         $this->mime = match ($format) {
             'jpg', 'jpeg' => 'image/jpeg',
@@ -269,7 +312,7 @@ class Image
             'webp'        => 'image/webp',
             'bmp'         => 'image/bmp',
             'avif'        => 'image/avif',
-            default       => throw new \InvalidArgumentException("Unsupported conversion format: [{$format}]"),
+            default       => throw new InvalidArgumentException("Unsupported conversion format: [{$format}]"),
         };
 
         return $this;
@@ -277,26 +320,31 @@ class Image
 
     /**
      * Save Image
+     * @param $path Same Path
+     * @param int $quality 0–100. For PNG, higher = less compression (larger file).
      * @return bool
      */
     public function save(string $path, int $quality = 100): bool
     {
-        if (\in_array($this->mime, ['image/png', 'image/gif'])) {
-            \imagealphablending($this->image, false);
-            \imagesavealpha($this->image, true);
+        // Check Resources
+        $this->checkResources();
+
+        if (in_array($this->mime, ['image/png', 'image/gif'])) {
+            imagealphablending($this->image, false);
+            imagesavealpha($this->image, true);
         }
         return match ($this->mime) {
-            'image/jpeg', 'image/jpg' => \imagejpeg($this->image, $path, $quality),
-            'image/png'               => \imagepng($this->image, $path, (int) \round((100 - $quality) * 9 / 100)),
-            'image/gif'               => \imagegif($this->image, $path),
-            'image/webp'              => \imagewebp($this->image, $path, $quality),
-            'image/bmp'               => \function_exists('imagebmp')
-                ? \imagebmp($this->image, $path)
-                : throw new \RuntimeException("Cannot save BMP: not supported"),
+            'image/jpeg', 'image/jpg' => imagejpeg($this->image, $path, $quality),
+            'image/png'               => imagepng($this->image, $path, (int) round((100 - $quality) * 9 / 100)),
+            'image/gif'               => imagegif($this->image, $path),
+            'image/webp'              => imagewebp($this->image, $path, $quality),
+            'image/bmp'               => function_exists('imagebmp')
+                ? imagebmp($this->image, $path)
+                : throw new RuntimeException("Cannot save BMP: not supported"),
             'image/avif'              => function_exists('imageavif')
-                ? \imageavif($this->image, $path, $quality)
-                : throw new \RuntimeException("Cannot save AVIF: not supported"),
-            default                   => throw new \RuntimeException("Cannot save unsupported image type: {$this->mime}")
+                ? imageavif($this->image, $path, $quality)
+                : throw new RuntimeException("Cannot save AVIF: not supported"),
+            default                   => throw new RuntimeException("Cannot save unsupported image type: {$this->mime}")
         };
     }
 
@@ -304,29 +352,33 @@ class Image
      * Get Image Raw Data
      * @return void
      */
-    public function output(): void
+    public function show(): void
     {
-        \header("Content-Type: {$this->mime}");
+        // Check Resources
+        $this->checkResources();
+
+        header("Content-Type: {$this->mime}");
         if (in_array($this->mime, ['image/png', 'image/gif'])) {
-            \imagealphablending($this->image, false);
-            \imagesavealpha($this->image, true);
+            imagealphablending($this->image, false);
+            imagesavealpha($this->image, true);
         }
 
         match ($this->mime) {
-            'image/jpeg', 'image/jpg' => \imagejpeg($this->image),
-            'image/png'               => \imagepng($this->image),
-            'image/gif'               => \imagegif($this->image),
-            'image/webp'              => \imagewebp($this->image),
-            'image/bmp'               => \function_exists('imagebmp')
-                ? \imagebmp($this->image)
-                : throw new \RuntimeException("Cannot output BMP: not supported"),
-            'image/avif'              => \function_exists('imageavif')
+            'image/jpeg', 'image/jpg' => imagejpeg($this->image),
+            'image/png'               => imagepng($this->image),
+            'image/gif'               => imagegif($this->image),
+            'image/webp'              => imagewebp($this->image),
+            'image/bmp'               => function_exists('imagebmp')
+                ? imagebmp($this->image)
+                : throw new RuntimeException("Cannot output BMP: not supported"),
+            'image/avif'              => function_exists('imageavif')
                 ? imageavif($this->image)
-                : throw new \RuntimeException("Cannot output AVIF: not supported"),
-            default                   => throw new \RuntimeException("Cannot output unsupported image type: {$this->mime}")
+                : throw new RuntimeException("Cannot output AVIF: not supported"),
+            default                   => throw new RuntimeException("Cannot output unsupported image type: {$this->mime}")
         };
 
-        \imagedestroy($this->image);
+        imagedestroy($this->image);
+        $this->reset();
     }
 
     /**
@@ -335,53 +387,47 @@ class Image
      */
     public function toBase64(): string
     {
-        \ob_start();
+        // Check Resources
+        $this->checkResources();
+
+        ob_start();
 
         match ($this->mime) {
-            'image/jpeg', 'image/jpg' => \imagejpeg($this->image),
-            'image/png'               => \imagepng($this->image),
-            'image/gif'               => \imagegif($this->image),
-            'image/webp'              => \imagewebp($this->image),
-            'image/bmp'               => \function_exists('imagebmp')
-                ? \imagebmp($this->image)
-                : throw new \RuntimeException("Cannot output BMP: not supported"),
-            'image/avif'              => \function_exists('imageavif')
-                ? \imageavif($this->image)
-                : throw new \RuntimeException("Cannot output AVIF: not supported"),
-            default                   => throw new \RuntimeException("Unsupported image type: {$this->mime}"),
+            'image/jpeg', 'image/jpg' => imagejpeg($this->image),
+            'image/png'               => imagepng($this->image),
+            'image/gif'               => imagegif($this->image),
+            'image/webp'              => imagewebp($this->image),
+            'image/bmp'               => function_exists('imagebmp')
+                ? imagebmp($this->image)
+                : throw new RuntimeException("Cannot output BMP: not supported"),
+            'image/avif'              => function_exists('imageavif')
+                ? imageavif($this->image)
+                : throw new RuntimeException("Cannot output AVIF: not supported"),
+            default                   => throw new RuntimeException("Unsupported image type: {$this->mime}"),
         };
 
-        $imageData = \ob_get_clean();
-        $base64 = \base64_encode($imageData);
-
-        return 'data:' . $this->mime . ';base64,' . $base64;
+        $imageData = ob_get_clean();
+        $base64 = base64_encode($imageData);
+        $output = 'data:' . $this->mime . ';base64,' . $base64;
+        $this->destroy();
+        return $output;
     }
 
     /**
-     * Get Image Width
-     * @return int
+     * Get Image Info
+     * @return array
      */
-    public function getWidth(): int
+    public function info(): array
     {
-        return $this->width;
-    }
-
-    /**
-     * Get Image Height
-     * @return int
-     */
-    public function getHeight(): int
-    {
-        return $this->height;
-    }
-
-    /**
-     * Get Image Mime Type
-     * @return string
-     */
-    public function getMime(): string
-    {
-        return $this->mime;
+        // Check Resources
+        $this->checkResources();
+        $result = [
+            'width' => $this->width,
+            'height' => $this->height,
+            'mime' => $this->mime
+        ];
+        $this->reset();
+        return $result;
     }
 
     /**
@@ -390,9 +436,13 @@ class Image
      */
     public function destroy(): void
     {
+        // Check Resources
+        $this->checkResources();
+
         if ($this->image) {
-            \imagedestroy($this->image);
+            imagedestroy($this->image);
         }
+        $this->image = null;
     }
 
     /**
@@ -401,33 +451,18 @@ class Image
      */
     public function unlink(): bool
     {
-        if (\file_exists($this->path)) {
-            return \unlink($this->path);
+        // Check Resources
+        $this->checkResources();
+
+        if (file_exists($this->path)) {
+            return unlink($this->path);
         }
         return false;
     }
 
-    /**
-     * Load GdImage of Resource Image
-     * @return void
-     */
-    protected function load(): void
-    {
-        $this->image = match ($this->mime) {
-            'image/jpeg', 'image/jpg' => \imagecreatefromjpeg($this->path),
-            'image/png'               => \imagecreatefrompng($this->path),
-            'image/gif'               => \imagecreatefromgif($this->path),
-            'image/webp'              => \imagecreatefromwebp($this->path),
-            'image/bmp'               => \function_exists('imagecreatefrombmp')
-                ? \imagecreatefrombmp($this->path)
-                : throw new \RuntimeException("BMP not supported"),
-            'image/avif'              => \function_exists('imagecreatefromavif')
-                ? \imagecreatefromavif($this->path)
-                : throw new \RuntimeException("AVIF not supported"),
-            default                   => throw new \RuntimeException("Unsupported image type: {$this->mime}")
-        };
-    }
-
+    /*========================================================================================*/
+    /*===================================== INTERNAL API =====================================*/
+    /*========================================================================================*/
     /**
      * Keep Transparency for PNG and GIF
      * @param GdImage $image Required Argument
@@ -435,11 +470,70 @@ class Image
      */
     protected function preserveTransparency(GdImage $image): void
     {
-        if (\in_array($this->mime, ['image/png', 'image/gif'])) {
-            \imagealphablending($image, false);
-            \imagesavealpha($image, true);
-            $transparent = \imagecolorallocatealpha($image, 0, 0, 0, 127);
-            \imagefilledrectangle($image, 0, 0, \imagesx($image), \imagesy($image), $transparent);
+        if (in_array($this->mime, ['image/png', 'image/gif'])) {
+            imagealphablending($image, false);
+            imagesavealpha($image, true);
+            $transparent = imagecolorallocatealpha($image, 0, 0, 0, 127);
+            imagefilledrectangle($image, 0, 0, imagesx($image), imagesy($image), $transparent);
         }
+    }
+
+    /**
+     * Reset All Properties
+     * @return void
+     */
+    protected function reset(): void
+    {
+        if ($this->image) {
+            imagedestroy($this->image);
+        }
+        $this->path   = null;
+        $this->mime   = null;
+        $this->width  = null;
+        $this->height = null;
+        $this->image  = null;
+    }
+
+    /**
+     * Check File & Resources is Valid
+     * @return void
+     * @throws RuntimeException
+     */
+    protected function checkResources(): void
+    {
+        if (in_array(null, [$this->path, $this->mime, $this->width, $this->height, $this->image])) {
+            throw new RuntimeException("Run Image::path(\$path) To Set Image File Path");
+        }
+    }
+
+    /**
+     * Alpha-safe opacity merge for true-color images
+     * @param GdImage $dst Destination image
+     * @param GdImage $src Watermark image
+     * @param int $x Position of X
+     * @param int $y Position of Y
+     * @param int $opacity 0–99
+     * @return void
+     */
+    protected function mergeWithAlpha(GdImage $dst, GdImage $src, int $x, int $y, int $opacity): void
+    {
+        $w = imagesx($src);
+        $h = imagesy($src);
+
+        // Create a temp canvas matching the watermark size
+        $cut = imagecreatetruecolor($w, $h);
+        imagealphablending($cut, false);
+        imagesavealpha($cut, true);
+
+        // Copy the destination background into the temp canvas
+        imagecopy($cut, $dst, 0, 0, $x, $y, $w, $h);
+
+        // Copy the watermark on top
+        imagecopy($cut, $src, 0, 0, 0, 0, $w, $h);
+
+        // Merge the temp canvas back onto the destination with the desired opacity
+        imagecopymerge($dst, $cut, $x, $y, 0, 0, $w, $h, $opacity);
+
+        imagedestroy($cut);
     }
 }

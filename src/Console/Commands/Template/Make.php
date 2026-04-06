@@ -39,14 +39,18 @@ class Make extends Command
         }
 
         // Get Extension
-        $ext = strtolower($params[0] ?? 'twig');
+        $ext = strtolower($params[1] ?? 'twig');
+
+        if (!in_array($ext, ['twig', 'html'])) {
+            $this->error("Invalid Template Engine: '{$ext}'. Allowed: twig, html");
+            return;
+        }
 
         if (!\preg_match($this->exp, $params[0])) {
             // Invalid Name
             $this->error("Invalid Template Name: '{$params[0]}'");
             return;
         }
-        // $parts = $this->parts($params[0], false);
 
         $name = trim($params[0]);
 
@@ -71,7 +75,7 @@ class Make extends Command
             return;
         }
 
-        $this->success("Template Created Successfully: {$params[0]}");
+        $this->success("Template Created Successfully: {$name}.{$ext}");
         return;
     }
 }

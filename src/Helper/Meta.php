@@ -1,5 +1,4 @@
 <?php
-
 /**
  * Laika PHP MVC Framework
  * Author: Showket Ahmed
@@ -19,24 +18,24 @@ class Meta
 {
    /**
     * Get Version Info from PHP File
-    * @param string $path - Required A Path of PHP File
+    * @param string $file - Required A Path of PHP File
     * @return array - Returns an associative array of meta information extracted from the PHP file's doc comments
     */
-   public static function version(string $path): array
+   public function info(string $file): array
    {
-      if (!\is_file($path)) {
-         throw new InvalidArgumentException("Invalid file path: $path");
+      if (!is_file($file)) {
+         throw new InvalidArgumentException("Invalid file path: $file");
       }
       $meta = [];
-      $tokens = \token_get_all(\file_get_contents($path));
+      $tokens = token_get_all(file_get_contents($file));
       foreach ($tokens as $token) {
          if (isset($token[0], $token[1]) && $token[0] === T_DOC_COMMENT) {
-            $comments = \explode('*', $token[1]);
+            $comments = explode('*', $token[1]);
             foreach ($comments as $value) {
-               if (\str_contains($value, ':')) {
-                  $parts = \explode(':', $value, 2);
-                  $key = \strtolower(\str_replace(' ', '-', \trim($parts[0])));
-                  $value = \trim($parts[1] ?? '');
+               if (str_contains($value, ':')) {
+                  $parts = explode(':', $value, 2);
+                  $key = strtolower(str_replace(' ', '-', trim($parts[0])));
+                  $value = trim($parts[1] ?? '');
                   $meta[$key] = $value;
                }
             }

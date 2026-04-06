@@ -1,5 +1,4 @@
 <?php
-
 /**
  * Laika PHP MVC Framework
  * Author: Showket Ahmed
@@ -13,44 +12,24 @@ declare(strict_types=1);
 
 namespace Laika\Core\Helper;
 
+use Laika\Core\Relay\Relays\Directory;
+use Laika\Core\Relay\Relays\File;
+use RuntimeException;
+
 class Config
 {
-    /**
-     * @var ?Config $instance
-     */
-    private static ?Config $instance = null;
+    /** @var array{string:mixed} $config Contains Config Vars */
+    private static array $config = [];
 
-    /**
-     * @var array $config Contains Config Vars
-     */
-    private array $config = [];
-
-    /**
-     * @var string $path
-     */
-    private string $path;
-
-    // Create Object
-    private function __construct() // Prevent External Instantiation
-    {
-        $this->path = APP_PATH . '/lf-config';
-
-        $files = Directory::files($this->path, 'php');
-
-        foreach ($files as $file) {
-            if (\is_file($file)) {
-                $basename = \strtolower(\basename($file, '.php'));
-                $this->config[$basename] = require $file;
-            }
-        }
-    }
+    /** @var string $path */
+    private static string $path = APP_PATH . '/lf-config';
 
     ######################################################################################
     ## --------------------------------- PUBLIC API ----------------------------------- ##
     ######################################################################################
 
-    // Get Value From Config
     /**
+     * Get Config Value
      * @param string $name Config file name (without extension)
      * @param ?string $key Config key (optional)
      * @param mixed $default Default value if not found
@@ -58,51 +37,51 @@ class Config
      */
     public static function get(string $name, ?string $key = null, mixed $default = null): mixed
     {
-        $obj = self::getInstance();
-        $name = strtolower($name);
+        // Initiate
+        self::init();
+        $name = strtolower(trim($name));
 
         // Get Value
         if ($key !== null) {
-            return $obj->config[$name][$key] ?? $default;
+            return self::$config[$name][$key] ?? $default;
         }
-        return $obj->config[$name] ?? $default;
+        return self::$config[$name] ?? $default;
     }
 
-    // Set/Modify A Value in Config
     /**
-     * Modify a key value inside a config file
+     * Modify a Config Value
      * @param string $name Config file name (without extension)
      * @param string $key Config key (optional)
      * @param null|int|string|bool $value Value to Set
-     * @return null|int|string|bool
+     * @return void
      */
-    public static function set(string $name, string $key, null|int|string|bool|array $value): null|int|string|bool|array
+    public static function set(string $name, string $key, null|int|string|bool|array $value): void
     {
-        $obj    =   $obj = self::getInstance();
-        $name   =   strtolower($name);
-        $key    =   strtolower($key);
+        // Initiate
+        self::init();
+        $name = strtolower(trim($name));
+        $key = strtolower(trim($key));
 
-        $file = new File("{$obj->path}/{$name}.php");
+        $file = self::$path . DIRECTORY_SEPARATOR . "{$name}.php";
 
-        if (!$file->exists()) {
-            throw new \RuntimeException("Config File '{$name}' Does Not Exist.");
+        if (!File::exists($file)) {
+            throw new RuntimeException("Config File [$name}] Does Not Exist.");
         }
 
         // Ensure config exists in memory
-        if (!isset($obj->config[$name]) || !is_array($obj->config[$name])) {
-            $obj->config[$name] = [];
+        if (!isset(self::$config[$name]) || !is_array(self::$config[$name])) {
+            self::$config[$name] = [];
         }
 
         // Update in memory
-        $obj->config[$name][$key] = $value;
+        self::$config[$name][$key] = $value;
 
         // Rebuild file content with short array syntax
-        $content = self::make($obj->config[$name]);
+        $content = self::make(self::$config[$name]);
 
-        if (!$file->write($content)) {
-            throw new \RuntimeException("Config Write Failed: '{$name}'");
+        if (!File::write($content, $file)) {
+            throw new RuntimeException("Config Write Failed: [$name}]");
         }
-        return true;
     }
 
     // Check Name & Key Config Exists
@@ -111,95 +90,113 @@ class Config
      * @param string $key Config key (optional)
      * @return bool
      */
-    public static function has(string $name, ?string $key = null): bool
+    public function has(string $name, ?string $key = null): bool
     {
-        $obj = $obj = self::getInstance();
-        $name = strtolower($name);
+        // Initiate
+        self::init();
+        $name = strtolower(trim($name));
         if ($key !== null) {
             $key = strtolower($key);
-            return array_key_exists($key, $obj->config[$name]);
+            return array_key_exists($key, self::$config[$name]);
         }
-        return array_key_exists($name, $obj->config);
+        return array_key_exists($name, self::$config);
     }
 
-    // Delete a Config Key
     /**
+     * Delete a Config Key
      * @param string $name Config file name (without extension)
      * @param string $key Config key (optional)
      * @return bool
      */
-    public static function pop(string $name, string $key): bool
+    public function pop(string $name, string $key): bool
     {
-        $obj    =   $obj = self::getInstance();
-        $name   =   strtolower($name);
-        $key    =   strtolower($key);
+        // Initiate
+        self::init();
+        $name = strtolower(trim($name));
+        $key = strtolower(trim($key));
 
-        $file = new File("{$obj->path}/{$name}.php");
+        $file = self::$path . DIRECTORY_SEPARATOR . "{$name}.php";
 
-        if (!$file->exists()) {
-            throw new \RuntimeException("Config File '{$name}' Does Not Exist.");
+        if (!File::exists($file)) {
+            throw new RuntimeException("Config File [$name}] Does Not Exist.");
         }
 
         // Ensure config exists in memory
-        if (!isset($obj->config[$name]) || !is_array($obj->config[$name])) {
+        if (!isset(self::$config[$name]) || !is_array(self::$config[$name])) {
             return false;
         }
 
         // Remove From memory
-        unset($obj->config[$name][$key]);
+        unset(self::$config[$name][$key]);
 
         // Rebuild file content with short array syntax
-        $content = self::make($obj->config[$name]);
+        $content = self::make(self::$config[$name]);
 
-        if (!$file->write($content)) {
-            throw new \RuntimeException("Config Write Failed: '{$name}'");
+        if (!File::write($content, $file)) {
+            throw new RuntimeException("Config Write Failed: [$name}]");
         }
         return true;
     }
 
-    // Create A New Config File
     /**
+     * Create A New Config File
      * @param string $name Name of the Config to Make Config File
      * @param array $data Data to insert in Config File
      * @return bool
      */
-    public static function create(string $name, array $data): bool
+    public function create(string $name, array $data): bool
     {
-        $obj = self::getInstance();
+        // Initiate
+        self::init();
         $name = trim(strtolower($name));
 
-        $file = $obj->path . "/{$name}.php";
+        $file = self::$path . DIRECTORY_SEPARATOR . "{$name}.php";
 
         // Check File Already Exist
-        $fileObj = new File($file);
-        if ($fileObj->exists()) {
-            throw new \RuntimeException("Config File '{$name}' Already Exists.");
+        if (File::exists($file)) {
+            throw new RuntimeException("Config File [$name}] Already Exists.");
         }
 
-        $obj->config[$name] = $data;
+        self::$config[$name] = $data;
 
         // Make Array Values
         $content = self::make($data);
         // Create Config File
-        if (!$fileObj->write($content)) {
-            throw new \RuntimeException("Config Write Failed: {$name}");
+        if (!File::write($content, $file)) {
+            throw new RuntimeException("Config [{$name}] Write Failed!");
         }
         return true;
     }
 
-    ########################################################################################
-    ## ------------------------------- INTERNAL METHODS --------------------------------- ##
-    ########################################################################################
+    ####################################################################################
+    ## ------------------------------- INTERNAL API --------------------------------- ##
+    ####################################################################################
 
-    // Load Configs
-    private static function getInstance(): self // Run this method in the beginning of php codes
+    /**
+     * Initiate Config
+     * @return void
+     */
+    private static function init(): void
     {
-        self::$instance ??= new self();
-        return self::$instance;
+        if (!empty(self::$config)) {
+            return;
+        }
+
+        $files = Directory::files(self::$path, 'php');
+
+        foreach ($files as $file) {
+            if (is_file($file)) {
+                $basename = strtolower(basename($file, '.php'));
+
+                self::$config[$basename] = require $file;
+            }
+        }
     }
 
     /**
      * Export a value into short array-friendly PHP syntax
+     * @param null|int|string|bool $value Value to Export
+     * @return string
      */
     private static function exportValue(null|int|string|bool $value): string
     {
@@ -213,8 +210,8 @@ class Config
         };
     }
 
-    // Allign Key Values From Array
     /**
+     * Allign Key Values From Array
      * @param array $array Key Value Pairs to Make Content
      * @param int $spaces Howq Many Spaces Before Array Values
      * @return string
@@ -234,18 +231,16 @@ class Config
         return "{$content}" . str_repeat(' ', $spaces) . "];";
     }
 
-    ##################################################################################
-    ## ----------------------------- PRIVATE API ---------------------------------- ##
-    ##################################################################################
-
-    // Default Content
+    /**
+     * Default Content
+     */
     private static function defaultContent(): string
     {
         return "<?php\n/**\n* Laika PHP MVC Framework\n* Author: Showket Ahmed\n* Email: riyadhtayf@gmail.com\n* License: MIT\n* This file is part of the Laika PHP MVC Framework.\n* For the full copyright and license information, please view the LICENSE file that was distributed with this source code.\n*/\n\ndeclare(strict_types=1);\n\n// Deny Direct Access\ndefined('APP_PATH') || http_response_code(403).die('403 Direct Access Denied!');\n\nreturn ";
     }
 
-    // Make Config File Contens
     /**
+     * Make Config File Contens
      * @param array $array Key Value Pairs to Make Content
      * @param int $spaces Howq Many Spaces Before Array Values
      * @return string

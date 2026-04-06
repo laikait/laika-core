@@ -1,5 +1,4 @@
 <?php
-
 /**
  * Laika Framework
  * Author: Showket Ahmed

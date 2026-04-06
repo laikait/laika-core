@@ -15,11 +15,6 @@ namespace Laika\Core\Http;
 class Request
 {
     /**
-     * @property Request $instance
-     */
-    protected static Request $instance;
-
-    /**
      * @property array $get
      */
     protected array $get;
@@ -52,25 +47,22 @@ class Request
     /**
      * @property array $errors Request Validation Errors
      */
-    protected array $errors;
-
+    protected array $errors = [];
 
     ##################################################################
     /*------------------------- PUBLIC API -------------------------*/
     ##################################################################
 
-    /**
-     * Start Instance
-     */
     public function __construct()
     {
         $this->get = purify($_GET ?? []);
         $this->post = purify($_POST ?? []);
         $this->files = $_FILES ?? [];
-        $this->rawBody = \file_get_contents('php://input');
-        $this->json = \purify($this->decode($this->rawBody));
-        $this->method = \strtoupper($this->post['_method'] ?? $_SERVER['REQUEST_METHOD'] ?? 'GET');
-        $this->errors = [];
+        $this->rawBody = file_get_contents('php://input');
+        $this->json = purify($this->decode($this->rawBody));
+        $spoofable = ['PUT', 'PATCH', 'DELETE'];
+        $spoofed = strtoupper($this->post['_method'] ?? '');
+        $this->method = in_array($spoofed, $spoofable, true) ? $spoofed : strtoupper($_SERVER['REQUEST_METHOD'] ?? 'GET');
     }
 
     /**
@@ -79,7 +71,6 @@ class Request
      */
     public function method(): string
     {
-        // Define $instance if Not Defined Yet
         return $this->method;
     }
 
@@ -91,8 +82,8 @@ class Request
     {
         $headers = [];
         foreach ($_SERVER as $key => $value) {
-            if (\str_starts_with($key, 'HTTP_')) {
-                $headers[\strtolower(\str_replace('_', '-', \substr($key, 5)))] = $value;
+            if (str_starts_with($key, 'HTTP_')) {
+                $headers[strtolower(str_replace('_', '-', substr($key, 5)))] = $value;
             }
         }
         return $headers;
@@ -105,7 +96,7 @@ class Request
      */
     public function header(string $key): ?string
     {
-        return $this->headers()[\strtolower($key)] ?? null;
+        return $this->headers()[strtolower($key)] ?? null;
     }
 
     /**
@@ -159,7 +150,7 @@ class Request
      */
     public function isAjax(): bool
     {
-        return \strtolower($this->header('X-Requested-With')) === 'xmlhttprequest';
+        return strtolower($this->header('X-Requested-With')) === 'xmlhttprequest';
     }
 
     /**
@@ -179,10 +170,14 @@ class Request
      */
     public function inputs(): array
     {
-        return \array_merge($this->json, $this->post, $this->get);
+        return array_merge($this->get, $this->json, $this->post);
     }
 
-    // Get Selected Key Values
+    /**
+     * Get Selected Key Values
+     * @param string[] $keys Array Keys to Get Values
+     * @return array
+     */
     public function only(array $keys): array
     {
         $result = [];
@@ -199,14 +194,14 @@ class Request
      */
     public function has(string $key): bool
     {
-        return \array_key_exists($key, $this->post) || \array_key_exists($key, $this->get) || \array_key_exists($key, $this->json);
+        return array_key_exists($key, $this->post) || array_key_exists($key, $this->get) || array_key_exists($key, $this->json);
     }
 
     /**
      * Get JSON Body
      * @return array
      */
-    public function json(): array
+    public function array(): array
     {
         return $this->json;
     }
@@ -218,7 +213,7 @@ class Request
      */
     public function file(?string $key = null): ?array
     {
-        return $key ? ($this->files[$key] ?? []) : $this->files;
+        return $key ? ($this->files[$key] ?? null) : $this->files;
     }
 
     /**
@@ -228,36 +223,6 @@ class Request
     public function raw(): string
     {
         return $this->rawBody;
-    }
-
-    /**
-     * Validate Request Keys
-     * @param array $keys Request Keys. Example: ['name', 'password']
-     * @return bool
-     */
-    public function validRequestKeys(array $keys): bool
-    {
-        foreach ($keys as $key) {
-            if (!$this->has($key)) {
-                return false;
-            }
-        }
-        return true;
-    }
-
-    /**
-     * Check If Required Inputs Has Blank Value
-     * @param $keys Required Argument. Example: ['username','email','password']
-     */
-    public function hasBlankInput(array $keys): bool
-    {
-        foreach ($keys as $key) {
-            $value = $this->input($key);
-            if ($value === null || $value === '') {
-                return true;
-            }
-        }
-        return false;
     }
 
     /**
@@ -280,16 +245,19 @@ class Request
         return $this->errors;
     }
 
+    ###################################################################
+    /*------------------------- INTERNAL API -------------------------*/
+    ###################################################################
     /**
      * Decode Raw Body
      * @return array
      */
-    public function decode(string $rawBody): array
+    protected function decode(string $rawBody): array
     {
         $contentType = $_SERVER['CONTENT_TYPE'] ?? '';
-        if (\str_starts_with(\strtolower($contentType), 'application/json')) {
-            $decoded = \json_decode($rawBody, true);
-            return \is_array($decoded) ? $decoded : [];
+        if (str_starts_with(strtolower($contentType), 'application/json')) {
+            $decoded = json_decode($rawBody, true);
+            return is_array($decoded) ? $decoded : [];
         }
         return [];
     }

@@ -1,5 +1,4 @@
 <?php
-
 /**
  * Laika PHP MVC Framework
  * Author: Showket Ahmed
@@ -13,63 +12,54 @@ declare(strict_types=1);
 
 namespace Laika\Core\Generator;
 
+use Laika\Core\Relay\Relays\Config;
+use Laika\Core\Relay\Relays\Url;
 use Firebase\JWT\JWT;
 use Firebase\JWT\Key;
-use Laika\Core\Helper\Url;
-use Laika\Core\Helper\Date;
-use Laika\Core\Helper\Config;
-use Exception;
 
+/*======================================================================================*/
+/*================================= MOVED TO GENERATOR =================================*/
+/*======================================================================================*/
 class Token
 {
-    /**
-     * Secret Key
-     * @var string $secret
-     */
+    /** @var string $secret Secret Key */
     private string $secret;
 
-    /**
-     * Token Issuer
-     * @var string $issuer
-     */
+    /** @var int $time Time */
+    private int $time;
+
+    /** @var string $issuer Token Issuer */
     private string $issuer;
 
-    /**
-     * Token Audience
-     * @var string $audience
-     */
+    /** @var string $audience Token Audience */
     private string $audience;
 
-    /**
-     * Algorithm
-     * @var string $algorithm
-     */
+    /** @var string $algorithm Algorithm */
     private string $algorithm;
 
-    /**
-     * Token Expire Time
-     * @var int $expiration Default 1 hour
-     */
-    private int $expiration;
+    /** @var int $ttl Total Time Limit */
+    private int $ttl;
 
-    /**
-     * User Data
-     * @var array $currentUser
-     */
+    /** @var array $currentUser User Data */
     private ?array $currentUser = null;
 
-    /**
-     * @param string $secret Required Argument. 256 bit Secret Key
-     * @param ?int $expiration Optional Argument. Example 1800 for 30 Minutes
-     */
-    public function __construct(?int $expiration = null)
+    public function __construct()
     {
-        $uri = new Url();
         $this->secret = Config::get('secret', 'key');
-        $this->issuer = $uri->host();
+        $this->time = (int) Config::get('env', 'start.time', time());
+        $this->issuer = Url::host();
         $this->algorithm = 'HS256';
-        $this->audience = $uri->host();
-        $this->expiration = $expiration ?: 3600;
+        $this->audience = Url::host();
+        $this->ttl = 3600;
+    }
+
+    /**
+     * Set Token Total Time Limit
+     * @param int $ttl
+     */
+    public function setTtl(int $ttl): void
+    {
+        $this->ttl = $ttl;
     }
 
     /**
@@ -79,14 +69,12 @@ class Token
      */
     public function generate(?array $user = null): string
     {
-        // $now = new DateTimeImmutable();
-        $time = new Date();
         $payload = [
             'iss'   =>  $this->issuer,
             'aud'   =>  $this->audience,
-            'iat'   =>  $time->getTimestamp(),
-            'nbf'   =>  $time->getTimestamp(),
-            'exp'   =>  $time->getTimestamp() + $this->expiration,
+            'iat'   =>  $this->time,
+            'nbf'   =>  $this->time,
+            'exp'   =>  $this->time + $this->ttl,
             'data'  =>  $user
         ];
 
@@ -104,7 +92,7 @@ class Token
             $decoded = JWT::decode($token ?: '', new Key($this->secret, $this->algorithm));
             $this->currentUser = (array) $decoded->data;
             return true;
-        } catch (Exception $e) {
+        } catch (\Throwable $e) {
             return false;
         }
     }

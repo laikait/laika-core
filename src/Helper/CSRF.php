@@ -1,5 +1,4 @@
 <?php
-
 /**
  * Laika PHP MVC Framework
  * Author: Showket Ahmed
@@ -13,70 +12,85 @@ declare(strict_types=1);
 
 namespace Laika\Core\Helper;
 
-use Laika\Core\Http\Response;
-use Laika\Core\Http\Request;
-use Laika\Session\Session;
+use Laika\Core\Relay\Relays\Header;
+use Laika\Core\Relay\Relays\Request;
+use Laika\Core\Relay\Relays\Config;
+use Laika\Core\Relay\Relays\Cookie;
+use Laika\Core\Relay\Relays\Token;
 
 class CSRF
 {
-    /**
-     * @var int $lifetime CSRF Token Lifetime
-     */
-    protected int $lifetime;
+    /** @var int $ttl CSRF Token Total Time Limit */
+    protected int $ttl;
 
-    /**
-     * @var string $for CSRF Session For
-     */
-    protected string $for;
+    /** @var string $for CSRF Session For */
+    protected string $for = 'APP';
 
-    /**
-     * @var string $key Request Key
-     */
+    /** @var string $key Request Key */
     protected string $key;
 
-    /**
-     * @var string $header Header Key
-     */
-    protected string $header;
+    // /** @var string $header Header Key */
+    // protected string $header;
 
-    /**
-     * @var int $time App Start Time
-     */
+    /** @var int $time App Start Time */
     protected int $time;
 
-    /**
-     * Initiate CSRF Object
-     * @param ?string $for Default is null. In null 'APP' will be placed as argument
-     * @param ?string $key Default is null. In null 'token' will be placed as argument
-     */
-    public function __construct(?string $for = null, ?string $key = null)
+    /** @var string $token CSRF Token */
+    protected string $token;
+
+    public function __construct()
     {
-        $this->for = $for ? \strtoupper($for) : 'APP';
-        $this->key = $key ? \strtolower($key) : 'token';
-        $this->header = "X-Laika-Token";
-        $this->lifetime = (int) \do_hook('config.env', 'csrf.lifetime', 300); // Default Lifetime is 300
-        $this->time = (int) \do_hook('config.env', 'start.time', time());
-        $this->generate();
+        $this->key = 'token';
+        $this->ttl = 300; // Default Lifetime is 300 Seconds
+        $this->time = (int) Config::get('env', 'start.time', time()); // Realtime
+        $this->token = Cookie::get('_xct', '');
+    }
+
+    /**
+     * Reset CSRF Object
+     * @return void
+     */
+    public function reset(): void
+    {
+        $this->key = 'token';
+        $this->ttl = 300; // Default Lifetime is 300 Seconds
+        $this->time = (int) Config::get('env', 'start.time', time()); // Realtime
+        $this->token = '';
+    }
+
+    /**
+     * Change Request Key
+     * @param string $key
+     * @return static
+     */
+    public function setKey(string $key): static
+    {
+        $this->key = trim($key);
+        return $this;
+    }
+
+    /**
+     * Set Lifetime
+     * @param int $ttl Seconds
+     * @return static
+     */
+    public function setTtl(int $ttl): static
+    {
+        $this->ttl = $ttl;
+        return $this;
     }
 
     /**
      * Create CSRF Token
      * @return string
      */
-    private function generate(): string
+    public function generate(): string
     {
-        $csrf = Session::get($this->key, $this->for);
-        // Generate CSRF Token if Not Exists
-        if (
-            !isset($csrf['created'], $csrf['hash']) || // Check Token & Created Time Exists
-            !$csrf['created'] || // Check CSRF Created Time is Valid
-            !$csrf['hash'] || // Check CSRF Token is Valid
-            ((int) do_hook('config.env', 'start.time', time()) - $csrf['created'] > $this->lifetime) // Check Token is Not Expired
-        ) {
-            return $this->reset();
+        $this->token = Cookie::get('_xct', '');
+        if (!Token::validateToken($this->token)) {
+            return $this->refresh();
         }
-        $this->header($csrf['hash']);
-        return $csrf['hash'];
+        return $this->token;
     }
 
     /**
@@ -85,30 +99,24 @@ class CSRF
      */
     public function get(): string
     {
-        $csrf = Session::get($this->key, $this->for);
-        if (!isset($csrf['hash']) || !$csrf['hash']) {
-            return $this->reset();
-        }
-        return $csrf['hash'];
+        return $this->token;
     }
 
     /**
-     * Reset Form Token
+     * Reset CSRF Token
      * @return string
      */
-    public function reset(): string
+    public function refresh(): string
     {
-        $arr = [
-            'created' => (int) do_hook('config.env', 'start.time', time()),
-            'hash' => \bin2hex(random_bytes(32))
-        ];
-        Session::set($this->key, $arr, $this->for);
-        $this->header($arr['hash']);
-        return $arr['hash'];
+        $csrf = ['_xct' => bin2hex(random_bytes(16))];
+        $this->token = Token::generate($csrf);
+        Cookie::expire($this->ttl)->set('_xct', $this->token);
+        return $this->token;
     }
 
     /**
      * @return string CSRF Html Field
+     * @return string
      */
     public function field(): string
     {
@@ -116,31 +124,19 @@ class CSRF
     }
 
     /**
-     * Validate Form Token
+     * Check CSRF Form Token is Valid
      * @return bool
      */
-    public function validate(): bool
+    public function is_valid(): bool
     {
         // If CSRF Request Key Missing or Blank, Return false
-        $request_token = (string) \call_user_func([new Request, 'input'], $this->key);
-        if (!$request_token) {
+        $request_token = Request::input($this->key, '');
+        if ($request_token === '') {
             return false;
         }
 
         $existing_token = $this->get();
-        $this->reset();
-        return \hash_equals($request_token, $existing_token);
-    }
-
-    ##################################################################
-    /*------------------------ INTERNAL API ------------------------*/
-    ##################################################################
-    /**
-     * Set Heder Token Key
-     * @return void
-     */
-    private function header(string $value): void
-    {
-        \call_user_func([new Response, 'setHeader'], [$this->header => $value]);
+        $this->refresh();
+        return hash_equals($request_token, $existing_token);
     }
 }

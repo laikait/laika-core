@@ -1,5 +1,4 @@
 <?php
-
 /**
  * Laika PHP MVC Framework
  * Author: Showket Ahmed
@@ -13,63 +12,69 @@ declare(strict_types=1);
 
 namespace Laika\Core\Helper;
 
-use Exception;
+use Laika\Core\Relay\Relays\Directory;
+use Laika\Core\Relay\Relays\File;
+use RuntimeException;
 
 class Local
 {
-    // Language Path
-    private static string $path = APP_PATH . '/lf-lang';
+    /** @var string Local Path */
+    private string $path = APP_PATH . '/lf-lang';
 
-    // Language Name
-    private static string $lang = 'en';
-
-    // Disable Clone
-    private function __clone()
-    {
-        throw new Exception('Cloning is Disabled!');
-    }
+    /** @var string Local Name */
+    private string $lang = 'en';
 
     /**
      * Set Language
-     * @param string $lang Optional Argument. Default is null.
+     * @param string $lang Optional Argument. Default is 'en'.
      * @return void
      */
-    public static function set(?string $lang = null): void
+    public function set(string $lang = 'en'): void
     {
-        self::$lang = \trim($lang ?: self::$lang);
+        $this->lang = strtolower(trim($lang ?: $this->lang));
     }
 
     /**
      * Get Language
      * @return string
      */
-    public static function get(): string
+    public function get(): string
     {
-        return self::$lang;
+        return $this->lang;
+    }
+
+    /**
+     * Set Path
+     * @param string $path Sub Directory or Absolute Path
+     * @return void
+     * @throws RuntimeException
+     */
+    public function setPath(string $path): void
+    {
+        if (is_dir($path)) {
+            $this->path = realpath($path);
+        } else {
+            $this->path .= trim($path, '/');
+        }
+
+        if (!is_dir($this->path)) {
+            throw new RuntimeException("Invalid Local Path [{$this->path}]");
+        }
     }
 
     /**
      * Set or Load Path
-     * @param ?string Optional Argument. Default is null
      * @return void
      */
-    public static function load(?string $path = null): void
+    public function load(): void
     {
-        // Set New Path if Argument is Not Blank or Null
-        if ($path) {
-            $path = \str_replace('\\', '/', $path);
-            self::$path .= '/' . \trim($path, '/');
-        }
         // Make Directory If Doesn't Exists
-        Directory::make(self::$path);
+        Directory::make($this->path);
 
         // Get File Name
-        $lang_path = self::$path . '/' . self::get() . '.local.php';
+        $file = $this->path . '/' . $this->get() . '.local.php';
 
-        // Make Language File Object
-        $file = new File($lang_path);
-
-        if (!$file->exists()) {
+        if (!File::exists($file)) {
             $content = <<<HTML
             <?php
             /**
@@ -94,10 +99,9 @@ class Local
             HTML;
 
             // Create Language File
-            $file->write($content);
+            File::write($content, $file);
         }
         // Return Language Path
-        require_once $lang_path;
-        return;
+        require_once $file;
     }
 }

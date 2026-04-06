@@ -1,5 +1,4 @@
 <?php
-
 /**
  * Laika PHP MVC Framework
  * Author: Showket Ahmed
@@ -13,7 +12,7 @@ declare(strict_types=1);
 
 namespace Laika\Core\Route;
 
-use Laika\Core\Helper\Directory;
+use Laika\Core\Relay\Relays\Directory;
 
 class Url
 {
@@ -24,7 +23,7 @@ class Url
      */
     public static function normalize(string $uri): string
     {
-        return '/' . \trim($uri, '/');
+        return '/' . trim($uri, '/');
     }
 
     /**
@@ -43,7 +42,7 @@ class Url
      */
     public static function method(): string
     {
-        return \strtoupper($_SERVER['REQUEST_METHOD'] ?? 'GET');
+        return strtoupper($_SERVER['REQUEST_METHOD'] ?? 'GET');
     }
 
     /**
@@ -63,7 +62,7 @@ class Url
         
         // Convert Route Placeholders to Regex Patterns
         foreach ($routes as $route) {
-            $pattern = \preg_replace_callback(
+            $pattern = preg_replace_callback(
                 '#\{(\w+)(?::([^/]+))?\}#',
                 function ($matches) {
                     $name = $matches[1];
@@ -76,11 +75,11 @@ class Url
             $pattern = '#^' . $pattern . '$#';
 
             // Try to match
-            if (\preg_match($pattern, $requestUrl, $matches)) {
+            if (preg_match($pattern, $requestUrl, $matches)) {
                 // Filter Only Named Captures
                 return [
                     'route'     =>  $route,
-                    'params'    =>  \array_filter($matches, fn($k) => !\is_int($k), ARRAY_FILTER_USE_KEY)
+                    'params'    =>  array_filter($matches, fn($k) => !is_int($k), ARRAY_FILTER_USE_KEY)
                 ];
             }
         }
@@ -99,7 +98,7 @@ class Url
     {
         // Load Routes
         $routes = Directory::files(APP_PATH . '/lf-routes', 'php');
-        \array_map(function ($route) { require_once $route; }, $routes);
+        array_map(function ($route) { require_once $route; }, $routes);
         return;
     }
 }

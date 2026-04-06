@@ -1,5 +1,4 @@
 <?php
-
 /**
  * Laika PHP MVC Framework
  * Author: Showket Ahmed
@@ -15,7 +14,7 @@ namespace Laika\Core\Helper;
 
 class Filter
 {
-    /** @var array<string, array<int, callable[]>> $filters */
+    /** @var array<string,array<int,callable[]>> $filters */
     private static array $filters = [];
 
     /**
