@@ -1,5 +1,4 @@
 <?php
-
 /**
  * Laika Framework
  * Author: Showket Ahmed
@@ -14,7 +13,7 @@ declare(strict_types=1);
 namespace Laika\Core\Console\Commands\Secret;
 
 use Laika\Core\Console\Command;
-use Laika\Core\Helper\Config;
+use Laika\Core\Relay\Relays\Config;
 
 class Pop extends Command
 {

@@ -1,7 +1,6 @@
 <?php
-
 /**
- * Laika Framework
+ * Laika PHP MVC Framework
  * Author: Showket Ahmed
  * Email: riyadhtayf@gmail.com
  * License: MIT
@@ -52,22 +51,33 @@ class Console extends Command
                 'pop:middleware'        =>  \Laika\Core\Console\Commands\Middleware\Pop::class,
                 'list:middleware'       =>  \Laika\Core\Console\Commands\Middleware\Lists::class,
                 /* Afterware Commands */
-                'make:afterware'       =>  \Laika\Core\Console\Commands\Afterware\Make::class,
-                'rename:afterware'     =>  \Laika\Core\Console\Commands\Afterware\Rename::class,
-                'pop:afterware'        =>  \Laika\Core\Console\Commands\Afterware\Pop::class,
-                'list:afterware'       =>  \Laika\Core\Console\Commands\Afterware\Lists::class,
+                'make:afterware'        =>  \Laika\Core\Console\Commands\Afterware\Make::class,
+                'rename:afterware'      =>  \Laika\Core\Console\Commands\Afterware\Rename::class,
+                'pop:afterware'         =>  \Laika\Core\Console\Commands\Afterware\Pop::class,
+                'list:afterware'        =>  \Laika\Core\Console\Commands\Afterware\Lists::class,
                 /* Model Commands */
                 'make:model'            =>  \Laika\Core\Console\Commands\Model\Make::class,
                 'rename:model'          =>  \Laika\Core\Console\Commands\Model\Rename::class,
                 'pop:model'             =>  \Laika\Core\Console\Commands\Model\Pop::class,
                 'list:model'            =>  \Laika\Core\Console\Commands\Model\Lists::class,
-                /* View Commands */
+                /* Template Commands */
                 'make:template'         =>  \Laika\Core\Console\Commands\Template\Make::class,
-                'rename:vtemplateiew'   =>  \Laika\Core\Console\Commands\Template\Rename::class,
+                'rename:template'       =>  \Laika\Core\Console\Commands\Template\Rename::class,
                 'pop:template'          =>  \Laika\Core\Console\Commands\Template\Pop::class,
                 'list:template'         =>  \Laika\Core\Console\Commands\Template\Lists::class,
+                /* Template Commands */
+                'make:relay'            =>  \Laika\Core\Console\Commands\Relay\Make::class,
+                'rename:relay'          =>  \Laika\Core\Console\Commands\Relay\Rename::class,
+                'pop:relay'             =>  \Laika\Core\Console\Commands\Relay\Pop::class,
+                'list:relay'            =>  \Laika\Core\Console\Commands\Relay\Lists::class,
                 /* Other Commands */
                 'help'                  =>  \Laika\Core\Console\Commands\Help::class,
+                'help:controller'       =>  \Laika\Core\Console\Commands\Help\ControllerHelp::class,
+                'help:afterware'        =>  \Laika\Core\Console\Commands\Help\AfterwareHelp::class,
+                'help:middleware'       =>  \Laika\Core\Console\Commands\Help\MiddlewareHelp::class,
+                'help:model'            =>  \Laika\Core\Console\Commands\Help\ModelHelp::class,
+                'help:relay'            =>  \Laika\Core\Console\Commands\Help\RelayHelp::class,
+                'help:template'         =>  \Laika\Core\Console\Commands\Help\TemplateHelp::class,
                 /* Migrate */
                 'migrate'               =>  \Laika\Core\Console\Commands\Migrate::class,
                 /* Route */
@@ -184,14 +194,14 @@ class Console extends Command
             return [
                 'success' => false,
                 'class' => null,
-                'message' => "Laika Suggested Command: '{$closestKey}'. For Help, Run 'php laika help'",
+                'message' => "Laika Suggested Command:\n\n\t '{$closestKey}'\n\nFor Help, Run 'php laika help'",
             ];
         }
 
         return [
             'success' => false,
             'class' => null,
-            'message' => "Invalid Command '{$key}'. For Help, Run 'php laika help'",
+            'message' => "Invalid Command \n\n\t'{$key}'\n\nFor Help, Run 'php laika help'",
         ];
     }
 

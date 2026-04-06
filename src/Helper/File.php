@@ -32,7 +32,7 @@ class File
      */
     public function exists(string $file): bool
     {
-        return file_exists($file);
+        return is_file($file);
     }
 
     /**

@@ -10,39 +10,40 @@
 
 declare(strict_types=1);
 
-namespace Laika\Core\Console\Commands\Controller;
+namespace Laika\Core\Console\Commands\Relay;
 
-use Laika\Core\Console\Command;
 use Laika\Core\Relay\Relays\File;
+use Laika\Core\Console\Command;
 
-// Remove Controller Class
+// Remove Relay Class
 class Pop extends Command
 {
-    // App Controller Path
-    protected string $path = APP_PATH . '/lf-app/Controller';
+    // App Relay Path
+    protected string $path = APP_PATH . '/lf-app/Relay';
 
     // Accepted Regular Expresion
-    private string $exp = '/^[a-zA-Z_\/][a-zA-Z0-9_\/]+$/';
+    private string $exp = '/^[a-zA-Z_\/]+$/';
 
     /**
      * @param array $params
+     * @return void
      */
     public function run(array $params, array $options = []): void
     {
         // Check Parameters
-        if (count($params) < 1) {
-            $this->error("USAGE: php laika pop:controller <name>");
+        if (count($params) != 1) {
+            $this->error("USAGE: php laika pop:relay <name>");
             return;
         }
 
-        // Check Controller Name is Valid
+        // Check Relay Name is Valid
         if (!preg_match($this->exp, $params[0])) {
-            // Invalid Controller Name
-            $this->error("Invalid Controller Name: [{$params[0]}]!");
+            // Invalid Relay Name
+            $this->error("Invalid Relay Name: [{$params[0]}]");
             return;
         }
 
-        // Get Controller Parts
+        // Get Relay Parts
         $parts = $this->parts($params[0]);
 
         // Set Path
@@ -50,18 +51,17 @@ class Pop extends Command
 
         $file = "{$this->path}/{$parts['name']}.php";
 
-        // Check Controller Path is Valid
+        // Check Relay Path is Valid
         if (!File::exists($file)) {
-            $this->error("Controller [{$params[0]}] Doesn't Exists!");
+            $this->error("Invalid Relay or Path: [{$params[0]}]");
             return;
         }
 
         if (!File::pop($file)) {
-            $this->error("Failed to Remove Controller: [{$file}]!");
+            $this->error("Failed to Remove Relay: [{$file}]");
             return;
         }
 
-        $this->success("Controller [{$params[0]}] Removed Successfully!");
-        return;
+        $this->success("Relay [{$params[0]}] Removed Successfully!");
     }
 }

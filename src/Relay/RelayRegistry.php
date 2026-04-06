@@ -29,8 +29,10 @@ class RelayRegistry
     /**
      * Register a transient binding.
      * A new instance is created on every make().
-     *
+     * @param string $key
+     * @param Closure|string $concrete
      * @param array $args Explicit args for unresolvable constructor parameters.
+     * @return static
      */
     public function bind(string $key, Closure|string $concrete, array $args = []): static
     {
@@ -41,8 +43,10 @@ class RelayRegistry
     /**
      * Register a singleton binding.
      * The same instance is returned on every make().
-     *
+     * @param string $key
+     * @param Closure|string $concrete
      * @param array $args Explicit args for unresolvable constructor parameters.
+     * @return static
      */
     public function singleton(string $key, Closure|string $concrete, array $args = []): static
     {
@@ -52,6 +56,9 @@ class RelayRegistry
 
     /**
      * Register an already-constructed object directly.
+     * @param string $key
+     * @param object $instance
+     * @return static
      */
     public function instance(string $key, object $instance): static
     {
@@ -65,7 +72,7 @@ class RelayRegistry
 
     /**
      * Resolve a binding by key.
-     *
+     * @return object
      * @throws RelayException
      */
     public function make(string $key): object
@@ -97,13 +104,33 @@ class RelayRegistry
         throw new RelayException("No binding registered for [{$key}]. Register it via RelayRegistry::singleton() or ::bind().");
     }
 
+    /**
+     * Check Has Key
+     * @return bool
+     */
     public function has(string $key): bool
     {
-        return isset($this->bindings[$key])
-            || isset($this->singletons[$key])
-            || isset($this->instances[$key]);
+        return isset($this->bindings[$key]) || isset($this->singletons[$key]) || isset($this->instances[$key]);
     }
 
+    /**
+     * Get All Registered Relays
+     * @return array
+     */
+    public function getRegisteredRelays(): array
+    {
+        return [
+            'binding' => $this->bindings,
+            'singleton' => $this->singletons,
+            'instance' => $this->instances
+        ];
+    }
+
+    /**
+     * Forget Instance
+     * @param string $key
+     * @return static
+     */
     public function forgetInstance(string $key): static
     {
         unset($this->instances[$key]);
@@ -121,9 +148,9 @@ class RelayRegistry
      * If $concrete is a class string, its constructor is auto-wired via
      * reflection. Dependencies that exist in the registry are resolved
      * automatically; everything else is filled from $args in order.
-     *
+     * @param Closure|string $concrete
      * @param array $args Explicit overrides for non-resolvable parameters.
-     *
+     * @return object
      * @throws RelayException
      */
     private function build(Closure|string $concrete, array $args = []): object
@@ -168,8 +195,9 @@ class RelayRegistry
      *   3. Parameter default values
      *
      * @param ReflectionParameter[] $parameters
-     * @param array                 $args        Positional values for primitives.
-     *
+     * @param array $parameters
+     * @param array $args Positional values for primitives.
+     * @return array
      * @throws RelayException
      */
     private function resolveParameters(array $parameters, array $args): array

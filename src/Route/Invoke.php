@@ -12,9 +12,6 @@ declare(strict_types=1);
 
 namespace Laika\Core\Route;
 
-use Laika\Core\Http\Request;
-use Laika\Core\Http\Response;
-
 class Invoke
 {
     /**
@@ -22,23 +19,18 @@ class Invoke
      * @param array $middlewares Middlewares to Invoke
      * @param callable|string|array|null|object $controller Controller to Call After Middlewares Run
      * @param array $params Parameters
-     * @param ?Request $request Request Object
-     * @param ?Response $response Response Object
      * @return ?string Return Response From Controller
      */
-    public static function middleware(array $middlewares, callable|string|array|null|object $controller, array $params = [], ?Request $request = null, ?Response $response = null): ?string
+    public static function middleware(array $middlewares, callable|string|array|null|object $controller, array $params = []): ?string
     {
-        $request  ??= new Request();
-        $response ??= new Response();
-
         $next = array_reduce(
             array_reverse($middlewares),
-            function ($next, $middleware) use ($params, $request, $response) {
-                return function ($params) use ($middleware, $next, $request, $response) {
+            function ($next, $middleware) use ($params) {
+                return function ($params) use ($middleware, $next) {
                     $parts = explode('|', $middleware);
                     $parts[0] = trim($parts[0], '\\');
 
-                    $middleware = class_exists($parts[0]) ? $parts[0] : "Laika\\App\\Middleware\\{$parts[0]}";
+                    $middleware = class_exists($parts[0]) ? $parts[0] : "App\\Middleware\\{$parts[0]}";
 
                     if (isset($parts[1])) {
                         $args = [];
@@ -65,16 +57,14 @@ class Invoke
                     }
 
                     try {
-                        return $obj->handle($next, $request, $response, $params);
+                        return $obj->handle($next, $params);
                     } catch (\Throwable $th) {
                         report_bug($th);
                     }
                     return null;
                 };
             },
-            function ($params) use ($controller, $request, $response) {
-                if (empty($params['request'])) $params['request'] = $request;
-                if (empty($params['response'])) $params['response'] = $response;
+            function ($params) use ($controller) {
                 return self::controller($controller, $params);
             }
         );
@@ -86,24 +76,19 @@ class Invoke
      * Invoke Afterware
      * @param array $afterwares Afterwares to Invoke
      * @param ?string $output Response body to show
-     * @param ?Request $request Request Object
-     * @param ?Response $response Response Object
      * @param array $params Parameters
      * @return ?string Return Response From Controller
      */
-    public static function afterware(array $afterwares, ?string $output, array $params = [], ?Request $request = null, ?Response $response = null): ?string
+    public static function afterware(array $afterwares, ?string $output, array $params = []): ?string
     {
-        $request  ??= new \Laika\Core\Http\Request();
-        $response ??= new \Laika\Core\Http\Response();
-
         $next = array_reduce(
             array_reverse($afterwares),
-            function ($next, $afterware) use ($params, $request, $response) {
-                return function ($output) use ($afterware, $next, $params, $request, $response) {
+            function ($next, $afterware) use ($params) {
+                return function ($output) use ($afterware, $next, $params) {
                     $parts = explode('|', $afterware);
                     $parts[0] = trim($parts[0], '\\');
 
-                    $afterware = class_exists($parts[0]) ? $parts[0] : "Laika\\App\\Afterware\\{$parts[0]}";
+                    $afterware = class_exists($parts[0]) ? $parts[0] : "App\\Afterware\\{$parts[0]}";
 
                     if (isset($parts[1])) {
                         $args = [];
@@ -116,15 +101,15 @@ class Invoke
                     }
 
                     // FIX 1 (same as middleware): return null after report_bug() to halt execution.
-                    if (!\class_exists($afterware)) {
-                        \report_bug(new \RuntimeException("Invalid Afterware: [{$afterware}]"));
+                    if (!class_exists($afterware)) {
+                        throw new \RuntimeException("Invalid Afterware: [{$afterware}]");
                         return null;
                     }
 
                     $obj = new $afterware;
 
                     if (!method_exists($obj, 'terminate')) {
-                        \report_bug(new \RuntimeException("Method Not Found: [{$afterware}::terminate()]"));
+                        throw new \RuntimeException("Method Not Found: [{$afterware}::terminate()]");
                         return null;
                     }
 
@@ -133,8 +118,6 @@ class Invoke
                             function ($newOutput) use ($next, $params) {
                                 return $next($newOutput);
                             },
-                            $request,
-                            $response,
                             $output,
                             $params
                         );
@@ -169,7 +152,7 @@ class Invoke
         if (is_array($handler) && isset($handler[0], $handler[1]) && is_string($handler[0])) {
             $handler[0] = class_exists($handler[0])
                 ? $handler[0]
-                : "Laika\\App\\Controller\\{$handler[0]}";
+                : "App\\Controller\\{$handler[0]}";
         }
 
         // Execute Callable (closures, functions, and now namespace-resolved array callables)
@@ -185,7 +168,6 @@ class Invoke
 
         // Execute String
         if (is_string($handler)) {
-            // FIX 3: Explicit @ check before explode() to give a clear error message.
             // Without this, explode('@', 'HomeController') returns a single-element array,
             // and [$controller, $method] destructuring silently sets $method to null.
             if (!str_contains($handler, '@')) {
@@ -194,7 +176,7 @@ class Invoke
 
             [$controller, $method] = explode('@', $handler, 2);
 
-            $controller = "Laika\\App\\Controller\\{$controller}";
+            $controller = "App\\Controller\\{$controller}";
 
             // Check Controller Exists
             if (!class_exists($controller)) {

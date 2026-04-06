@@ -90,7 +90,7 @@ class Config
      * @param string $key Config key (optional)
      * @return bool
      */
-    public function has(string $name, ?string $key = null): bool
+    public static function has(string $name, ?string $key = null): bool
     {
         // Initiate
         self::init();
@@ -108,7 +108,7 @@ class Config
      * @param string $key Config key (optional)
      * @return bool
      */
-    public function pop(string $name, string $key): bool
+    public static function pop(string $name, string $key): bool
     {
         // Initiate
         self::init();
@@ -144,7 +144,7 @@ class Config
      * @param array $data Data to insert in Config File
      * @return bool
      */
-    public function create(string $name, array $data): bool
+    public static function create(string $name, array $data): bool
     {
         // Initiate
         self::init();

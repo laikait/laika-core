@@ -1,7 +1,6 @@
 <?php
-
 /**
- * Laika Framework
+ * Laika PHP MVC Framework
  * Author: Showket Ahmed
  * Email: riyadhtayf@gmail.com
  * License: MIT
@@ -13,23 +12,23 @@ declare(strict_types=1);
 
 namespace Laika\Core\Console\Commands\Template;
 
-use Laika\Core\Helper\Directory;
+use Laika\Core\Relay\Relays\Directory;
+use Laika\Core\Relay\Relays\File;
 use Laika\Core\Console\Command;
 
-// Rename View Class
 class Rename extends Command
 {
-    // App View Old Path
+    // App Temaple Old Path
     protected string $old_path = APP_PATH . '/lf-templates';
 
-    // App View New Path
+    // App Temaple New Path
     protected string $new_path = APP_PATH . '/lf-templates';
 
     // Accepted Regular Expresion
     private string $exp = '/^[a-zA-Z0-9_\-\/]+$/';
 
     /**
-     * Run The Command to Remove a View.
+     * Run The Command to Remove a Temaple.
      *
      * @param array $params
      * @return void
@@ -37,25 +36,25 @@ class Rename extends Command
     public function run(array $params, array $options = []): void
     {
         // Check Parameters
-        if (\count($params) < 2) {
-            $this->error("Usage: php laika rename:view <old_name> <new_name>");
+        if (count($params) < 2) {
+            $this->error("Usage: php laika rename:template <old_name> <new_name>");
             return;
         }
 
-        // View Name
+        // Temaple Name
         $old = $params[0];
         $new = $params[1];
 
-        // Check Old View Name is Valid
-        if (!\preg_match($this->exp, $old)) {
-            // Invalid View Name
-            $this->error("Invalid Old View Name: '{$old}'");
+        // Check Old Temaple Name is Valid
+        if (!preg_match($this->exp, $old)) {
+            // Invalid Temaple Name
+            $this->error("Invalid Old Temaple Name: '{$old}'");
             return;
         }
-        // Check New View Name is Valid
-        if (!\preg_match($this->exp, $new)) {
-            // Invalid View Name
-            $this->error("Invalid New View Name: '{$old}'");
+        // Check New Temaple Name is Valid
+        if (!preg_match($this->exp, $new)) {
+            // Invalid Temaple Name
+            $this->error("Invalid New Temaple Name: '{$old}'");
             return;
         }
 
@@ -70,43 +69,46 @@ class Rename extends Command
         $old_file = "{$this->old_path}/{$old_parts['name']}.tpl.php";
         $new_file = "{$this->new_path}/{$new_parts['name']}.tpl.php";
 
-        // Check Old View Path is Valid
-        if (!\is_file($old_file)) {
-            $this->error("Invalid View Name or Path: '$old'");
+        // Check Old Temaple Path is Valid
+        if (!File::exists($old_file)) {
+            $this->error("Invalid Temaple Name or Path: '$old'");
             return;
         }
 
         // Check New Path Exist
-        if (!Directory::exists($this->new_path)) {
+        try {
             Directory::make($this->new_path);
+        } catch (\Throwable $th) {
+            $this->error($th->getMessage());
+            return;
         }
 
-        // Check New View Path is Valid
-        if (\is_file($new_file)) {
-            $this->error("New View Already Exist: '$old'");
+        // Check New Temaple Path is Valid
+        if (File::exists($new_file)) {
+            $this->error("New Template Already Exist: '$old'");
             return;
         }
 
         // Get Contents
-        $content = \file_get_contents($old_file);
+        $content = File::read($old_file);
         if ($content === false) {
-            $this->error("Failed to Read View: '{$old}'");
+            $this->error("Failed to Read Old Template: '{$old}'");
             return;
         }
 
-        // Create New View File
-        if (\file_put_contents($new_file, $content) === false) {
-            $this->error("Failed to Create View: {$new}");
+        // Create New Temaple File
+        if (File::write($content, $new_file) === false) {
+            $this->error("Failed to Create Temaple: {$new}");
             return;
         }
 
-        // Remove Old View File
-        if (!\unlink($old_file)) {
-            $this->error("Failed to Remove View: '{$old_file}'");
+        // Remove Old Temaple File
+        if (!File::pop($old_file)) {
+            $this->error("Failed to Remove Temaple: '{$old_file}'");
             return;
         }
 
-        $this->success("View Renamed Successfully: '{$old}'->'{$new}'");
+        $this->success("Temaple Renamed Successfully: '{$old}'->'{$new}'");
         return;
     }
 }

@@ -1,7 +1,6 @@
 <?php
-
 /**
- * Laika Framework
+ * Laika PHP MVC Framework
  * Author: Showket Ahmed
  * Email: riyadhtayf@gmail.com
  * License: MIT
@@ -16,7 +15,7 @@ namespace Laika\Core\Console\Commands;
 use Laika\Core\Exceptions\MigrationException;
 use Laika\Core\Console\Command;
 use Laika\Model\Schema\Schema;
-use Laika\Core\Helper\Config;
+use Laika\Core\Relay\Relays\Config;
 use Laika\Model\Connection;
 
 class Migrate extends Command

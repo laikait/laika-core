@@ -1,5 +1,4 @@
 <?php
-
 /**
  * Laika Framework
  * Author: Showket Ahmed
@@ -27,31 +26,31 @@ class Lists extends Command
      */
     public function run(array $params, array $options = []): void
     {
-        $middlewares = \call_user_func([new \Laika\Core\App\Infra(), 'getMiddlewareClasses']);
+        $middlewares = call_user_func([new \Laika\Core\App\Infra(), 'getMiddlewareClasses']);
 
         // Header
         $headers = ['#', 'Middlewares'];
 
         // Find max width for "File Path" column
-        $maxLength = \max(\array_map('strlen', $middlewares) ?: [30]);
-        $col2Width = \max(\strlen($headers[1]), $maxLength);
+        $maxLength = max(array_map('strlen', $middlewares) ?: [30]);
+        $col2Width = max(strlen($headers[1]), $maxLength);
 
         // Table width
-        $line = '+' . \str_repeat('-', 5) . '+' . \str_repeat('-', $col2Width + 2) . "+\n";
+        $line = '+' . str_repeat('-', 5) . '+' . str_repeat('-', $col2Width + 2) . "+\n";
 
         // Print Header
         echo $line;
-        \printf("| %-3s | %-{$col2Width}s |\n", $headers[0], $headers[1]);
+        printf("| %-3s | %-{$col2Width}s |\n", $headers[0], $headers[1]);
         echo $line;
 
         $count = 0;
         // Print Rows
         foreach ($middlewares as $item) {
             $count++;
-            \printf("| %-3d | %-{$col2Width}s |\n", $count, $item);
+            printf("| %-3d | %-{$col2Width}s |\n", $count, $item);
+            echo $line;
         }
 
-        echo $line;
         echo "Total: {$count}\n\n";
         return;
     }

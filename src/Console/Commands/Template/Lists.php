@@ -1,5 +1,4 @@
 <?php
-
 /**
  * Laika Framework
  * Author: Showket Ahmed
@@ -13,7 +12,8 @@ declare(strict_types=1);
 
 namespace Laika\Core\Console\Commands\Template;
 
-use Laika\Core\Helper\Directory;
+use Laika\Core\Relay\Relays\Directory;
+use Laika\Core\Relay\Relays\File;
 use Laika\Core\Console\Command;
 
 // Make View Class
@@ -34,10 +34,10 @@ class Lists extends Command
     public function run(array $params, array $options = []): void
     {
         // Path
-        $path = \trim($params[0] ?? '', '/');
+        $path = trim($params[0] ?? '', '/');
 
         // Check View Name is Valid
-        if ($path && !\preg_match($this->exp, $path)) {
+        if ($path && !preg_match($this->exp, $path)) {
             // Invalid View Name
             $this->error("Invalid View Path: '{$path}'");
             return;
@@ -50,7 +50,7 @@ class Lists extends Command
 
         // Check Path Exist
         if (!Directory::exists($this->path)) {
-            $this->error("View Path Not Found: '{$this->path}'");
+            $this->error("Template Directory Not Found: '{$this->path}'");
             return;
         }
 
@@ -58,7 +58,7 @@ class Lists extends Command
         $items = [];
         $count = 0;
         foreach ($paths as $file) {
-            if (is_file($file)) {
+            if (File::exists($file)) {
                 $file = str_replace("{$this->path}/", '', $file);
                 $name = pathinfo($file, PATHINFO_FILENAME);
                 if ($name != 'functions') {
@@ -85,16 +85,16 @@ class Lists extends Command
 
         // Print Header
         echo $line;
-        \printf("| %-3s | %-{$col2Width}s |\n", $headers[0], $headers[1]);
+        printf("| %-3s | %-{$col2Width}s |\n", $headers[0], $headers[1]);
         echo $line;
 
         // $count = 0;
         // Print Rows
         foreach ($items as $k => $item) {
-            \printf("| %-3d | %-{$col2Width}s |\n", $k + 1, $item);
+            printf("| %-3d | %-{$col2Width}s |\n", $k + 1, $item);
+            echo $line;
         }
 
-        echo $line;
         echo $this->bg_green("Total: {$count}");
         return;
     }

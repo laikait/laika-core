@@ -1,5 +1,4 @@
 <?php
-
 /**
  * Laika Framework
  * Author: Showket Ahmed
@@ -13,7 +12,8 @@ declare(strict_types=1);
 
 namespace Laika\Core\Console\Commands\Afterware;
 
-use Laika\Core\Helper\Directory;
+use Laika\Core\Relay\Relays\Directory;
+use Laika\Core\Relay\Relays\File;
 use Laika\Core\Console\Command;
 
 // Make Afterware Class
@@ -32,12 +32,12 @@ class Make extends Command
     public function run(array $params, array $options = []): void
     {
         // Check Parameters
-        if (\count($params) < 1) {
+        if (count($params) < 1) {
             $this->error("USAGE: php laika make:afterware <name>");
             return;
         }
 
-        if (!\preg_match($this->exp, $params[0])) {
+        if (!preg_match($this->exp, $params[0])) {
             // Invalid Name
             $this->error("Invalid Afterware Name: [{$params[0]}]!");
             return;
@@ -50,24 +50,36 @@ class Make extends Command
         $this->path .=  $parts['path'];
 
         // Make Directory if Not Exists
-        if (!Directory::exists($this->path)) {
+        try {
             Directory::make($this->path);
+        } catch (\Throwable $th) {
+            $this->error($th->getMessage());
+            return;
         }
 
         $file = "{$this->path}/{$parts['name']}.php";
 
-        if (\is_file($file)) {
+        if (File::exists($file)) {
             $this->error("Afterware [{$file}] Already Exist!");
             return;
         }
 
         // Get Sample Content
-        $content = \file_get_contents(__DIR__ . '/../../Samples/Afterware.sample');
+        $content = File::read(__DIR__ . '/../../Samples/Afterware.sample');
+
+        if ($content === false) {
+            $this->error("Failed to Read Sample: [{$file}]!");
+            return;
+        }
 
         // Replace Placeholders
-        $content = \str_replace(['{{NAMESPACE}}','{{NAME}}'], [$parts['namespace'],$parts['name']], $content);
+        $content = str_replace(
+            ['{{NAMESPACE}}','{{NAME}}'],
+            [$parts['namespace'],$parts['name']],
+            $content
+        );
 
-        if (\file_put_contents($file, $content) === false) {
+        if (File::write($content, $file) === false) {
             $this->error("Failed to Create Afterware: [{$file}]!");
             return;
         }

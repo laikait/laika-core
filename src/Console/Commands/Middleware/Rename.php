@@ -1,5 +1,4 @@
 <?php
-
 /**
  * Laika Framework
  * Author: Showket Ahmed
@@ -13,7 +12,8 @@ declare(strict_types=1);
 
 namespace Laika\Core\Console\Commands\Middleware;
 
-use Laika\Core\Helper\Directory;
+use Laika\Core\Relay\Relays\Directory;
+use Laika\Core\Relay\Relays\File;
 use Laika\Core\Console\Command;
 
 // Rename Middleware Class
@@ -35,7 +35,7 @@ class Rename extends Command
     public function run(array $params, array $options = []): void
     {
         // Check Parameters
-        if (\count($params) < 2) {
+        if (count($params) < 2) {
             $this->error("Usage: php laika rename:middleware <old_name> <new_name>");
             return;
         }
@@ -45,13 +45,13 @@ class Rename extends Command
         $new = $params[1];
 
         // Check Old Middleware Name is Valid
-        if (!\preg_match($this->exp, $old)) {
+        if (!preg_match($this->exp, $old)) {
             // Invalid Middleware Name
             $this->error("Invalid Old Middleware Name: [{$old}]!");
             return;
         }
         // Check New Middleware Name is Valid
-        if (!\preg_match($this->exp, $new)) {
+        if (!preg_match($this->exp, $new)) {
             // Invalid Middleware Name
             $this->error("Invalid New Middleware Name: [{$new}]!");
             return;
@@ -66,53 +66,56 @@ class Rename extends Command
         $this->new_path .= $new_parts['path'];
 
         // Old and New Namespace
-        $old_namespace = "namespace Laika\\App\\Middleware{$old_parts['namespace']}";
-        $new_namespace = "namespace Laika\\App\\Middleware{$new_parts['namespace']}";
+        $old_namespace = "namespace App\\Middleware{$old_parts['namespace']}";
+        $new_namespace = "namespace App\\Middleware{$new_parts['namespace']}";
 
         $old_file = "{$this->old_path}/{$old_parts['name']}.php";
         $new_file = "{$this->new_path}/{$new_parts['name']}.php";
 
         // Check Old Middleware is Valid
-        if (!\is_file($old_file)) {
+        if (!File::exists($old_file)) {
             $this->error("Old Middleware [{$old}] Doesn't Exists!");
             return;
         }
 
         // Check New Middleware is Valid
-        if (\is_file($new_file)) {
+        if (File::exists($new_file)) {
             $this->error("New Middleware [{$new}] Doesn't Exists!");
             return;
         }
 
         // Create Directory if Doesn't Exists
-        if (!Directory::exists($this->new_path)) {
+        try {
             Directory::make($this->new_path);
+        } catch (\Throwable $th) {
+            $this->error($th->getMessage());
+            return;
         }
 
         // Get Contents
-        $content = \file_get_contents($old_file);
+        $content = File::read($old_file);
         if ($content === false) {
-            $this->error("Failed to Read Middleware: [{$old}]");
+            $this->error("Failed to Read Old File: [{$old_file}]!");
             return;
         }
 
         // Replace Namespace if Not Same
         if ($old_namespace != $new_namespace) {
-            $content = \preg_replace('/' . \preg_quote($old_namespace, '/') . '/', $new_namespace, $content);
+            $content = preg_replace('/' . preg_quote($old_namespace, '/') . '/', $new_namespace, $content);
         }
 
         // Replace Class Name
-        $content = \preg_replace("/class {$old_parts['name']}/i", "class {$new_parts['name']}", $content);
+        $content = preg_replace("/class {$old_parts['name']}/i", "class {$new_parts['name']}", $content);
 
         // Create New Middleware File
-        if (\file_put_contents($new_file, $content) === false) {
+        if (File::write($content, $new_file) === false) {
             $this->error("Failed to Create Middleware: [{$new}]");
             return;
         }
 
         // Remove Old Middleware File
 
-        if (!\unlink($old_file)) {
+        if (!File::pop($old_file)) {
             $this->error("Failed to Remove Middleware: [$old_file]!");
             return;
         }

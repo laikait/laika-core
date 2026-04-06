@@ -1,7 +1,6 @@
 <?php
-
 /**
- * Laika Framework
+ * Laika PHP MVC Framework
  * Author: Showket Ahmed
  * Email: riyadhtayf@gmail.com
  * License: MIT
@@ -31,12 +30,12 @@ class Pop extends Command
     public function run(array $params, array $options = []): void
     {
         // Check Parameters
-        if (\count($params) < 1) {
+        if (count($params) < 1) {
             $this->error("USAGE: php laika pop:template <name>");
             return;
         }
 
-        if (!\preg_match($this->exp, $params[0])) {
+        if (!preg_match($this->exp, $params[0])) {
             // Invalid Name
             $this->error("Invalid Template Name: {$params[0]}");
             return;
@@ -55,12 +54,12 @@ class Pop extends Command
 
         $file = "{$this->path}/{$name}.{$ext}";
 
-        if (!\is_file($file)) {
+        if (!is_file($file)) {
             $this->error("Template Doesn't Exist: {$file}");
             return;
         }
 
-        if (!\unlink($file)) {
+        if (!unlink($file)) {
             $this->error("Failed to Remove Template: {$file}");
             return;
         }

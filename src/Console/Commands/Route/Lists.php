@@ -1,5 +1,4 @@
 <?php
-
 /**
  * Laika Framework
  * Author: Showket Ahmed
@@ -121,9 +120,9 @@ class Lists extends Command
                 $row['method'],
                 $row['handler']
             );
+            echo $line;
         }
 
-        echo $line;
         echo "Total: {$count}\n\n";
         return;
     }

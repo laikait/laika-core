@@ -10,7 +10,7 @@
 
 declare(strict_types=1);
 
-namespace Laika\App\Model;
+namespace App\Model;
 
 // Deny Direct Access
 defined('APP_PATH') || http_response_code(403).die('403 Direct Access Denied!');
@@ -24,6 +24,9 @@ class {{NAME}} extends Model
 
     // Primary Column Name
     protected string $id = '{{ID}}';
+
+    // Deleted At Column Name
+    protected string $deletedAtColumn = '{{DELETED_AT}}';
 
     // Cast Columns
     protected array $casts = []; // Example: ['col_1' => 'int', 'col_2' => 'string', ....]

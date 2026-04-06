@@ -1,7 +1,6 @@
 <?php
-
 /**
- * Laika Framework
+ * Laika PHP MVC Framework
  * Author: Showket Ahmed
  * Email: riyadhtayf@gmail.com
  * License: MIT
@@ -13,7 +12,8 @@ declare(strict_types=1);
 
 namespace Laika\Core\Console\Commands\Model;
 
-use Laika\Core\Helper\Directory;
+use Laika\Core\Relay\Relays\Directory;
+use Laika\Core\Relay\Relays\File;
 use Laika\Core\Console\Command;
 
 class Make extends Command
@@ -34,12 +34,12 @@ class Make extends Command
     public function run(array $params, array $options = []): void
     {
         // Check Parameters
-        if (\count($params) < 1) {
+        if (count($params) < 1) {
             $this->error("USAGE: php laika make:model <name> <table::optional>");
             return;
         }
 
-        if (!\preg_match($this->exp, $params[0])) {
+        if (!preg_match($this->exp, $params[0])) {
             // Invalid Name
             $this->error("Invalid Model Name: [{$params[0]}]!");
             return;
@@ -50,6 +50,7 @@ class Make extends Command
         // Table Name
         $table = $options['long']['table'] ?? $options['short']['t'] ?? $model;
         $id = $options['long']['primary'] ?? $options['short']['p'] ?? 'id';
+        $deletedAt = $options['long']['deleted'] ?? $options['short']['d'] ?? 'deletedAtColumn';
 
         // Check Table Name Is Valid
         if (!preg_match('/^[a-zA-Z_]+$/', $table)) {
@@ -64,25 +65,32 @@ class Make extends Command
         }
 
         // Make Directory if Not Exist
-        if (!Directory::exists($this->path)) {
+        try {
             Directory::make($this->path);
+        } catch (\Throwable $th) {
+            $this->error($th->getMessage());
+            return;
         }
 
         $file = "{$this->path}/{$model}.php";
 
-        if (\is_file($file)) {
+        if (File::exists($file)) {
             $this->error("Model [{$params[0]}] Already Exists!");
             return;
         }
 
         // Get Sample Content
-        $content = \file_get_contents(__DIR__ . '/../../Samples/Model.sample');
+        $content = File::read(__DIR__ . '/../../Samples/Model.sample');
+        if ($content === false) {
+            $this->error("Failed to Read Sample: [{$file}]!");
+            return;
+        }
 
         // Replace Placeholders
-        $content = \str_replace(['{{NAME}}','{{TABLE}}', '{{ID}}'], [$model, $table, $id], $content);
+        $content = str_replace(['{{NAME}}','{{TABLE}}', '{{ID}}', '{{DELETED_AT}}'], [$model, $table, $id, $deletedAt], $content);
 
         // Create Model File
-        if (\file_put_contents($file, $content) === false) {
+        if (File::write($content, $file) === false) {
             $this->error("Failed to Create Model: {$file}!");
             return;
         }
@@ -92,13 +100,13 @@ class Make extends Command
         $migrationFile = "{$this->migrationPath}/{$schemaName}.php";
 
         // Get Sample Migration Content
-        $migrationContent = \file_get_contents(__DIR__ . '/../../Samples/Migration.sample');
+        $migrationContent = File::read(__DIR__ . '/../../Samples/Migration.sample');
 
         // Replace Placeholders in Migration File
-        $migrationContent = \str_replace(['{{NAME}}','{{TABLE}}', '{{ID}}', '{{MODEL}}'], [$schemaName, $table, $id, $model], $migrationContent);
+        $migrationContent = str_replace(['{{NAME}}','{{TABLE}}', '{{ID}}', '{{MODEL}}', '{{DELETED_AT}}'], [$schemaName, $table, $id, $model, $deletedAt], $migrationContent);
 
         // Create Migration File
-        if (\file_put_contents($migrationFile, $migrationContent) === false) {
+        if (File::write($migrationContent, $migrationFile) === false) {
             $this->error("Failed to Create Migration File: {$migrationFile}!");
             return;
         }

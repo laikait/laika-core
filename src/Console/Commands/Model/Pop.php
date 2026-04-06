@@ -1,5 +1,4 @@
 <?php
-
 /**
  * Laika Framework
  * Author: Showket Ahmed
@@ -13,6 +12,7 @@ declare(strict_types=1);
 
 namespace Laika\Core\Console\Commands\Model;
 
+use Laika\Core\Relay\Relays\File;
 use Laika\Core\Console\Command;
 
 class Pop extends Command
@@ -33,12 +33,12 @@ class Pop extends Command
     public function run(array $params, array $options = []): void
     {
         // Check Parameters
-        if (\count($params) < 1) {
+        if (count($params) < 1) {
             $this->error("USAGE: php laika pop:model <name>");
             return;
         }
 
-        if (!\preg_match($this->exp, $params[0])) {
+        if (!preg_match($this->exp, $params[0])) {
             // Invalid Name
             $this->error("Invalid Model Name: {$params[0]}!");
             return;
@@ -53,17 +53,22 @@ class Pop extends Command
         $schemaName = preg_replace('/model/i', '', $model) . 'Schema';
         $migrationFile = "{$this->migrationPath}/{$schemaName}.php";
 
-        if (!\is_file($file)) {
+        if (!File::exists($file)) {
             $this->error("Model [{$params[0]}] Doesn't Exist!");
             return;
         }
 
-        if (!\unlink($file)) {
+        if (!File::pop($file)) {
             $this->error("Failed to Remove Model: [{$file}]!");
             return;
         }
 
-        if (is_file($migrationFile) && !\unlink($migrationFile)) {
+        if (!File::exists($migrationFile)) {
+            $this->error("Model Deleted, But Migration [{$migrationFile}] Doesn't Exist!");
+            return;
+        }
+
+        if (!File::pop($migrationFile)) {
             $this->error("Failed to Remove Migration File: [{$migrationFile}]!");
             return;
         }
