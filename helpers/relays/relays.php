@@ -64,8 +64,3 @@ try { require_once APP_PATH . '/lf-inc/relays.php'; } catch (\Throwable $th) {}
  * Register All Relays
  */
 Relay::setRegistry($registry);
-
-/**
- * Delete $registry Object
- */
-unset($registry);
