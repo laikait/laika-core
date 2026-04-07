@@ -331,6 +331,25 @@ class Date
     }
 
     /**
+     * Set App Timezone
+     * @param string $timezone Required Argument. Example: 'UTC'
+     * @return void
+     */
+    public function setAppTimezone(string $timezone): void
+    {
+        date_default_timezone_set($timezone);
+    }
+
+    /**
+     * Get App Timezone
+     * @return string
+     */
+    public function getAppTimezone(): string
+    {
+        return date_default_timezone_get();
+    }
+
+    /**
      * String Representation
      * @return string
      */
