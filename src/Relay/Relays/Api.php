@@ -21,6 +21,7 @@ use Laika\Core\Relay\Relay;
  * @method static string getMethod()
  * @method static array body()
  * @method static string bearerToken()
+ * @method static never send(array $payload, int $status = 200, array $additional = [])
  */
 class Api extends Relay
 {

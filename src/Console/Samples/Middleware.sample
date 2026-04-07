@@ -1,6 +1,6 @@
 <?php
 /**
- * Laika PHP MVC Framework
+ * Laika Framework
  * Author: Showket Ahmed
  * Email: riyadhtayf@gmail.com
  * License: MIT
@@ -15,28 +15,15 @@ namespace App\Middleware{{NAMESPACE}};
 // Deny Direct Access
 defined('APP_PATH') || http_response_code(403).die('403 Direct Access Denied!');
 
-use Laika\Core\Http\Request;
-use Laika\Core\Http\Redirect;
-use Laika\Core\Http\Response;
 use Closure;
 
 class {{NAME}}
 {
-    /** @var Redirect $redirect */
-    private Redirect $redirect;
-
-    public function __construct()
-    {
-        $this->redirect = new Redirect();
-    }
-
     /**
      * @param Closure $next Pass Parameters to Next Middleware or Controller
-     * @param Request $request Request Object
-     * @param Response $response Response Object
      * @param array $params Parameters
      */
-    public function handle(Closure $next, Request $request, Response $response, array $params)
+    public function handle(Closure $next, array $params)
     {
         // Start Code From Here....
 

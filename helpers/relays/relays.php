@@ -24,6 +24,7 @@ $registry->singleton('config', Laika\Core\Helper\Config::class);
 $registry->singleton('session', Laika\Session\Session::class);
 $registry->singleton('cookie', Laika\Core\Helper\Cookie::class);
 $registry->singleton('request', Laika\Core\Http\Request::class);
+$registry->singleton('redirect', Laika\Core\Http\Redirect::class);
 $registry->singleton('changelog', Laika\Core\Http\ChangeLog::class);
 $registry->singleton('header', Laika\Core\Http\Header::class);
 $registry->singleton('visitor', Laika\Core\Helper\Client::class);

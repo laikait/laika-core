@@ -19,12 +19,10 @@ class {{NAME}}
 {
     /**
      * @param $next Pass Parameters to Next Afterware
-     * @param $request $request Request Object
-     * @param $response $response Response Object
      * @param $output Controller Output
      * @param $params Parameters
      */
-    public function terminate($next, $request, $response, $output, $params): string
+    public function terminate($next, $output, $params): string
     {
         // After controller
         // Write Code From Here ......

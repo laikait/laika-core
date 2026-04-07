@@ -188,6 +188,8 @@ class Template
     {
         // Register Hooks
         $this->addFilter('hook', 'do_hook');
+        // Decode Html Special Characters
+        $this->addFilter('decode', 'htmlspecialchars_decode');
         // Register Slugs
         $this->addFilter('slug', function (int $index){ return Url::segment($index); });
         // Register Queries
