@@ -15,7 +15,6 @@ use Laika\Core\Relay\Relays\Header;
 use Laika\Core\Relay\Relays\Csrf;
 use Laika\Session\Relay\Session;
 use Laika\Core\Relay\Relays\Url;
-use Laika\Core\Relay\Relays\Date;
 
 /*=================================== URL HOOKS ===================================*/
 /**
@@ -25,7 +24,7 @@ use Laika\Core\Relay\Relays\Date;
 add_hook('app.host', function(): string
 {
     $host = Url::base();
-    return \rtrim($host, '/') . '/';
+    return rtrim($host, '/') . '/';
 }, 1000);
 /*=================================== ASSET HOOKS ===================================*/
 /**
@@ -170,14 +169,14 @@ add_hook('message.get', function(): array {
  * @param string $title
  */
 add_hook('page.title', function(string $title): string {
-    return "{$title} | " . do_hook('app.name');
+    return "{$title} | " . config('app', 'name', 'Laika Framework');
 }, 1000);
 
 /**
  * Page Number
  */
 add_hook('page.number', function(): int {
-    return max(1, (int) do_hook('request.input', 'page', 1));
+    return max(1, (int) Request::input('page', 1));
 }, 1000);
 
 /*================================== REQUEST HOOKS ==================================*/
