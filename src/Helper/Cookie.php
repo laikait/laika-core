@@ -47,7 +47,7 @@ class Cookie
      * @var int $ttl
      * @return static
      */
-    public function expire(int $ttl): static
+    public function ttl(int $ttl): static
     {
         $this->ttl = abs($ttl);
         return $this;
