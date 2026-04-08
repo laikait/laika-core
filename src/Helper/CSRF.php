@@ -123,7 +123,7 @@ class CSRF
     public function is_valid(): bool
     {
         // If CSRF Request Key Missing or Blank, Return false
-        $request_token = Request::input($this->key, '');
+        $request_token = $_REQUEST[$this->key] ?? '';
         if ($request_token === '') {
             return false;
         }

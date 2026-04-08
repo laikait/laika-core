@@ -13,6 +13,7 @@ declare(strict_types=1);
 namespace Laika\Core\Generator;
 
 use Laika\Core\Relay\Relays\Config;
+use Laika\Core\Relay\Relays\Vault;
 use Laika\Core\Relay\Relays\Url;
 use Firebase\JWT\JWT;
 use Firebase\JWT\Key;
@@ -78,7 +79,7 @@ class Token
             'data'  =>  $user
         ];
 
-        return JWT::encode($payload, $this->secret, $this->algorithm);
+        return Vault::encrypt(JWT::encode($payload, $this->secret, $this->algorithm));
     }
 
     /**
@@ -89,7 +90,7 @@ class Token
     public function validateToken(?string $token): bool
     {
         try {
-            $decoded = JWT::decode($token ?: '', new Key($this->secret, $this->algorithm));
+            $decoded = JWT::decode(Vault::decrypt($token ?: ''), new Key($this->secret, $this->algorithm));
             $this->currentUser = (array) $decoded->data;
             return true;
         } catch (\Throwable $e) {
