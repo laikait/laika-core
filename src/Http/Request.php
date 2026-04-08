@@ -237,6 +237,27 @@ class Request
     }
 
     /**
+     * Add Bulk Errors
+     * @param array<string,array> $errors
+     * @return void
+     */
+    public function addBulkError(array $errors): void
+    {
+        $this->errors = array_merge($this->errors, $errors);
+    }
+
+    /**
+     * Add Error
+     * @param string $key Form Error Key
+     * @param string $error Error Message
+     * @return void
+     */
+    public function addError(string $key, string $error): void
+    {
+        $this->errors[$key][] = $error;
+    }
+
+    /**
      * Request Errors
      * @return array
      */
