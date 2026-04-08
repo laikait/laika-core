@@ -103,7 +103,7 @@ class CSRF
     {
         $csrf = ['_xct' => bin2hex(random_bytes(16))];
         $this->token = Token::generate($csrf);
-        Cookie::expire($this->ttl)->set('_xct', $this->token);
+        Cookie::ttl($this->ttl)->set('_xct', $this->token);
         return $this->token;
     }
 
