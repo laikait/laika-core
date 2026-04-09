@@ -43,7 +43,7 @@ class CoreServiceProvider extends RelayProvider
         $this->registry->singleton('header', \Laika\Core\Http\Header::class);
         $this->registry->singleton('visitor', \Laika\Core\Helper\Client::class);
         $this->registry->singleton('directory', \Laika\Core\Helper\Directory::class);
-        $this->registry->singleton('file', \Laika\Core\Helper\file::class);
+        $this->registry->singleton('file', \Laika\Core\Helper\File::class);
         $this->registry->singleton('csrf', \Laika\Core\Helper\Csrf::class);
         $this->registry->singleton('url', \Laika\Core\Helper\Url::class);
         $this->registry->singleton('unique', \Laika\Core\Generator\Unique::class);

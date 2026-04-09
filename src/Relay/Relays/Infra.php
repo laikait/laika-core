@@ -21,7 +21,6 @@ use Laika\Core\Relay\Relay;
  * @method static array getMiddlewareClasses()
  * @method static array getAfterwareClasses()
  * @method static array getTemplateNames()
- * @method static array getRelayClasses()
  */
 class Infra extends Relay
 {
