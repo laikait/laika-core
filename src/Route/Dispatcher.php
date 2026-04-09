@@ -155,7 +155,6 @@ class Dispatcher
             APP_PATH . '/lf-app/Middleware',
             APP_PATH . '/lf-app/Afterware',
             APP_PATH . '/lf-app/Migration',
-            APP_PATH . '/lf-app/Relay',
             APP_PATH . '/lf-hooks',
         ];
 
@@ -176,11 +175,11 @@ class Dispatcher
     private static function createSecretKey(): void
     {
         if (!Config::has('secret')) {
-            Config::create('secret', ['key' => bin2hex(random_bytes(64))]);
+            Config::create('secret', ['key' => bin2hex(random_bytes(32))]);
         }
 
         if (!Config::has('secret', 'key')) {
-            Config::set('secret', 'key', bin2hex(random_bytes(64)));
+            Config::set('secret', 'key', bin2hex(random_bytes(32)));
         }
         return;
     }

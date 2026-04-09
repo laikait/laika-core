@@ -11,17 +11,17 @@ namespace Laika\Core\Relay\Relays;
 
 use Laika\Core\Relay\Relay;
 
+/**
+ * @method static void add(string $key, mixed $subKeyOrValue, mixed $value = null)
+ * @method static void has(string $key)
+ * @method static array keys()
+ * @method static mixed get(?string $key = null)
+ * @method static void reset()
+ */
 class ShieldConfig extends Relay
 {
-    /**
-     * @method static void add(string $key, mixed $subKeyOrValue, mixed $value = null)
-     * @method static void has(string $key)
-     * @method static array keys()
-     * @method static mixed get(?string $key = null)
-     * @method static void reset()
-     */
     public static function getRelayAccessor(): string
     {
-        return 'shieldconfig';
+        return 'shield.config';
     }
 }

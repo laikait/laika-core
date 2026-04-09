@@ -1,6 +1,6 @@
 <?php
 /**
- * Laika PHP MVC Framework
+ * Laika Framework
  * Author: Showket Ahmed
  * Email: riyadhtayf@gmail.com
  * License: MIT
@@ -54,6 +54,7 @@ class Config
      * @param string $key Config key (optional)
      * @param null|int|string|bool $value Value to Set
      * @return void
+     * @throws RuntimeException
      */
     public static function set(string $name, string $key, null|int|string|bool|array $value): void
     {
@@ -61,6 +62,10 @@ class Config
         self::init();
         $name = strtolower(trim($name));
         $key = strtolower(trim($key));
+
+        if ($name == 'providers') {
+            throw new RuntimeException("You Are Trying to Use a Reserved Name: 'providers'");
+        }
 
         $file = self::$path . DIRECTORY_SEPARATOR . "{$name}.php";
 
@@ -89,12 +94,18 @@ class Config
      * @param string $name Config file name (without extension)
      * @param string $key Config key (optional)
      * @return bool
+     * @throws RuntimeException
      */
     public static function has(string $name, ?string $key = null): bool
     {
         // Initiate
         self::init();
         $name = strtolower(trim($name));
+
+        if ($name == 'providers') {
+            throw new RuntimeException("You Are Trying to Use a Reserved Name: 'providers'");
+        }
+
         if ($key !== null) {
             $key = strtolower($key);
             return array_key_exists($key, self::$config[$name]);
@@ -107,6 +118,7 @@ class Config
      * @param string $name Config file name (without extension)
      * @param string $key Config key (optional)
      * @return bool
+     * @throws RuntimeException
      */
     public static function pop(string $name, string $key): bool
     {
@@ -114,6 +126,10 @@ class Config
         self::init();
         $name = strtolower(trim($name));
         $key = strtolower(trim($key));
+
+        if ($name == 'providers') {
+            throw new RuntimeException("You Are Trying to Use a Reserved Name: 'providers'");
+        }
 
         $file = self::$path . DIRECTORY_SEPARATOR . "{$name}.php";
 
@@ -143,12 +159,17 @@ class Config
      * @param string $name Name of the Config to Make Config File
      * @param array $data Data to insert in Config File
      * @return bool
+     * @throws RuntimeException
      */
     public static function create(string $name, array $data): bool
     {
         // Initiate
         self::init();
         $name = trim(strtolower($name));
+
+        if ($name == 'providers') {
+            throw new RuntimeException("You Are Trying to Use a Reserved Name: 'providers'");
+        }
 
         $file = self::$path . DIRECTORY_SEPARATOR . "{$name}.php";
 
@@ -188,7 +209,9 @@ class Config
             if (is_file($file)) {
                 $basename = strtolower(basename($file, '.php'));
 
-                self::$config[$basename] = require $file;
+                if ($basename != 'providers') {
+                    self::$config[$basename] = require $file;
+                }
             }
         }
     }
