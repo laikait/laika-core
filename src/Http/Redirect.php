@@ -53,16 +53,16 @@ class Redirect
      */
     public function to(string $to, array $params = [], int $code = 302): static
     {
-        if (!\in_array($code, [301,302])) {
+        if (!in_array($code, [301,302])) {
             throw new HttpException(500, "Invelid Redirect Code: {$code}", 500);
         }
 
-        if (\parse_url($to, PHP_URL_HOST)) {
+        if (parse_url($to, PHP_URL_HOST)) {
             $this->send($to, $code);
             return $this;
         }
 
-        $this->send(\named($to, $params, true), $code);
+        $this->send(named($to, $params, true), $code);
         return $this;
     }
 
@@ -81,7 +81,7 @@ class Redirect
         if (!in_array($code, [301,302])) {
             throw new HttpException(500, "Invalid Redirect Code: {$code}", 500);
         }
-        \header("Location:{$to}", true, $code);
+        header("Location:{$to}", true, $code);
         exit();
     }
 }

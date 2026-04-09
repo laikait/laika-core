@@ -32,6 +32,8 @@ use Laika\Core\Relay\Relay;
  * @method static ?array file(?string $key = null)
  * @method static string raw()
  * @method static array validate(array $rules, array $customMessages = [])
+ * @method static void addBulkError(array $errors)
+ * @method static void addError(string $key, string $error)
  * @method static array errors()
  */
 class Request extends Relay

@@ -16,7 +16,7 @@ use Laika\Core\Relay\Relay;
 
 /**
  * @method static static policy(string $policy)
- * @method static static expire(int $ttl)
+ * @method static static ttl(int $ttl)
  * @method static static httponly(bool $httponly = true)
  * @method static static path(string $path)
  * @method static bool set(string $name, mixed $value)

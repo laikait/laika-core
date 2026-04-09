@@ -12,7 +12,6 @@ declare(strict_types=1);
 
 namespace Laika\Core\Helper;
 
-use Laika\Core\Relay\Relays\Header;
 use Laika\Core\Relay\Relays\Request;
 use Laika\Core\Relay\Relays\Config;
 use Laika\Core\Relay\Relays\Cookie;
@@ -22,9 +21,6 @@ class CSRF
 {
     /** @var int $ttl CSRF Token Total Time Limit */
     protected int $ttl;
-
-    /** @var string $for CSRF Session For */
-    protected string $for = 'APP';
 
     /** @var string $key Request Key */
     protected string $key;
@@ -40,10 +36,7 @@ class CSRF
 
     public function __construct()
     {
-        $this->key = 'token';
-        $this->ttl = 300; // Default Lifetime is 300 Seconds
-        $this->time = (int) Config::get('env', 'start.time', time()); // Realtime
-        $this->token = Cookie::get('_xct', '');
+        $this->reset();
     }
 
     /**
@@ -55,7 +48,7 @@ class CSRF
         $this->key = 'token';
         $this->ttl = 300; // Default Lifetime is 300 Seconds
         $this->time = (int) Config::get('env', 'start.time', time()); // Realtime
-        $this->token = '';
+        $this->token = Cookie::get('_xct', '');
     }
 
     /**
@@ -110,7 +103,7 @@ class CSRF
     {
         $csrf = ['_xct' => bin2hex(random_bytes(16))];
         $this->token = Token::generate($csrf);
-        Cookie::expire($this->ttl)->set('_xct', $this->token);
+        Cookie::ttl($this->ttl)->set('_xct', $this->token);
         return $this->token;
     }
 
@@ -130,7 +123,7 @@ class CSRF
     public function is_valid(): bool
     {
         // If CSRF Request Key Missing or Blank, Return false
-        $request_token = Request::input($this->key, '');
+        $request_token = $_REQUEST[$this->key] ?? '';
         if ($request_token === '') {
             return false;
         }

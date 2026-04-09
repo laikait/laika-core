@@ -12,8 +12,8 @@ declare(strict_types=1);
 
 namespace Laika\Core\Exceptions;
 
-use Laika\Core\Helper\Directory;
-use Laika\Core\Http\Header;
+use Laika\Core\Relay\Relays\Directory;
+use Laika\Core\Relay\Relays\Header;
 use RuntimeException;
 use Throwable;
 
@@ -66,7 +66,7 @@ class Handler
         }
         $logDir = APP_PATH . '/lf-logs';
         // Create Directory If Not Exists
-        call_user_func([new Directory(), 'make'], $logDir);
+        Directory::make($logDir);
 
         $file = $logDir . '/' . date('Y') . '-' . date('M') . '-' . date('d') . '-error.log';
 
@@ -90,7 +90,7 @@ class Handler
     protected function render(Throwable $e): void
     {
         if ($this->wantsJson()) {
-            call_user_func([new Header, 'setHeader'], ['content-type'=>'application/json']);
+            Header::set(['content-type'=>'application/json']);
             $this->renderJson($e);
         } else {
             $this->renderHtml($e);
@@ -141,7 +141,7 @@ class Handler
         http_response_code(500);
 
         echo json_encode([
-            'message' => 'Laika Application Error!',
+            'message' => 'Application Error!',
             'exception' => $this->debug ? $e->getMessage() : null,
         ]);
     }

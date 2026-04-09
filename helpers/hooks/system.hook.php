@@ -10,11 +10,11 @@
 
 declare(strict_types=1);
 
-use Laika\Core\Http\Response;
-use Laika\Core\Http\Request;
-use Laika\Core\Helper\CSRF;
-use Laika\Core\Helper\Url;
-use Laika\Session\Session;
+use Laika\Core\Relay\Relays\Request;
+use Laika\Core\Relay\Relays\Header;
+use Laika\Core\Relay\Relays\Csrf;
+use Laika\Session\Relay\Session;
+use Laika\Core\Relay\Relays\Url;
 
 /*=================================== URL HOOKS ===================================*/
 /**
@@ -23,8 +23,8 @@ use Laika\Session\Session;
 */
 add_hook('app.host', function(): string
 {
-    $host = call_user_func([new Url, 'base']);
-    return \rtrim($host, '/') . '/';
+    $host = Url::base();
+    return rtrim($host, '/') . '/';
 }, 1000);
 /*=================================== ASSET HOOKS ===================================*/
 /**
@@ -32,11 +32,11 @@ add_hook('app.host', function(): string
  * @param string $file
  */
 add_hook('app.asset', function(string $file): string {
-    if(\parse_url($file, PHP_URL_HOST)){
+    if(parse_url($file, PHP_URL_HOST)){
         return $file;
     }
-    $file = \trim($file, '/');
-    return \named('app.src', ['name' => $file], true);
+    $file = trim($file, '/');
+    return named('app.src', ['name' => $file], true);
 }, 1000);
 
 /**
@@ -59,14 +59,14 @@ add_hook('tpl.asset', function(string $file): string {
  */
 add_hook('app.local', function(string $property, ...$args): string {
     // Return if Class Doesn't Exists
-    if(!\class_exists('LANG')) {
+    if(!class_exists('LANG')) {
         throw new RuntimeException("'LANG' Class Doesn't Exists!");
     }
     // Return if Class Exists
     if (!isset(LANG::$$property)) {
         throw new InvalidArgumentException("Invalid Language Property: [$property]");
     }
-    return \sprintf(LANG::$$property, ...$args);
+    return sprintf(LANG::$$property, ...$args);
 }, 1000);
 
 /*================================== CONFIG HOOKS ==================================*/
@@ -139,8 +139,8 @@ add_hook('config.secret', function(?string $key = 'key', mixed $default = null):
  * @param ?string $for Default is null. Example: 'app' or 'admin'
  * @return string
  */
-add_hook('csrf.field', function (?string $for = null): string{
-    return call_user_func([new CSRF(for:$for), 'field']);
+add_hook('csrf.field', function (): string {
+    return Csrf::field();
 }, 1000);
 
 /*================================== MESSAGE HOOKS ==================================*/
@@ -152,16 +152,6 @@ add_hook('csrf.field', function (?string $for = null): string{
 add_hook('message.set', function(string $message, bool $status): void {
     Session::set('message', ['info'=>$message,'status'=>$status]);
     return;
-}, 1000);
-
-/**
- * Get Notification Message
- * @deprecated This Hook is Deprecated. Use 'message.get' Hook Instead.
- */
-add_hook('message.show', function(): array {
-    $message = Session::get('message');
-    Session::pop('message');
-    return $message ?: [];
 }, 1000);
 
 /**
@@ -179,30 +169,14 @@ add_hook('message.get', function(): array {
  * @param string $title
  */
 add_hook('page.title', function(string $title): string {
-    return "{$title} | " . do_hook('app.name');
+    return "{$title} | " . config('app', 'name', 'Laika Framework');
 }, 1000);
 
 /**
  * Page Number
  */
 add_hook('page.number', function(): int {
-    return max(1, (int) do_hook('request.input', 'page', 1));
-}, 1000);
-
-/**
- * Next Page Number
- */
-add_hook('page.next', function()
-{
-    return call_user_func([new Url, 'incrementQuery']);
-}, 1000);
-
-/**
- * Previous Page Number
- */
-add_hook('page.previous', function()
-{
-    return call_user_func([new Url, 'decrementQuery']);
+    return max(1, (int) Request::input('page', 1));
 }, 1000);
 
 /*================================== REQUEST HOOKS ==================================*/
@@ -212,7 +186,7 @@ add_hook('page.previous', function()
  * @param string $key
  */
 add_hook('request.header', function(string $key): ?string {
-    return call_user_func([new Request, 'header'], $key);
+    return Request::header($key);
 }, 1000);
 
 /**
@@ -221,14 +195,14 @@ add_hook('request.header', function(string $key): ?string {
  * @param mixed $default Default is ''
  */
 add_hook('request.input', function(string $key, mixed $default = ''): mixed {
-    return call_user_func([new Request, 'input'], $key, $default);
+    return Request::input($key, $default);
 }, 1000);
 
 /**
  * Get Request Values
  */
 add_hook('request.inputs', function(): array {
-    return call_user_func([new Request, 'inputs']);
+    return Request::inputs();
 }, 1000);
 
 /**
@@ -239,22 +213,22 @@ add_hook('request.is', function(string $method): bool {
     $method = strtolower($method);
     switch ($method) {
         case 'post':
-            return call_user_func([new Request, 'isPost']);
+            return Request::isPost();
             break;
         case 'get':
-            return call_user_func([new Request, 'isGet']);
+            return Request::isGet();
             break;
         case 'put':
-            return call_user_func([new Request, 'isPut']);
+            return Request::isPut();
             break;
         case 'patch':
-            return call_user_func([new Request, 'isPatch']);
+            return Request::isPatch();
             break;
         case 'delete':
-            return call_user_func([new Request, 'isDelete']);
+            return Request::isDelete();
             break;
         case 'ajax':
-            return call_user_func([new Request, 'isAjax']);
+            return Request::isAjax();
             break;
         default:
             return false;
@@ -265,7 +239,7 @@ add_hook('request.is', function(string $method): bool {
 /*================================== TEMPLATE HOOKS ==================================*/
 // Set Template Default JS Vars
 add_hook('tpl.scripts', function(): string{
-    $authorizarion = call_user_func([new Response, 'get'], 'authorization');
+    $authorizarion = Header::get('authorization');
     $appuri = trim(do_hook('app.host'), '/');
     return "<script>let token = '{$authorizarion}'; let appuri = '{$appuri}';</script>\n";
 }, 1000);
@@ -274,9 +248,4 @@ add_hook('tpl.scripts', function(): string{
 /** Get All Timezones */
 add_hook('time.zones', function () {
     return \DateTimeZone::listIdentifiers(DateTimeZone::ALL);
-}, 1000);
-
-/** Time Local Format */
-add_hook('time.local.format', function (string $time, string $format = 'Y-m-d H:i:s', string $timezone = 'UTC') {
-    return (new \Laika\Core\Helper\Date($time, $format))->toLocal($timezone)->format();
 }, 1000);

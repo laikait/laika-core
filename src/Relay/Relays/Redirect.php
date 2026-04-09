@@ -23,6 +23,6 @@ class Redirect extends Relay
 {
     protected static function getRelayAccessor(): string
     {
-        return 'changelog';
+        return 'redirect';
     }
 }

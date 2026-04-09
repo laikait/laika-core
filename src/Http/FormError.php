@@ -15,6 +15,9 @@ namespace Laika\Core\Http;
 // Deny Direct Access
 defined('APP_PATH') || http_response_code(403) . die('403 Direct Access Denied!');
 
+/**
+ * @deprecated
+ */
 class FormError
 {
     /**

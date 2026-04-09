@@ -34,6 +34,8 @@ use Laika\Core\Relay\Relay;
  * @method static string humanDiff(Date|DateTime|null $other = null)
  * @method static string humanDiffShort(?Date $other = null)
  * @method static static fromFormat(string $format, string $time, ?string $outputFormat = null, ?string $timezone = null)
+ * @method static void setAppTimezone(string $timezone)
+ * @method static string getAppTimezone()
  * @method static string format(?string $format = null)
  */
 class Date extends Relay

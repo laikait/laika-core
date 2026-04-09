@@ -20,6 +20,7 @@ use Laika\Core\Relay\Relays\Header;
 use Laika\Core\Relay\Relays\Config;
 use Laika\Core\Relay\Relays\Token;
 use Laika\Core\Relay\Relays\Csrf;
+use Laika\Core\Relay\Relays\Date;
 
 class Dispatcher
 {
@@ -154,7 +155,7 @@ class Dispatcher
             APP_PATH . '/lf-app/Middleware',
             APP_PATH . '/lf-app/Afterware',
             APP_PATH . '/lf-app/Migration',
-            APP_PATH . '/lf-app/Relay',
+            APP_PATH . '/lf-hooks',
         ];
 
         foreach ($dirs as $dir) {
@@ -174,11 +175,11 @@ class Dispatcher
     private static function createSecretKey(): void
     {
         if (!Config::has('secret')) {
-            Config::create('secret', ['key' => bin2hex(random_bytes(64))]);
+            Config::create('secret', ['key' => bin2hex(random_bytes(32))]);
         }
 
         if (!Config::has('secret', 'key')) {
-            Config::set('secret', 'key', bin2hex(random_bytes(64)));
+            Config::set('secret', 'key', bin2hex(random_bytes(32)));
         }
         return;
     }
@@ -205,6 +206,8 @@ class Dispatcher
      */
     private static function preDispatcher(): void
     {
+        // Set App Timezone
+        Date::setAppTimezone('UTC');
         // Register Error Handler
         ErrorHandler::register();
 

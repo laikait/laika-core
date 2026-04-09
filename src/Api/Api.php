@@ -151,7 +151,7 @@ class Api
                 "status"    =>  $status,
                 "data"      =>  $payload,
                 "message"   =>  $this->message ?: "Success",
-                "context"   =>  Header::codes()[$status]['message'] ?? 'Unassigned',
+                "context"   =>  Header::statusCodes()[$status]['message'] ?? 'Unassigned',
                 "timestamp" =>  date('c')
             ], $additional);
         }
