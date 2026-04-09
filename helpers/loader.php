@@ -27,10 +27,13 @@ $providers = new ProviderRegistry($register);
 $providers->register(CoreServiceProvider::class);
 
 // Providers From Config
-$configProviders = require APP_PATH . '/lf-config/providers.php';
-if (is_array($configProviders)) {
-    foreach ($configProviders as $provider) {
-        $providers->register($provider);
+$path = realpath(__DIR__ . '../../../../../lf-config/providers.php');
+if ($path) {
+    $configProviders = require $path;
+    if (is_array($configProviders)) {
+        foreach ($configProviders as $provider) {
+            $providers->register($provider);
+        }
     }
 }
 
