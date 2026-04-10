@@ -63,10 +63,6 @@ class Config
         $name = strtolower(trim($name));
         $key = strtolower(trim($key));
 
-        if ($name == 'providers') {
-            throw new RuntimeException("You Are Trying to Use a Reserved Name: 'providers'");
-        }
-
         $file = self::$path . DIRECTORY_SEPARATOR . "{$name}.php";
 
         if (!File::exists($file)) {
@@ -102,10 +98,6 @@ class Config
         self::init();
         $name = strtolower(trim($name));
 
-        if ($name == 'providers') {
-            throw new RuntimeException("You Are Trying to Use a Reserved Name: 'providers'");
-        }
-
         if ($key !== null) {
             $key = strtolower($key);
             return array_key_exists($key, self::$config[$name]);
@@ -126,10 +118,6 @@ class Config
         self::init();
         $name = strtolower(trim($name));
         $key = strtolower(trim($key));
-
-        if ($name == 'providers') {
-            throw new RuntimeException("You Are Trying to Use a Reserved Name: 'providers'");
-        }
 
         $file = self::$path . DIRECTORY_SEPARATOR . "{$name}.php";
 
@@ -166,10 +154,6 @@ class Config
         // Initiate
         self::init();
         $name = trim(strtolower($name));
-
-        if ($name == 'providers') {
-            throw new RuntimeException("You Are Trying to Use a Reserved Name: 'providers'");
-        }
 
         $file = self::$path . DIRECTORY_SEPARATOR . "{$name}.php";
 
