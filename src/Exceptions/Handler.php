@@ -14,6 +14,7 @@ namespace Laika\Core\Exceptions;
 
 use Laika\Core\Relay\Relays\Directory;
 use Laika\Core\Relay\Relays\Header;
+use Laika\Core\Relay\Relays\Config;
 use RuntimeException;
 use Throwable;
 
@@ -23,10 +24,7 @@ class Handler
 
     public function __construct()
     {
-        if (!defined('DEBUG')) {
-            throw new RuntimeException("DEBUG not defined!");
-        }
-        $this->debug = DEBUG;
+        $this->debug = Config::get('env', 'debug', false);
     }
 
     /**
@@ -160,7 +158,7 @@ class Handler
         }
 
         http_response_code($code);
-        echo "<h1>Something Went Wrong!</h1>";
+        echo ServerError::show();
         return;
     }
 }

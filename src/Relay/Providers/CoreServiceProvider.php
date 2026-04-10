@@ -33,10 +33,7 @@ class CoreServiceProvider extends RelayProvider
     {
         // Register Each Core Service As A Singleton.
         $this->registry->singleton('config', \Laika\Core\Helper\Config::class);
-        $this->registry->singleton('session', \Laika\Session\Session::class);
         $this->registry->singleton('cookie', \Laika\Core\Helper\Cookie::class);
-        $this->registry->singleton('shield', \Laika\Shield\Shield::class);
-        $this->registry->singleton('shield.config', \Laika\Shield\Config::class);
         $this->registry->singleton('request', \Laika\Core\Http\Request::class);
         $this->registry->singleton('redirect', \Laika\Core\Http\Redirect::class);
         $this->registry->singleton('changelog', \Laika\Core\Http\ChangeLog::class);

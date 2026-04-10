@@ -144,31 +144,6 @@ class Dispatcher
     }
 
     /**
-     * Create required application directories
-     * @return void
-     */
-    private static function createDirectories(): void
-    {
-        $dirs = [
-            APP_PATH . '/lf-app/Controller',
-            APP_PATH . '/lf-app/Model',
-            APP_PATH . '/lf-app/Middleware',
-            APP_PATH . '/lf-app/Afterware',
-            APP_PATH . '/lf-app/Migration',
-            APP_PATH . '/lf-hooks',
-        ];
-
-        foreach ($dirs as $dir) {
-            if (!is_dir($dir)) {
-                if (!mkdir($dir, 0755, true)) {
-                    throw new \RuntimeException("Failed to Create Directory: {$dir}");
-                }
-            }
-        }
-        return;
-    }
-
-    /**
      * Create secret key config file if it does not exist
      * @return void
      */
@@ -210,7 +185,9 @@ class Dispatcher
         Date::setAppTimezone('UTC');
         // Register Error Handler
         ErrorHandler::register();
-
+    
+        // Create Secret Key
+        self::createSecretKey();
 
         // Apply memory limits. monitor() is intentionally called with no arguments
         // (silent / production-safe). To opt in to logging, change to:
@@ -219,12 +196,6 @@ class Dispatcher
         $manager = new MemoryManager();
         $manager->apply();
         $manager->monitor();
-
-        // Create Secret Key
-        self::createSecretKey();
-
-        // Create Required Directories
-        self::createDirectories();
 
         // Set Default Headers
         Header::register();
