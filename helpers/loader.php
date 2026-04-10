@@ -26,20 +26,28 @@ $providers = new ProviderRegistry($register);
 // Register Core Services
 $providers->register(CoreServiceProvider::class);
 
-// Providers From Config
-$path = realpath(__DIR__ . '../../../../../lf-config/providers.php');
-if ($path) {
-    $configProviders = require $path;
-    if (is_array($configProviders)) {
-        foreach ($configProviders as $provider) {
+// Auto-discover from installed packages
+$autoDiscoverJsonFile = realpath(__DIR__ . '../../../../../vendor/composer/installed.json');
+if ($autoDiscoverJsonFile && is_file($autoDiscoverJsonFile)) {
+    $installed = json_decode(file_get_contents($autoDiscoverJsonFile), true);
+    $installed = $installed['packages'] ?? $installed;
+
+    foreach ($installed as $package) {
+        $package = $package['extra']['laika']['providers'] ?? [];
+        foreach ($package as $provider) {
             $providers->register($provider);
         }
     }
 }
 
-
-// Register App Services
-
+// Auto Discover App Providers
+$appProviderDir = realpath(__DIR__ . '../../../../../lf-app/Provider');
+if ($appProviderDir && is_file($appProviderDir)) {
+    $appProviderFiles = glob("{$appProviderDir}/*.php");
+    foreach($appProviderFiles as $file) {
+        require $file;
+    }
+}
 
 // Wire Registry
 Relay::setRegistry($register);

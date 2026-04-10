@@ -33,18 +33,15 @@ class CoreServiceProvider extends RelayProvider
     {
         // Register Each Core Service As A Singleton.
         $this->registry->singleton('config', \Laika\Core\Helper\Config::class);
-        $this->registry->singleton('session', \Laika\Session\Session::class);
         $this->registry->singleton('cookie', \Laika\Core\Helper\Cookie::class);
-        $this->registry->singleton('shield', \Laika\Shield\Shield::class);
-        $this->registry->singleton('shield.config', \Laika\Shield\Config::class);
         $this->registry->singleton('request', \Laika\Core\Http\Request::class);
         $this->registry->singleton('redirect', \Laika\Core\Http\Redirect::class);
         $this->registry->singleton('changelog', \Laika\Core\Http\ChangeLog::class);
         $this->registry->singleton('header', \Laika\Core\Http\Header::class);
         $this->registry->singleton('visitor', \Laika\Core\Helper\Client::class);
         $this->registry->singleton('directory', \Laika\Core\Helper\Directory::class);
-        $this->registry->singleton('file', \Laika\Core\Helper\file::class);
-        $this->registry->singleton('csrf', \Laika\Core\Helper\Csrf::class);
+        $this->registry->singleton('file', \Laika\Core\Helper\File::class);
+        $this->registry->singleton('csrf', \Laika\Core\Helper\CSRF::class);
         $this->registry->singleton('url', \Laika\Core\Helper\Url::class);
         $this->registry->singleton('unique', \Laika\Core\Generator\Unique::class);
         $this->registry->singleton('auth', \Laika\Core\Auth\Auth::class);
