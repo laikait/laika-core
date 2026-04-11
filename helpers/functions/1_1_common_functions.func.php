@@ -1,10 +1,10 @@
 <?php
 /**
- * Laika PHP MVC Framework
+ * Laika Framework
  * Author: Showket Ahmed
  * Email: riyadhtayf@gmail.com
  * License: MIT
- * This file is part of the Laika PHP MVC Framework.
+ * This file is part of the Laika Framework.
  * For the full copyright and license information, please view the LICENSE file that was distributed with this source code.
  */
 
@@ -13,6 +13,7 @@ declare(strict_types=1);
 use Laika\Core\App\Router;
 use Laika\Core\Helper\Filter;
 use Laika\Core\Relay\Relays\Url;
+use Laika\Core\Relay\Relays\File;
 use Laika\Core\Relay\Relays\Header;
 use Laika\Core\Exceptions\Handler;
 use Laika\Core\Relay\Relays\Config;

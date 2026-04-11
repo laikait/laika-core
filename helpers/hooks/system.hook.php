@@ -35,7 +35,7 @@ add_hook('app.asset', function(string $file): string {
     if(parse_url($file, PHP_URL_HOST)){
         return $file;
     }
-    $file = trim($file, '/');
+    $file = trim($file, '/.\\');
     return named('app.src', ['name' => $file], true);
 }, 1000);
 
@@ -47,7 +47,7 @@ add_hook('tpl.asset', function(string $file): string {
     if(parse_url($file, PHP_URL_HOST)){
         return $file;
     }
-    $file = trim($file, '/');
+    $file = trim($file, '/.\\');
     return named('tpl.src', ['name' => $file], true);
 }, 1000);
 
