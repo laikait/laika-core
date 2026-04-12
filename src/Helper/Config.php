@@ -22,7 +22,7 @@ class Config
     private static array $config = [];
 
     /** @var string $path */
-    private static string $path = __DIR__ . '/../../../../../lf-config';
+    private static string $path = __DIR__ . '/../../../../lf-config';
 
     ######################################################################################
     ## --------------------------------- PUBLIC API ----------------------------------- ##
@@ -119,7 +119,7 @@ class Config
         $name = strtolower(trim($name));
         $key = strtolower(trim($key));
 
-        $file = self::$path . DIRECTORY_SEPARATOR . "{$name}.php";
+        $file = self::$path . "/{$name}.php";
 
         if (!File::exists($file)) {
             throw new RuntimeException("Config File [$name}] Does Not Exist.");
