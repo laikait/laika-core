@@ -22,7 +22,7 @@ class Config
     private static array $config = [];
 
     /** @var string $path */
-    private static string $path = __DIR__ . '/../../../../lf-config';
+    private static string $path = __DIR__ . '/../../../../../lf-config';
 
     ######################################################################################
     ## --------------------------------- PUBLIC API ----------------------------------- ##
