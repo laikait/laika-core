@@ -20,6 +20,7 @@ use Throwable;
 
 class Handler
 {
+    /** @var bool */
     protected bool $debug;
 
     public function __construct()
@@ -69,8 +70,9 @@ class Handler
         $file = $logDir . '/' . date('Y') . '-' . date('M') . '-' . date('d') . '-error.log';
 
         $log = sprintf(
-            "[%s] %s: %s in %s on line %d\nTrace:\n%s\n\n",
+            "[%s %s] %s: %s in %s on line %d\nTrace:\n%s\n\n",
             date('Y-M-d H:i:s'),
+            date('P'),
             get_class($e),
             $e->getMessage(),
             $e->getFile(),

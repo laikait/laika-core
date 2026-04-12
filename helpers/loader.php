@@ -27,7 +27,7 @@ $providers = new ProviderRegistry($register);
 $providers->register(CoreServiceProvider::class);
 
 // Auto-discover from installed packages
-$autoDiscoverJsonFile = realpath(__DIR__ . '../../../../../vendor/composer/installed.json');
+$autoDiscoverJsonFile = realpath(__DIR__ . '/../../../../vendor/composer/installed.json');
 if ($autoDiscoverJsonFile && is_file($autoDiscoverJsonFile)) {
     $installed = json_decode(file_get_contents($autoDiscoverJsonFile), true);
     $installed = $installed['packages'] ?? $installed;
@@ -41,7 +41,7 @@ if ($autoDiscoverJsonFile && is_file($autoDiscoverJsonFile)) {
 }
 
 // Auto Discover App Providers
-$appProviderDir = realpath(__DIR__ . '../../../../../lf-app/Provider');
+$appProviderDir = realpath(__DIR__ . '/../../../../lf-app/Provider');
 if ($appProviderDir && is_file($appProviderDir)) {
     $appProviderFiles = glob("{$appProviderDir}/*.php");
     foreach($appProviderFiles as $file) {

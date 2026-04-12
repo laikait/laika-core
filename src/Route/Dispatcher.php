@@ -12,7 +12,7 @@ declare(strict_types=1);
 
 namespace Laika\Core\Route;
 
-use Laika\Core\Exceptions\Handler as ErrorHandler;
+// use Laika\Core\Exceptions\Handler as ErrorHandler;
 use Laika\Core\Relay\Relays\Url as UrlHelper;
 use Laika\Core\System\MemoryManager;
 use Laika\Core\Relay\Relays\Directory;
@@ -58,7 +58,7 @@ class Dispatcher
         $routes = Handler::getRoutes(Url::method());
         $route = $routes[$res['route']];
 
-        // FIX 2: echo the output for asset routes — return value was silently discarded before.
+        // echo the output for asset routes — return value was silently discarded before.
         if (!$isWebUrl) {
             echo Invoke::middleware([], $route['controller'], $params);
             return;
@@ -144,22 +144,6 @@ class Dispatcher
     }
 
     /**
-     * Create secret key config file if it does not exist
-     * @return void
-     */
-    private static function createSecretKey(): void
-    {
-        if (!Config::has('secret')) {
-            Config::create('secret', ['key' => bin2hex(random_bytes(32))]);
-        }
-
-        if (!Config::has('secret', 'key')) {
-            Config::set('secret', 'key', bin2hex(random_bytes(32)));
-        }
-        return;
-    }
-
-    /**
      * Load hook files from lf-hooks directory
      * @return void
      */
@@ -181,14 +165,6 @@ class Dispatcher
      */
     private static function preDispatcher(): void
     {
-        // Set App Timezone
-        Date::setAppTimezone('UTC');
-        // Register Error Handler
-        ErrorHandler::register();
-    
-        // Create Secret Key
-        self::createSecretKey();
-
         // Apply memory limits. monitor() is intentionally called with no arguments
         // (silent / production-safe). To opt in to logging, change to:
         //   $manager->monitor(enabled: true);               — uses error_log fallback

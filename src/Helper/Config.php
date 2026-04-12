@@ -22,7 +22,7 @@ class Config
     private static array $config = [];
 
     /** @var string $path */
-    private static string $path = APP_PATH . '/lf-config';
+    private static string $path = __DIR__ . '/../../../../lf-config';
 
     ######################################################################################
     ## --------------------------------- PUBLIC API ----------------------------------- ##
@@ -63,11 +63,7 @@ class Config
         $name = strtolower(trim($name));
         $key = strtolower(trim($key));
 
-        if ($name == 'providers') {
-            throw new RuntimeException("You Are Trying to Use a Reserved Name: 'providers'");
-        }
-
-        $file = self::$path . DIRECTORY_SEPARATOR . "{$name}.php";
+        $file = self::$path . "/{$name}.php";
 
         if (!File::exists($file)) {
             throw new RuntimeException("Config File [$name}] Does Not Exist.");
@@ -102,10 +98,6 @@ class Config
         self::init();
         $name = strtolower(trim($name));
 
-        if ($name == 'providers') {
-            throw new RuntimeException("You Are Trying to Use a Reserved Name: 'providers'");
-        }
-
         if ($key !== null) {
             $key = strtolower($key);
             return array_key_exists($key, self::$config[$name]);
@@ -127,11 +119,7 @@ class Config
         $name = strtolower(trim($name));
         $key = strtolower(trim($key));
 
-        if ($name == 'providers') {
-            throw new RuntimeException("You Are Trying to Use a Reserved Name: 'providers'");
-        }
-
-        $file = self::$path . DIRECTORY_SEPARATOR . "{$name}.php";
+        $file = self::$path . "/{$name}.php";
 
         if (!File::exists($file)) {
             throw new RuntimeException("Config File [$name}] Does Not Exist.");
@@ -167,10 +155,6 @@ class Config
         self::init();
         $name = trim(strtolower($name));
 
-        if ($name == 'providers') {
-            throw new RuntimeException("You Are Trying to Use a Reserved Name: 'providers'");
-        }
-
         $file = self::$path . DIRECTORY_SEPARATOR . "{$name}.php";
 
         // Check File Already Exist
@@ -202,7 +186,8 @@ class Config
         if (!empty(self::$config)) {
             return;
         }
-
+        Directory::make(self::$path);
+        self::$path = realpath(self::$path);
         $files = Directory::files(self::$path, 'php');
 
         foreach ($files as $file) {

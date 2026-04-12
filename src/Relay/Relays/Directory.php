@@ -16,7 +16,7 @@ use Laika\Core\Relay\Relay;
 
 /**
  * @method static array folders(string $path)
- * @method static array files(string $path, string $ext = '*')
+ * @method static array files(string $path, string|array $ext = '*')
  * @method static bool exists(string $path)
  * @method static bool make(string $path, int $permissions = 0755, bool $recursive = true)
  * @method static bool pop(string $path)

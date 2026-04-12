@@ -54,7 +54,7 @@ class Local
         if (is_dir($path)) {
             $this->path = realpath($path);
         } else {
-            $this->path .= trim($path, '/');
+            $this->path .= '/' . trim($path, '/.\\');
         }
 
         if (!is_dir($this->path)) {

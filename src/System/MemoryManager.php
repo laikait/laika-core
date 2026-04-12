@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Laika\Core\System;
 
 use Laika\Core\Relay\Relays\Config;
+use RuntimeException;
 
 final class MemoryManager
 {
@@ -121,7 +122,7 @@ final class MemoryManager
         $usageBytes   = memory_get_usage(true);
 
         if ($targetBytes <= $usageBytes) {
-            throw new \RuntimeException("Target memory limit ($target) is less than or equal to current usage (" . round($usageBytes / 1024 / 1024, 2) . " MB). Please set a higher memory limit.");
+            throw new RuntimeException("Target memory limit ($target) is less than or equal to current usage (" . round($usageBytes / 1024 / 1024, 2) . " MB). Please set a higher memory limit.");
         }
 
         // Existing Ceiling Protection

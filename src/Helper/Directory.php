@@ -41,8 +41,9 @@ class Directory
     public function files(string $path, string|array $ext = '*'): array
     {
         $path = realpath($path);
+
         if (!$path || !self::exists($path)) {
-            throw new RuntimeException("Invalid Directory: [$path}]");
+            throw new RuntimeException("Invalid Directory: [{$path}]");
         }
         // Collect Extensions List
         if (is_string($ext)) $ext = [$ext];
