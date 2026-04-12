@@ -186,10 +186,8 @@ class Config
         if (!empty(self::$config)) {
             return;
         }
-        // self::$path = realpath(self::$path);
-        throw new \Exception((string)'Path: {'.realpath(__DIR__ . '/../../../../../lf-config').'}');
-        echo realpath(__DIR__ . '/../../../../../lf-config');
-        die;
+        Directory::make(self::$path);
+        self::$path = realpath(self::$path);
         $files = Directory::files(self::$path, 'php');
 
         foreach ($files as $file) {
