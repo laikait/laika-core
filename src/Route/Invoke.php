@@ -12,6 +12,10 @@ declare(strict_types=1);
 
 namespace Laika\Core\Route;
 
+use Laika\Core\Interfaces\MiddlewareInterface;
+use Laika\Core\Interfaces\AfterwareInterface;
+use RuntimeException;
+
 class Invoke
 {
     /**
@@ -45,21 +49,29 @@ class Invoke
                     // it does NOT exit. Without return, execution falls through to `new $middleware`
                     // on an unresolvable class, causing a fatal error.
                     if (!class_exists($middleware)) {
-                        report_bug(new \RuntimeException("Invalid Middleware: [{$middleware}]"));
+                        throw new RuntimeException("Invalid Middleware: [{$middleware}]");
+                        // report_bug(new RuntimeException("Invalid Middleware: [{$middleware}]"));
                         return null;
                     }
 
                     $obj = new $middleware;
 
+                    if (!is_subclass_of($middleware, MiddlewareInterface::class)) {
+                        throw new RuntimeException("Middleware Must Implement MiddlewareInterface: [{$middleware}]");
+                        return null;
+                    }
+
                     if (!method_exists($obj, 'handle')) {
-                        report_bug(new \RuntimeException("Method Not Found: [{$middleware}::handle()]"));
+                        throw new RuntimeException("Method Not Found: [{$middleware}::handle()]");
+                        // report_bug(new RuntimeException("Method Not Found: [{$middleware}::handle()]"));
                         return null;
                     }
 
                     try {
                         return $obj->handle($next, $params);
                     } catch (\Throwable $th) {
-                        report_bug($th);
+                        throw new RuntimeException($th->getMessage(), (int) $th->getCode(), $th);
+                        // report_bug($th);
                     }
                     return null;
                 };
@@ -83,8 +95,9 @@ class Invoke
     {
         $next = array_reduce(
             array_reverse($afterwares),
-            function ($next, $afterware) use ($params) {
-                return function ($output) use ($afterware, $next, $params) {
+            function ($next, $afterware) {
+                return function ($output, $params) use ($afterware, $next) {
+
                     $parts = explode('|', $afterware);
                     $parts[0] = trim($parts[0], '\\');
 
@@ -92,45 +105,36 @@ class Invoke
 
                     if (isset($parts[1])) {
                         $args = [];
-                        $paramParts = explode(',', $parts[1]);
-                        foreach ($paramParts as $paramPart) {
-                            [$k, $v]  = explode('=', $paramPart);
+                        foreach (explode(',', $parts[1]) as $paramPart) {
+                            [$k, $v] = explode('=', $paramPart);
                             $args[trim($k)] = trim($v);
                         }
                         $params = array_merge($params, $args);
                     }
 
-                    // FIX 1 (same as middleware): return null after report_bug() to halt execution.
                     if (!class_exists($afterware)) {
-                        throw new \RuntimeException("Invalid Afterware: [{$afterware}]");
-                        return null;
+                        throw new RuntimeException("Invalid Afterware: [{$afterware}]");
                     }
 
-                    $obj = new $afterware;
-
-                    if (!method_exists($obj, 'terminate')) {
-                        throw new \RuntimeException("Method Not Found: [{$afterware}::terminate()]");
-                        return null;
+                    if (!is_subclass_of($afterware, AfterwareInterface::class)) {
+                        throw new RuntimeException("Afterware Must Implement Interface: [{$afterware}]");
                     }
 
-                    try {
-                        return $obj->terminate(
-                            function ($newOutput) use ($next, $params) {
-                                return $next($newOutput);
-                            },
-                            $output,
-                            $params
-                        );
-                    } catch (\Throwable $th) {
-                        report_bug($th);
-                    }
-                    return null;
+                    $obj = new $afterware();
+
+                    return $obj->terminate(
+                        function ($newOutput, $newParams) use ($next) {
+                            return $next($newOutput, $newParams);
+                        },
+                        $output,
+                        $params
+                    );
                 };
             },
-            fn($output) => $output
+            fn($output, $params) => $output
         );
 
-        return $next($output);
+        return $next($output, $params);
     }
 
     /**
@@ -171,7 +175,7 @@ class Invoke
             // Without this, explode('@', 'HomeController') returns a single-element array,
             // and [$controller, $method] destructuring silently sets $method to null.
             if (!str_contains($handler, '@')) {
-                throw new \RuntimeException("Invalid Controller Assigned: [{$handler}]. Expected 'ControllerClass@method' format.");
+                throw new RuntimeException("Invalid Controller Assigned: [{$handler}]. Expected 'ControllerClass@method' format.");
             }
 
             [$controller, $method] = explode('@', $handler, 2);
@@ -180,11 +184,11 @@ class Invoke
 
             // Check Controller Exists
             if (!class_exists($controller)) {
-                throw new \RuntimeException("Invalid Controller: [{$controller}]");
+                throw new RuntimeException("Invalid Controller: [{$controller}]");
             }
             // Check Method Exists
             if (!method_exists($controller, $method)) {
-                throw new \RuntimeException("Invalid Method: [{$method}] on [{$controller}]");
+                throw new RuntimeException("Invalid Method: [{$method}] on [{$controller}]");
             }
             // Call Controller
             $obj = new $controller();
@@ -198,6 +202,6 @@ class Invoke
         }
 
         // Throw RuntimeException
-        throw new \RuntimeException("Invalid Controller: " . print_r($handler, true));
+        throw new RuntimeException("Invalid Controller: " . print_r($handler, true));
     }
 }
