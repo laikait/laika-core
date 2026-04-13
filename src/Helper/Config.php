@@ -22,7 +22,7 @@ class Config
     private static array $config = [];
 
     /** @var string $path */
-    private static string $path = __DIR__ . '/../../../../../lf-config';
+    private static string $path = APP_PATH . '/lf-config';
 
     ######################################################################################
     ## --------------------------------- PUBLIC API ----------------------------------- ##
@@ -186,8 +186,7 @@ class Config
         if (!empty(self::$config)) {
             return;
         }
-        Directory::make(self::$path);
-        self::$path = realpath(self::$path);
+
         $files = Directory::files(self::$path, 'php');
 
         foreach ($files as $file) {

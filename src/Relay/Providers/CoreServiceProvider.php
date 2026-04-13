@@ -61,17 +61,7 @@ class CoreServiceProvider extends RelayProvider
     }
 
     public function boot(): void
-    {
-        // Create Secret Key if Not Exists
-        $config = $this->registry->make('config');
-        if (!$config->has('secret')) {
-            $config->create('secret', ['key' => bin2hex(random_bytes(32))]);
-        }
-
-        if (!$config->has('secret', 'key')) {
-            $config->set('secret', 'key', bin2hex(random_bytes(32)));
-        }
-        
+    {        
         // Set App Timezone
         $date = $this->registry->make('date');
         $date->setAppTimeZone('UTC');
