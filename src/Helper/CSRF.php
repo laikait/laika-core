@@ -12,7 +12,6 @@ declare(strict_types=1);
 
 namespace Laika\Core\Helper;
 
-use Laika\Core\Relay\Relays\Request;
 use Laika\Core\Relay\Relays\Config;
 use Laika\Core\Relay\Relays\Cookie;
 use Laika\Core\Relay\Relays\Token;
@@ -46,7 +45,7 @@ class CSRF
     public function reset(): void
     {
         $this->key = 'token';
-        $this->ttl = 300; // Default Lifetime is 300 Seconds
+        $this->ttl = 1800; // Default Lifetime is 1800 Seconds
         $this->time = (int) Config::get('env', 'start.time', time()); // Realtime
         $this->token = Cookie::get('_xct', '');
     }
