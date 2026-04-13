@@ -20,7 +20,6 @@ use Laika\Core\Relay\Relays\Header;
 use Laika\Core\Relay\Relays\Config;
 use Laika\Core\Relay\Relays\Token;
 use Laika\Core\Relay\Relays\Csrf;
-use Laika\Core\Relay\Relays\Date;
 
 class Dispatcher
 {
