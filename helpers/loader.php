@@ -15,6 +15,11 @@ use Laika\Core\Relay\RelayRegistry;
 use Laika\Core\Relay\ProviderRegistry;
 use Laika\Core\Relay\Providers\CoreServiceProvider;
 
+// Define APP_PATH
+if (!defined('APP_PATH')) {
+    define('APP_PATH', realpath(__DIR__ . '/../../../../'));
+}
+
 ####################################################################################
 /*--------------------------------- RELAY LOADER ---------------------------------*/
 ####################################################################################
@@ -27,7 +32,7 @@ $providers = new ProviderRegistry($register);
 $providers->register(CoreServiceProvider::class);
 
 // Auto-discover from installed packages
-$autoDiscoverJsonFile = realpath(__DIR__ . '/../../../../vendor/composer/installed.json');
+$autoDiscoverJsonFile = APP_PATH . '/vendor/composer/installed.json';
 if ($autoDiscoverJsonFile && is_file($autoDiscoverJsonFile)) {
     $installed = json_decode(file_get_contents($autoDiscoverJsonFile), true);
     $installed = $installed['packages'] ?? $installed;
@@ -41,7 +46,7 @@ if ($autoDiscoverJsonFile && is_file($autoDiscoverJsonFile)) {
 }
 
 // Auto Discover App Providers
-$appProviderDir = realpath(__DIR__ . '/../../../../lf-app/Provider');
+$appProviderDir = APP_PATH . '/lf-app/Provider';
 if ($appProviderDir && is_file($appProviderDir)) {
     $appProviderFiles = glob("{$appProviderDir}/*.php");
     foreach($appProviderFiles as $file) {
