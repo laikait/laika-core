@@ -187,6 +187,9 @@ class Config
             return;
         }
 
+        // Make Config Directory if Not Exists
+        Directory::make(self::$path);
+
         $files = Directory::files(self::$path, 'php');
 
         foreach ($files as $file) {
