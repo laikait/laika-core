@@ -17,6 +17,7 @@ use Laika\Core\Relay\Relay;
 /**
  * @method static string next(?string $key = null)
  * @method static string previous(?string $key = null)
+ * @method static int number(?string $key = null)
  */
 class Page extends Relay
 {

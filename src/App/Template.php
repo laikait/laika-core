@@ -174,7 +174,7 @@ class Template
         // Assign Local Name. Default is en
         $this->assign('local', Local::get());
         // Assign Pagination
-        $this->assign('page', ['next' => Page::next(), 'previous' => Page::previous()]);
+        $this->assign('page', ['number' => Page::number(), 'next' => Page::next(), 'previous' => Page::previous()]);
         // Assign Request Inputs
         $this->assign('input', Request::inputs());
         // Assign Form Errors
