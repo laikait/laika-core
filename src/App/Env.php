@@ -15,13 +15,10 @@ namespace Laika\Core\App;
 // Application Environments
 class Env
 {
-    // Environment Obkect
+    /** @var static ?object */
     private static ?object $instance = null;
 
-    /**
-     * Parameters
-     * @var array<string,mixed>
-     */
+    /** @var array<string,mixed> */
     private array $params = [];
 
     // Singleton Process
