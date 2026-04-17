@@ -15,6 +15,7 @@ namespace Laika\Core\App;
 // Application Environments
 class Env
 {
+    
     /** @var static ?object */
     private static ?object $instance = null;
 
