@@ -14,11 +14,12 @@ declare(strict_types=1);
 namespace Laika\Core\App;
 
 use Twig\Loader\FilesystemLoader as Engine;
-use Laika\Core\Relay\Relays\Config;
 use Laika\Core\Relay\Relays\Directory;
+use Laika\Core\Relay\Relays\Visitor;
 use Laika\Core\Relay\Relays\Request;
-use Laika\Core\Relay\Relays\File;
+use Laika\Core\Relay\Relays\Config;
 use Laika\Core\Relay\Relays\Local;
+use Laika\Core\Relay\Relays\File;
 use Laika\Core\Relay\Relays\Page;
 use Laika\Core\Relay\Relays\Url;
 use Twig\Environment;
@@ -179,6 +180,8 @@ class Template
         $this->assign('input', Request::inputs());
         // Assign Form Errors
         $this->assign('errors', Request::errors());
+        // Visitor Info
+        $this->assign('visitor', Visitor::info());
     }
 
     /**
