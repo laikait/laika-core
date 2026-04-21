@@ -20,6 +20,7 @@ use Laika\Core\Relay\Relays\Header;
 use Laika\Core\Relay\Relays\Config;
 use Laika\Core\Relay\Relays\Token;
 use Laika\Core\Relay\Relays\Csrf;
+use Laika\Core\Relay\Relays\Date;
 
 class Dispatcher
 {
@@ -164,10 +165,13 @@ class Dispatcher
      */
     private static function preDispatcher(): void
     {
+        // Register Timezone
+        Date::setAppTimezone(config('env', 'time.zone', 'UTC'));
+
         // Apply memory limits. monitor() is intentionally called with no arguments
         // (silent / production-safe). To opt in to logging, change to:
-        //   $manager->monitor(enabled: true);               — uses error_log fallback
-        //   $manager->monitor(logger: fn($mb, $b) => ...);  — custom logger
+        // $manager->monitor(enabled: true);               — uses error_log fallback
+        // $manager->monitor(logger: fn($mb, $b) => ...);  — custom logger
         $manager = new MemoryManager();
         $manager->apply();
         $manager->monitor();

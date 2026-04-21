@@ -53,11 +53,26 @@ add_hook('tpl.asset', function(string $file): string {
 
 /**
  * Local Language
- * @param string $property Property of LANG Class
- * @param array ...$args Other Parameters for sprintf()
  * @return string
+ * @deprecated Use 'local' hook Instead
  */
 add_hook('app.local', function(string $property, ...$args): string {
+    // Return if Class Doesn't Exists
+    if(!class_exists('LANG')) {
+        throw new RuntimeException("'LANG' Class Doesn't Exists!");
+    }
+    // Return if Class Exists
+    if (!isset(LANG::$$property)) {
+        throw new InvalidArgumentException("Invalid Language Property: [$property]");
+    }
+    return sprintf(LANG::$$property, ...$args);
+}, 1000);
+
+/**
+ * Local Language Value
+ * @return string
+ */
+add_hook('local', function(string $property, ...$args): string {
     // Return if Class Doesn't Exists
     if(!class_exists('LANG')) {
         throw new RuntimeException("'LANG' Class Doesn't Exists!");

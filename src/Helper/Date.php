@@ -13,43 +13,117 @@ declare(strict_types=1);
 namespace Laika\Core\Helper;
 
 use DateTimeZone;
-use DateInterval;
 use DateTime;
 
 class Date
 {
-    /** @var DateTime $dateTime Object */
-    protected DateTime $dateTime;
+    protected DateTime $dt;
+    protected string $format;
+    protected string $timezone;
 
-    /** @var string $time Time String */
-    protected string $time = 'now';
-
-    /** @var string $format Time Format */
-    protected string $format = 'Y-m-d H:i:s';
-
-    /** @var string $timezone Timezone */
-    protected string $timezone = 'UTC';
-
-    public function __construct()
-    {
-        $this->dateTime = new DateTime($this->time, new DateTimeZone($this->timezone));
+    public function __construct(
+        string $timezone = 'UTC',
+        string $format = 'Y-m-d H:i:s'
+    ) {
+        $this->timezone = $timezone;
+        $this->format   = $format;
+        $this->dt       = new DateTime('now', new DateTimeZone($timezone));
     }
 
+    ##############################################################################
+    /*=============================== PUBLIC API ===============================*/
+    ##############################################################################
+
     /**
-     * Set Time String
-     * @param string $time Required Argument. Example: '2024-01-01 12:00:00' or 'now'
+     * Return a new instance set to the current date and time.
      * @return static
+     * @example Date::now()->format()  // "2025-04-21 10:30:00"
      */
-    public function setTime(string $time): static
+    public function now(): static
     {
-        $this->time = $time;
-        return $this;
+        $clone     = clone $this;
+        $clone->dt = new DateTime('now', new DateTimeZone($this->timezone));
+        return $clone;
     }
 
     /**
-     * Set DateTime Format
-     * @param string $format Required Argument. Example: 'Y-m-d H:i:s'
+     * Parse a date string from a specific format.
+     * @param  string      $format       Input format,  e.g. "d/m/Y"
+     * @param  string      $time         Date string,   e.g. "21/04/2025"
+     * @param  string|null $outputFormat Output format, e.g. "Y-m-d"
+     * @param  string|null $timezone     Timezone,      e.g. "Asia/Dhaka"
      * @return static
+     * @example Date::fromFormat('d/m/Y', '21/04/2025', 'Y-m-d')->format()  // "2025-04-21"
+     */
+    public function fromFormat(
+        string  $format,
+        string  $time,
+        ?string $outputFormat = null,
+        ?string $timezone     = null
+    ): static {
+        $clone         = clone $this;
+        $tz            = new DateTimeZone($timezone ?? $this->timezone);
+        $clone->dt     = DateTime::createFromFormat($format, $time, $tz) ?: new DateTime($time, $tz);
+        $clone->format = $outputFormat ?? $this->format;
+        return $clone;
+    }
+
+    /**
+     * Parse any date/time string understood by PHP.
+     * @param  string      $time     Date string, e.g. "2025-04-21", "next Monday", "-1 week"
+     * @param  string|null $timezone Timezone,    e.g. "America/New_York"
+     * @return static
+     * @example Date::parse('next Monday')->format('l, d M Y')  // "Monday, 28 Apr 2025"
+     * @example Date::parse('-1 week')->format()                // "2025-04-14 10:30:00"
+     */
+    public function parse(string $time, ?string $timezone = null): static
+    {
+        $clone     = clone $this;
+        $clone->dt = new DateTime($time, new DateTimeZone($timezone ?? $this->timezone));
+        return $clone;
+    }
+
+    // ── Getters ───────────────────────────────────────────────────────────────
+
+    /**
+     * Format the date using the given or default format string.
+     * @param  string|null $format PHP date format, e.g. "d M Y", "H:i"
+     * @return string
+     * @example Date::now()->format()         // "2025-04-21 10:30:00"
+     * @example Date::now()->format('d M Y')  // "21 Apr 2025"
+     */
+    public function format(?string $format = null): string
+    {
+        return $this->dt->format($format ?? $this->format);
+    }
+
+    /**
+     * Get the Unix timestamp.
+     * @return int
+     * @example Date::now()->getTimestamp()  // 1745229000
+     */
+    public function getTimestamp(): int
+    {
+        return $this->dt->getTimestamp();
+    }
+
+    /**
+     * Get the underlying PHP DateTime object.
+     * @return DateTime
+     * @example Date::now()->getDateTime()->format('U')  // "1745229000"
+     */
+    public function getDateTime(): DateTime
+    {
+        return $this->dt;
+    }
+
+    // ── Setters (fluent) ──────────────────────────────────────────────────────
+
+    /**
+     * Set the default output format for this instance.
+     * @param  string $format PHP date format, e.g. "d/m/Y"
+     * @return static
+     * @example Date::now()->setFormat('d/m/Y')->format()  // "21/04/2025"
      */
     public function setFormat(string $format): static
     {
@@ -58,291 +132,166 @@ class Date
     }
 
     /**
-     * Set Timezone
-     * @param string $timezone Required Argument. Example: 'UTC'
+     * Set the date/time from a Unix timestamp.
+     * @param  int $timestamp Unix timestamp, e.g. 1745229000
      * @return static
+     * @example Date::now()->setTimestamp(0)->format()  // "1970-01-01 00:00:00"
+     */
+    public function setTimestamp(int $timestamp): static
+    {
+        $clone     = clone $this;
+        $clone->dt = (clone $this->dt)->setTimestamp($timestamp);
+        return $clone;
+    }
+
+    /**
+     * Change the timezone of the current instance.
+     * @param  string $timezone IANA timezone, e.g. "Asia/Dhaka"
+     * @return static
+     * @example Date::now()->setTimezone('Asia/Dhaka')->format()  // "2025-04-21 16:30:00"
      */
     public function setTimezone(string $timezone): static
     {
         $this->timezone = $timezone;
-        if (isset($this->dateTime)) {
-            $this->dateTime->setTimezone(new DateTimeZone($this->timezone));
-        }
+        $this->dt->setTimezone(new DateTimeZone($timezone));
         return $this;
     }
 
     /**
-     * Bootstrap the DateTime Object
-     * Must be called after setTime(), setFormat(), setTimezone()
+     * Apply a relative date/time modifier string.
+     * @param  string $modifier PHP modifier string, e.g. "+1 day", "-2 hours", "next Friday"
      * @return static
-     */
-    public function init(): static
-    {
-        $this->dateTime = new DateTime($this->time, new DateTimeZone($this->timezone));
-        return $this;
-    }
-
-    /**
-     * Get Date Instance
-     * @return static
-     */
-    public function instance(): static
-    {
-        return $this;
-    }
-
-    /**
-     * This Time
-     * @param ?string $format Optional Argument. Default is null.
-     * @param ?string $timezone Optional Argument. Default is null.
-     * @return static
-     */
-    public static function now(?string $format = null, ?string $timezone = null): static
-    {
-        $instance = new static();
-        if ($format) {
-            $instance->setFormat($format);
-        }
-        if ($timezone) {
-            $instance->setTimezone($timezone);
-        }
-        return $instance->init();
-    }
-
-    /**
-     * Get Formatted DateTime
-     * @param string|null $format Optional Argument. Default is null
-     * @return string
-     */
-    public function format(?string $format = null): string
-    {
-        return $this->dateTime->format($format ?: $this->format);
-    }
-
-    /**
-     * Modify DateTime
-     * @param string $modifier Required Argument. Example: '+1 day'
-     * @return static
+     * @example Date::now()->modify('+7 days')->format()   // "2025-04-28 10:30:00"
+     * @example Date::now()->modify('-2 hours')->format()  // "2025-04-21 08:30:00"
      */
     public function modify(string $modifier): static
     {
-        $this->dateTime->modify($modifier);
-        return $this;
+        $clone = clone $this;
+        $clone->dt = (clone $this->dt)->modify($modifier);
+        return $clone;
     }
 
-    /**
-     * Get Timestamp
-     * @return int
-     */
-    public function getTimestamp(): int
-    {
-        return $this->dateTime->getTimestamp();
-    }
+    /*================================ CONVERT ================================*/
 
     /**
-     * Set Timestamp
-     * @param int $timestamp Required Argument.
+     * Convert the instance back to the default (local) timezone.
      * @return static
+     * @example Date::now()->toUtc()->toLocal()->format()  // "2025-04-21 10:30:00"
      */
-    public function setTimestamp(int $timestamp): static
+    public function toLocal(): static
     {
-        $this->dateTime->setTimestamp($timestamp);
-        return $this;
+        $clone     = clone $this;
+        $clone->dt = (clone $this->dt)->setTimezone(new DateTimeZone($this->timezone));
+        return $clone;
     }
 
     /**
-     * Get Timezone
+     * Return the date as an ISO 8601 string.
+     * @param  bool $extended true = ATOM format "2025-04-21T10:30:00+06:00", false = ISO8601 "20250421T103000+0600"
      * @return string
+     * @example Date::now()->toIso8601()        // "2025-04-21T10:30:00+06:00"
+     * @example Date::now()->toIso8601(false)   // "20250421T103000+0600"
      */
-    public function getTimezone(): string
+    public function toIso8601(bool $extended = true): string
     {
-        return $this->timezone;
+        return $this->dt->format($extended ? \DateTimeInterface::ATOM : \DateTimeInterface::ISO8601);
     }
 
     /**
-     * Get Difference Between Two Dates
-     * @param Date|DateTime $other Required Argument.
-     * @return DateInterval
-     */
-    public function diff(Date|DateTime $other): DateInterval
-    {
-        $dt = $other instanceof Date ? $other->getDateTime() : $other;
-        return $this->dateTime->diff($dt);
-    }
-
-    /**
-     * Get DateTime Object
-     * @return DateTime
-     */
-    public function getDateTime(): DateTime
-    {
-        return $this->dateTime;
-    }
-
-    /**
-     * Get ISO 8601 Formatted DateTime
-     * @param bool $convertToUtc Optional. If true, converts to UTC before formatting. Default is false.
-     * @return string Example: 2024-01-01T12:00:00+00:00 or 2024-01-01T12:00:00Z
-     */
-    public function toIso8601(bool $convertToUtc = false): string
-    {
-        if ($convertToUtc) {
-            return (clone $this->dateTime)
-                ->setTimezone(new DateTimeZone('UTC'))
-                ->format('Y-m-d\TH:i:s\Z');
-        }
-
-        return $this->dateTime->format(DateTime::ATOM);
-    }
-
-    /**
-     * Convert to UTC
-     * @return static
-     */
-    public function toUtc(): static
-    {
-        return $this->setTimezone('UTC');
-    }
-
-    /**
-     * Convert to Local Timezone
-     * @param string $timezone Required Argument. Example: 'America/New_York'
-     * @return static
-     */
-    public function toLocal(string $timezone): static
-    {
-        return $this->setTimezone($timezone);
-    }
-
-    /**
-     * Convert to Array
-     * @return array{year:int,month:int,day:int,hour:int,minute:int,second:int,timezone:string,timestamp:int}
+     * Return the date components as an associative array.
+     *
+     * @return array{year: int, month: int, day: int, hour: int, minute: int, second: int, timezone: string}
+     * @example Date::now()->toArray()
+     * // ['year'=>2025, 'month'=>4, 'day'=>21, 'hour'=>10, 'minute'=>30, 'second'=>0, 'timezone'=>'Europe/London']
      */
     public function toArray(): array
     {
         return [
-            'year'      =>  (int) $this->dateTime->format('Y'),
-            'month'     =>  (int) $this->dateTime->format('m'),
-            'day'       =>  (int) $this->dateTime->format('d'),
-            'hour'      =>  (int) $this->dateTime->format('H'),
-            'minute'    =>  (int) $this->dateTime->format('i'),
-            'second'    =>  (int) $this->dateTime->format('s'),
-            'timezone'  =>  $this->timezone,
-            'timestamp' =>  $this->getTimestamp()
+            'year'     => (int) $this->dt->format('Y'),
+            'month'    => (int) $this->dt->format('m'),
+            'day'      => (int) $this->dt->format('d'),
+            'hour'     => (int) $this->dt->format('H'),
+            'minute'   => (int) $this->dt->format('i'),
+            'second'   => (int) $this->dt->format('s'),
+            'timezone' => $this->dt->getTimezone()->getName(),
         ];
     }
 
+    // ── Diff / Human ──────────────────────────────────────────────────────────
+
     /**
-     * Get Human Readable Difference
-     * @param Date|DateTime|null $other Optional Argument. Default is null.
-     * @return string
+     * Get the DateInterval between this instance and another.
+     * @param  Date $other Another Date instance to compare against
+     * @return \DateInterval
+     *
+     * @example Date::parse('2025-01-01')->diff(Date::now())->days  // 110
      */
-    public function humanDiff(Date|DateTime|null $other = null): string
+    public function diff(Date $other): \DateInterval
     {
-        $other = $other ?? Date::now($this->format, $this->timezone);
-        $diff = $this->diff($other);
-
-        $units = [
-            'y' => 'year',
-            'm' => 'month',
-            'd' => 'day',
-            'h' => 'hour',
-            'i' => 'minute',
-            's' => 'second',
-        ];
-
-        foreach ($units as $key => $text) {
-            $value = (int) $diff->$key;
-            if ($value > 0) {
-                $plural = $value > 1 ? 's' : '';
-                return $diff->invert
-                    ? "in {$value} {$text}{$plural}"
-                    : "{$value} {$text}{$plural} ago";
-            }
-        }
-
-        return 'just now';
+        return $this->dt->diff($other->getDateTime());
     }
 
     /**
-     * Get Short Human Readable Difference
-     * @param Date|null $other Optional Argument. Default is null.
+     * Return a human-readable relative time string (long form).
+     * @param  Date|null $other Compare against this instance; defaults to now
      * @return string
+     * @example Date::parse('-3 days')->humanDiff()   // "3 days ago"
+     * @example Date::parse('-1 hour')->humanDiff()   // "1 hour ago"
+     * @example Date::parse('-30 seconds')->humanDiff() // "just now"
+     */
+    public function humanDiff(?Date $other = null): string
+    {
+        $secs = abs($this->dt->getTimestamp() - ($other?->getTimestamp() ?? time()));
+
+        return match (true) {
+            $secs < 60       => 'just now',
+            $secs < 3600     => (int)($secs / 60) . ' minute' . ((int)($secs / 60) !== 1 ? 's' : '') . ' ago',
+            $secs < 86400    => (int)($secs / 3600) . ' hour' . ((int)($secs / 3600) !== 1 ? 's' : '') . ' ago',
+            $secs < 2592000  => (int)($secs / 86400) . ' day' . ((int)($secs / 86400) !== 1 ? 's' : '') . ' ago',
+            $secs < 31536000 => (int)($secs / 2592000) . ' month' . ((int)($secs / 2592000) !== 1 ? 's' : '') . ' ago',
+            default          => (int)($secs / 31536000) . ' year' . ((int)($secs / 31536000) !== 1 ? 's' : '') . ' ago',
+        };
+    }
+
+    /**
+     * Return a human-readable relative time string (short form).
+     * @param  ?Date $other Compare against this instance; defaults to now
+     * @return string
+     * @example Date::parse('-3 days')->humanDiffShort()   // "3d"
+     * @example Date::parse('-2 hours')->humanDiffShort()  // "2h"
+     * @example Date::parse('-45 seconds')->humanDiffShort() // "now"
      */
     public function humanDiffShort(?Date $other = null): string
     {
-        $other = $other ?: Date::now($this->format, $this->timezone);
-        $diff = $this->diff($other);
+        $secs = abs($this->dt->getTimestamp() - ($other?->getTimestamp() ?? time()));
 
-        $units = [
-            'y' => 'y',
-            'm' => 'mo',
-            'd' => 'd',
-            'h' => 'h',
-            'i' => 'm',
-            's' => 's',
-        ];
-
-        foreach ($units as $key => $abbr) {
-            $value = (int)$diff->$key;
-            if ($value > 0) {
-                return $diff->invert
-                    ? "in {$value}{$abbr}"
-                    : "{$value}{$abbr} ago";
-            }
-        }
-
-        return 'now';
+        return match (true) {
+            $secs < 60       => 'now',
+            $secs < 3600     => (int)($secs / 60) . 'm',
+            $secs < 86400    => (int)($secs / 3600) . 'h',
+            $secs < 2592000  => (int)($secs / 86400) . 'd',
+            $secs < 31536000 => (int)($secs / 2592000) . 'mo',
+            default          => (int)($secs / 31536000) . 'y',
+        };
     }
 
     /**
-     * Create Date from Format
-     * @param string $format Required Argument. Example: 'Y-m-d H:i:s'
-     * @param string $time Required Argument. Example: '2024-01-01 12:00:00'
-     * @param ?string $outputFormat Optional Argument. Default is null.
-     * @param ?string $timezone Optional Argument. Default is null.
-     * @return static
-     * @throws \InvalidArgumentException
-     */
-    public static function fromFormat(
-        string $format,
-        string $time,
-        ?string $outputFormat = null,
-        ?string $timezone = null
-    ): static {
-        $tz = new DateTimeZone($timezone ?: 'UTC');
-        $dt = DateTime::createFromFormat($format, $time, $tz);
-
-        if (!$dt instanceof DateTime) {
-            throw new \InvalidArgumentException(
-                "Failed to parse [{$time}] using format [{$format}]"
-            );
-        }
-
-        $instance = new static();
-        if ($outputFormat) {
-            $instance->setFormat($outputFormat);
-        }
-        if ($timezone) {
-            $instance->setTimezone($timezone);
-        }
-        $instance->dateTime = $dt;
-        return $instance;
-    }
-
-    /**
-     * Set App Timezone
-     * @param string $timezone Required Argument. Example: 'UTC'
+     * Set the PHP application-level default timezone.
+     * @param  string $timezone IANA timezone, e.g. "Asia/Dhaka"
      * @return void
+     * @example Date::setAppTimezone('Asia/Dhaka')  // date_default_timezone_set('Asia/Dhaka')
      */
     public function setAppTimezone(string $timezone): void
     {
+        $this->timezone = $timezone;
         date_default_timezone_set($timezone);
+        $this->dt->setTimezone(new DateTimeZone($timezone));
     }
 
     /**
-     * Get App Timezone
+     * Get the current PHP application-level default timezone.
      * @return string
+     * @example Date::getAppTimezone()  // "Asia/Dhaka"
      */
     public function getAppTimezone(): string
     {
@@ -350,8 +299,9 @@ class Date
     }
 
     /**
-     * String Representation
+     * Cast the instance to its formatted string.
      * @return string
+     * @example (string) Date::now()  // "2025-04-21 10:30:00"
      */
     public function __toString(): string
     {
