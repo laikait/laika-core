@@ -29,7 +29,7 @@ class Redirect
      */
     public function with(string $message, bool $status): static
     {
-        Session::set('message', ['info'=>$message,'status'=>$status]);
+        Session::set('alert', ['message' => $message, 'status' => $status]);
         return $this;
     }
 

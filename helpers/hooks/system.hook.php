@@ -159,24 +159,18 @@ add_hook('csrf.field', function (): string {
     return Csrf::field();
 }, 1000);
 
-/*================================== MESSAGE HOOKS ==================================*/
-/**
- * Set Notification Message
- * @param string $message Message to Set
- * @param bool $status Warning or Success. true for Success & false for Warning
- */
-add_hook('message.set', function(string $message, bool $status): void {
-    Session::set('message', ['info'=>$message,'status'=>$status]);
+/*================================== ALERT HOOKS ==================================*/
+// Set Alert Message
+add_hook('alert.set', function(string $message, bool $status): void {
+    Session::set('alert', ['message' => $message, 'status' => $status]);
     return;
 }, 1000);
 
-/**
- * Get Alert Message
- */
-add_hook('message.get', function(): array {
-    $message = Session::get('message');
-    Session::pop('message');
-    return $message ?: [];
+// Get Alert Message
+add_hook('alert.get', function(): array {
+    $alert = Session::get('alert');
+    Session::pop('alert');
+    return $alert ?: [];
 }, 1000);
 
 /*================================== PAGE HOOKS ==================================*/
