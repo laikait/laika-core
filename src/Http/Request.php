@@ -228,12 +228,12 @@ class Request
     /**
      * @param array $rules Required Argument. Example ['email'=>'required','age'=>'required|min:18|max:65']
      * @param array $customMessages Optional Argument. Example: ['email.required'=>'Email is Required!']
-     * @return array
+     * @return void
      */
-    public function validate(array $rules, array $customMessages = []): array
+    public function validate(array $rules, array $customMessages = []): void
     {
-        $this->errors = Validator::make($this->inputs(), $rules, $customMessages);
-        return $this->errors;
+        Validator::make($this->inputs(), $rules, $customMessages);
+        return;
     }
 
     /**
