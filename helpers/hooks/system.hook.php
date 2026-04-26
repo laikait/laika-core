@@ -260,13 +260,6 @@ add_hook('tpl.scripts', function(): string{
     return "<script>let token = '{$authorizarion}'; let appuri = '{$appuri}';</script>\n";
 }, 1000);
 
-// Hidden Input Field
-add_hook('hidden.field', function(string $name, string|int|float|bool|null $value = null): string {
-    $value = htmlspecialchars((string)$value, ENT_QUOTES, 'UTF-8');
-    $value = Vault::encrypt($value);
-    return "<input type=\"hidden\" name=\"{$name}\" value=\"{$value}\" />";
-}, 1000);
-
 /*================================== COMMON HOOKS ==================================*/
 /** Get All Timezones */
 add_hook('time.zones', function () {
