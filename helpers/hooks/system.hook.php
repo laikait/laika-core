@@ -15,6 +15,7 @@ use Laika\Core\Relay\Relays\Header;
 use Laika\Core\Relay\Relays\Csrf;
 use Laika\Session\Relay\Session;
 use Laika\Core\Relay\Relays\Url;
+use Laika\Core\Relay\Relays\Vault;
 
 /*=================================== URL HOOKS ===================================*/
 /**
@@ -257,6 +258,13 @@ add_hook('tpl.scripts', function(): string{
     $authorizarion = Header::get('authorization');
     $appuri = trim(do_hook('app.host'), '/');
     return "<script>let token = '{$authorizarion}'; let appuri = '{$appuri}';</script>\n";
+}, 1000);
+
+// Hidden Input Field
+add_hook('hidden.field', function(string $name, string|int|float|bool|null $value = null): string {
+    $value = htmlspecialchars((string)$value, ENT_QUOTES, 'UTF-8');
+    $value = Vault::encrypt($value);
+    return "<input type=\"hidden\" name=\"{$name}\" value=\"{$value}\" />";
 }, 1000);
 
 /*================================== COMMON HOOKS ==================================*/
