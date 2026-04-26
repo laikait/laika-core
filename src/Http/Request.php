@@ -232,7 +232,7 @@ class Request
      */
     public function validate(array $rules, array $customMessages = []): void
     {
-        Validator::make($this->inputs(), $rules, $customMessages);
+        $this->errors = Validator::make($this->inputs(), $rules, $customMessages);
         return;
     }
 
