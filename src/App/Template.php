@@ -87,11 +87,22 @@ class Template
      * Set File Extension
      * @param string $extension File Extension
      * @return void
+     * @deprecated Use Template::html() Instead
      */
     public function extension(string $extension): void
     {
         $this->extension = $extension;
         return;
+    }
+
+    /**
+     * Set HTML Extension
+     * @return static
+     */
+    public function html(): static
+    {
+        $this->extension = 'html';
+        return $this;
     }
 
     /**
