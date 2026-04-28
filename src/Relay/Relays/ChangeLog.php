@@ -15,7 +15,9 @@ namespace Laika\Core\Relay\Relays;
 use Laika\Core\Relay\Relay;
 
 /**
- * @method static array check(array $existing, array $input)
+ * @method static static addExisting(array $array) Add Existing Value Example: ['name' => 'John Doe', 'email' => '
+ * @method static static addNew(array $array) Add New Value Example: ['name' => 'John Doe', 'email' => '
+ * @method static array getLogs() Get Change Logs
  */
 class ChangeLog extends Relay
 {
