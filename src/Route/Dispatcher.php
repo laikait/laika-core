@@ -166,7 +166,7 @@ class Dispatcher
     private static function preDispatcher(): void
     {
         // Register Timezone
-        Date::setAppTimezone(config('env', 'time.zone', 'UTC'));
+        Date::setAppTimezone('UTC');
 
         // Apply memory limits. monitor() is intentionally called with no arguments
         // (silent / production-safe). To opt in to logging, change to:
