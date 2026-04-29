@@ -60,7 +60,7 @@ function purify(array $data): array
     return array_map(function($val){
         return match (true) {
             is_array($val) => purify($val),
-            is_string($val) => htmlspecialchars(trim(urldecode((string) $val)), ENT_QUOTES, 'UTF-8'),
+            is_string($val) => htmlspecialchars(trim((string) $val), ENT_QUOTES, 'UTF-8'),
             default => $val
         };
     }, $data);
