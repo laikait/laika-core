@@ -32,6 +32,7 @@ use Laika\Core\Relay\Relay;
  * @method static string        humanDiffShort(?DateHelper $other = null)
  * @method static void          setAppTimezone(string $timezone)
  * @method static string        getAppTimezone()
+ * @method static string        getOffset()
  */
 class Date extends Relay
 {

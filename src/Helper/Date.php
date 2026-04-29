@@ -171,6 +171,23 @@ class Date
         return $clone;
     }
 
+    /**
+     * Get the UTC offset of the current timezone as a formatted string.
+     * @return string
+     * @example Date::now()->getOffset()  // "+06:00" (Asia/Dhaka)
+     * @example Date::now()->getOffset()  // "-05:00" (America/New_York)
+     */
+    public function getOffset(): string
+    {
+        $seconds = $this->dt->getOffset();
+        $sign    = $seconds >= 0 ? '+' : '-';
+        $seconds = abs($seconds);
+        $hours   = str_pad((string) intdiv($seconds, 3600), 2, '0', STR_PAD_LEFT);
+        $minutes = str_pad((string) (($seconds % 3600) / 60), 2, '0', STR_PAD_LEFT);
+
+        return "{$sign}{$hours}:{$minutes}";
+    }
+
     /*================================ CONVERT ================================*/
 
     /**
