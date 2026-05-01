@@ -188,7 +188,7 @@ class Template
         // Assign Pagination
         $this->assign('page', ['number' => Page::number(), 'next' => Page::next(), 'previous' => Page::previous()]);
         // Assign Request Inputs
-        $this->assign('input', Request::inputs());
+        $this->assign('input', new InputHandler());
         // Assign Form Errors
         $this->assign('errors', Request::errors());
         // Visitor Info
@@ -213,5 +213,40 @@ class Template
         $this->addFilter('named', function(string $name, array $params = []){
             return named($name, $params, true);
         });
+    }
+}
+
+// Input Handler
+final class InputHandler
+{
+    /**
+     * Check Property Exists
+     * @param mixed $name
+     * @return bool
+     */
+    public function __isset($name): bool
+    {
+        return true;
+    }
+
+    /**
+     * Get Input Value From Key
+     * @param mixed $name
+     * @throws \Exception
+     * @return string
+     */
+    public function __get($name): string
+    {
+        $input = Request::input($name);
+        return is_string($input) ? $input : '';
+    }
+
+    public function __call($name, $arguments)
+    {
+        $input = Request::input($name);
+        if (is_array($input)) {
+            return $input[(int) ($arguments[0] ?? 0)] ?? '';
+        }
+        return '';
     }
 }
