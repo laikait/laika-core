@@ -13,7 +13,6 @@ declare(strict_types=1);
 use Laika\Core\App\Router;
 use Laika\Core\Helper\Filter;
 use Laika\Core\Relay\Relays\Url;
-use Laika\Core\Relay\Relays\File;
 use Laika\Core\Relay\Relays\Header;
 use Laika\Core\Exceptions\Handler;
 use Laika\Core\Relay\Relays\Config;
@@ -60,7 +59,7 @@ function purify(array $data): array
     return array_map(function($val){
         return match (true) {
             is_array($val) => purify($val),
-            is_string($val) => htmlspecialchars(trim((string) $val), ENT_QUOTES, 'UTF-8'),
+            is_string($val) => trim((string) $val),
             default => $val
         };
     }, $data);
@@ -91,13 +90,54 @@ function do_hook(string $filter, mixed $value = null, mixed ...$args): mixed
 }
 
 /**
+ * Register An Action.
+ * @param string   $action   Action name.
+ * @param callable $callback The function to execute.
+ * @param int      $priority Priority for execution (lower runs first).
+ * @return void
+ */
+function add_action(string $action, callable $callback, int $priority = 10): void
+{
+    Filter::add_action($action, $callback, $priority);
+}
+
+/**
+ * Apply All Actions
+ * @param string $action Action name.
+ * @param mixed  ...$args Additional arguments to pass to callbacks.
+ * @return mixed
+ */
+function do_action(string $action, mixed ...$args): mixed
+{
+    return Filter::apply_action($action, ...$args);
+}
+
+/**
  * Get Filter Info
  * @param ?string $hook Hook Name. Default is null.
- * @return Array
+ * @return array
 */
-function hooks(?string $hook = null): mixed
+function hooks(?string $hook = null): array
 {
-    return Filter::filter_info($hook);
+    return Filter::filters($hook);
+}
+
+/**
+ * Get Actions
+ * @param ?string $action Action Name. Default is null.
+ * @return array
+*/
+function actions(?string $action = null): array
+{
+    return Filter::actions($action);
+}
+
+function asset(string $path): string
+{
+    $docRoot = rtrim($_SERVER['DOCUMENT_ROOT'], '/');
+    $appPath = rtrim(str_replace('\\', '/', APP_PATH), '/');
+    $relative = ltrim(str_replace($docRoot, '', $appPath), '/');
+    return Url::scheme() . '://' . Url::host() . '/' . $relative . '/lf-templates/' . ltrim($path, '/.');
 }
 
 /**

@@ -213,6 +213,8 @@ class Template
         $this->addFilter('named', function(string $name, array $params = []){
             return named($name, $params, true);
         });
+        // Register Asset
+        $this->addFilter('asset', 'asset');
     }
 }
 

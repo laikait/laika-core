@@ -215,4 +215,13 @@ class Url
     {
         return $this->scheme === 'https';
     }
+
+    /**
+     * Scheme
+     * @return string
+     */
+    public function scheme(): string
+    {
+        return $this->scheme;
+    }
 }

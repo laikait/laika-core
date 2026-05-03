@@ -39,8 +39,8 @@ class Dispatcher
         $params = $res['params'];
 
         // Check URL is for Web
-        $asset = new Asset();
-        $isWebUrl = !str_starts_with($res['route'] ?? '', $asset->app) && !str_starts_with($res['route'] ?? '', $asset->template);
+        // $asset = new Asset();
+        // $isWebUrl = !str_starts_with($res['route'] ?? '', $asset->app) && !str_starts_with($res['route'] ?? '', $asset->template);
 
         // When route is null, $isWebUrl is always true ('' does not start with asset prefixes),
         // so without this reorder, DB/session/hooks boot on every 404 request unnecessarily.
@@ -49,20 +49,12 @@ class Dispatcher
             return;
         }
 
-        // Register DB, Session, Hooks — only for valid web routes
-        if ($isWebUrl) {
-            self::registerInitiators();
-        }
+        // Register Headers & Load Hook Files
+        self::registerInitiators();
 
         // Get Matched Route Info
         $routes = Handler::getRoutes(Url::method());
         $route = $routes[$res['route']];
-
-        // echo the output for asset routes — return value was silently discarded before.
-        if (!$isWebUrl) {
-            echo Invoke::middleware([], $route['controller'], $params);
-            return;
-        }
 
         // Collect middlewares in order: global → group → route
         $middlewares = array_merge(
@@ -183,7 +175,7 @@ class Dispatcher
         Url::LoadRoutes();
 
         // Load App & Template Asset Routes
-        call_user_func([new Asset(), 'registerAssetRoute']);
+        // call_user_func([new Asset(), 'registerAssetRoute']);
         return;
     }
 

@@ -16,6 +16,7 @@ use Laika\Core\Relay\Relays\Csrf;
 use Laika\Session\Relay\Session;
 use Laika\Core\Relay\Relays\Url;
 use Laika\Core\Relay\Relays\Vault;
+use Laika\Core\Exceptions\HttpException;
 
 /*=================================== URL HOOKS ===================================*/
 /**
@@ -246,7 +247,34 @@ add_hook('request.is', function(string $method): bool {
     }
 }, 1000);
 
-/*================================== TEMPLATE HOOKS ==================================*/
+/*================================== TEMPLATE HOOKS & ACTIONS ==================================*/
+// Load Script Urls
+add_hook('lf_scripts', function () {
+    $str = '';
+    foreach (do_action('enque_script') as $script) {
+        $str .= "<script src=\"{$script}\"></script>\n";
+    }
+    return $str;
+});
+
+// Load Style Urls
+add_hook('lf_styles', function () {
+    $str = '';
+    foreach (do_action('enque_style') as $style) {
+        $str .= "<link href=\"{$style}\" rel=\"stylesheet\">\n";
+    }
+    return $str;
+});
+
+// Load Header
+add_hook('lf_assets', function () {
+    $str = "\n<!-- Styles -->\n";
+    $str .= do_hook('lf_styles') . "\n";
+    $str .= "<!-- Scripts -->";
+    $str .= do_hook('lf_scripts') . "\n";
+    return $str;
+});
+
 // Set Template Default JS Vars
 add_hook('tpl.scripts', function(): string{
     $authorizarion = Header::get('authorization');
