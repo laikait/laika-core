@@ -14,14 +14,14 @@ declare(strict_types=1);
 namespace Laika\Core\App;
 
 use Twig\Loader\FilesystemLoader as Engine;
-use Laika\Core\Relay\Relays\Directory;
-use Laika\Core\Relay\Relays\Visitor;
-use Laika\Core\Relay\Relays\Request;
-use Laika\Core\Relay\Relays\Config;
-use Laika\Core\Relay\Relays\Local;
-use Laika\Core\Relay\Relays\File;
-use Laika\Core\Relay\Relays\Page;
-use Laika\Core\Relay\Relays\Url;
+use Laika\Core\Service\Directory;
+use Laika\Core\Service\Visitor;
+use Laika\Core\Service\Request;
+use Laika\Core\Service\Config;
+use Laika\Core\Service\Local;
+use Laika\Core\Service\File;
+use Laika\Core\Service\Page;
+use Laika\Core\Service\Url;
 use Twig\Environment;
 use Twig\TwigFilter;
 

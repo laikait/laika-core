@@ -14,7 +14,7 @@ declare(strict_types=1);
 namespace Laika\Core\Storage;
 
 use Memcached as PhPMemcached;
-use Laika\Core\Helper\Config;
+use Laika\Core\Service\Config;
 use RuntimeException;
 
 /**

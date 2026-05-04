@@ -13,9 +13,8 @@ declare(strict_types=1);
 
 namespace Laika\Core\Storage;
 
-use Laika\Core\Helper\Directory;
+use Laika\Core\Service\Directory;
 use Aws\Exception\AwsException;
-use Laika\Core\Helper\Url;
 use RuntimeException;
 use Aws\S3\S3Client;
 use Exception;
@@ -282,7 +281,7 @@ class FileStorage
     }
 
     /**
-     * @param string $file File Name With Sub Path. Example: uploads/image/sample.png
+     * @param string $path File Name With Sub Path. Example: uploads/image/sample.png
      * @return bool
      */
     protected function deleteS3(string $path): bool

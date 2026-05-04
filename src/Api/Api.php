@@ -12,9 +12,9 @@ declare(strict_types=1);
 
 namespace Laika\Core\Api;
 
-use Laika\Core\Relay\Relays\Header;
-use Laika\Core\Relay\Relays\Request;
-use Laika\Core\Relay\Relays\Token;
+use Laika\Core\Service\Header;
+use Laika\Core\Service\Request;
+use Laika\Core\Service\Token;
 
 class Api
 {

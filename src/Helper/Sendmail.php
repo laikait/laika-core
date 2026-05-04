@@ -12,11 +12,11 @@ declare(strict_types=1);
 
 namespace Laika\Core\Helper;
 
-use Laika\Core\Relay\Relays\Config;
-use Laika\Core\Relay\Relays\File;
+use Laika\Core\Service\Config;
+use Laika\Core\Service\File;
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
-use Laika\Core\Relay\Relays\Url;
+use Laika\Core\Service\Url;
 use PHPMailer\PHPMailer\SMTP;
 use Throwable;
 

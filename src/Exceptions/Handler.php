@@ -12,9 +12,9 @@ declare(strict_types=1);
 
 namespace Laika\Core\Exceptions;
 
-use Laika\Core\Relay\Relays\Directory;
-use Laika\Core\Relay\Relays\Header;
-use Laika\Core\Relay\Relays\Config;
+use Laika\Core\Service\Directory;
+use Laika\Core\Service\Header;
+use Laika\Core\Service\Config;
 use RuntimeException;
 use Throwable;
 

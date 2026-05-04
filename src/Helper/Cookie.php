@@ -11,7 +11,7 @@ declare(strict_types=1);
 
 namespace Laika\Core\Helper;
 
-use Laika\Core\Relay\Relays\Url;
+use Laika\Core\Service\Url;
 use InvalidArgumentException;
 
 class Cookie

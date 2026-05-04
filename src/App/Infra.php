@@ -12,8 +12,8 @@ declare(strict_types=1);
 
 namespace Laika\Core\App;
 
-use Laika\Core\Relay\Relays\Directory;
-use Laika\Core\Relay\Relays\File;
+use Laika\Core\Service\Directory;
+use Laika\Core\Service\File;
 
 // Application Infrastructure Info
 class Infra

@@ -12,7 +12,7 @@ declare(strict_types=1);
 
 namespace Laika\Core\Helper;
 
-use Laika\Core\Relay\Relays\Config;
+use Laika\Core\Service\Config;
 use RuntimeException;
 
 class Vault
