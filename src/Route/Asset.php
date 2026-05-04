@@ -16,55 +16,57 @@ use Laika\Core\App\Router;
 
 class Asset
 {
-    /**
-     * @var ?Asset $asset
-     */
-    protected static ?Asset $asset = null;
+    /** @var string $path */
+    private string $path = '/tpl-src';
 
-    /**
-     * @var string $appSrc
-     */
-    private string $app = '/app-src';
+    /** @var string $named */
+    private string $named = 'asset.src';
 
-    /**
-     * @var string $templateSrc
-     */
-    private string $template = '/tpl-src';
+    /** @var array $mimes */
+    private array $mimes = [
+        // Stylesheets & Scripts
+        'css'   => 'text/css',
+        'js'    => 'application/javascript',
+        'mjs'   => 'application/javascript',
+        'ts'    => 'application/typescript',
 
-    /**
-     * Accepted File Types
-     * @var array $acceptedTypes
-     */
-    private array $acceptedTypes = [
-                'css'   =>  'text/css',
-                'js'    =>  'application/javascript',
-                'png'   =>  'image/png',
-                'jpg'   =>  'image/jpeg',
-                'jpeg'  =>  'image/jpeg',
-                'gif'   =>  'image/gif',
-                'svg'   =>  'image/svg+xml',
-                'webp'  =>  'image/webp',
-                'ico'   =>  'image/x-icon',
+        // Images
+        'png'   => 'image/png',
+        'jpg'   => 'image/jpeg',
+        'jpeg'  => 'image/jpeg',
+        'gif'   => 'image/gif',
+        'svg'   => 'image/svg+xml',
+        'webp'  => 'image/webp',
+        'ico'   => 'image/x-icon',
+        'bmp'   => 'image/bmp',
+        'avif'  => 'image/avif',
+
+        // Fonts
+        'woff'  => 'font/woff',
+        'woff2' => 'font/woff2',
+        'ttf'   => 'font/ttf',
+        'otf'   => 'font/otf',
+        'eot'   => 'application/vnd.ms-fontobject',
+
+        // Media
+        'mp4'   => 'video/mp4',
+        'webm'  => 'video/webm',
+        'ogg'   => 'audio/ogg',
+        'mp3'   => 'audio/mpeg',
+        'wav'   => 'audio/wav',
+
+        // Documents & Data
+        'pdf'   => 'application/pdf',
+        'json'  => 'application/json',
+        'xml'   => 'application/xml',
+        'txt'   => 'text/plain',
+        'csv'   => 'text/csv',
+
+        // Archives
+        'zip'   => 'application/zip',
+        'gz'    => 'application/gzip',
+        'tar'   => 'application/x-tar',
     ];
-
-    public static function instance(): self
-    {
-        self::$asset ??= new self();
-
-        return self::$asset;
-    }
-
-    /**
-     * Add Accepted File Type for Resource
-     * @return void
-     */
-    public function addType(string $ext, string $mime): void
-    {
-        $ext = strtolower(trim($ext));
-        $mime = strtolower(trim($mime));
-        self::instance()->acceptedTypes = array_merge(self::instance()->acceptedTypes, [$ext => $mime]);
-        return;
-    }
 
     /**
      * Register Asset Routes
@@ -73,15 +75,12 @@ class Asset
     public function registerAssetRoute(): void
     {
         // Register App Resources
-        Router::get(self::instance()->app . '/{name:.+}', function($name) {
+        Router::get("{$this->path}/{path:.+}", function($path) {
             // Trim leading/trailing slashes
-            $name = trim($name, './\\');
-
-            // Supported Content Types
-            $types = self::instance()->acceptedTypes;
+            $path = trim($path, './\\');
 
             // Get Asset File Path
-            $file = APP_PATH . "/lf-assets/{$name}";
+            $file = APP_PATH . "/lf-templates/{$path}";
             if(!is_file($file)){
                 http_response_code(404);
                 return;
@@ -89,45 +88,20 @@ class Asset
 
             // Read File
             $ext = pathinfo($file, PATHINFO_EXTENSION);
-            if (array_key_exists(strtolower($ext), $types)) {
-                header("Content-Type: {$types[$ext]}");
-            }
+            $mime = $this->mimes[$ext] ?? 'application/octet-stream';
+            header("Content-Type: {$mime}");
             readfile($file);
             return;
-        })->name('app.src');
-
-        // Register Template Resources
-        Router::get(self::instance()->template . '/{name:.+}', function($name) {
-            // Trim leading/trailing slashes
-            $name = trim($name, '/.\\');
-
-            // Supported Content Types
-            $types = self::instance()->acceptedTypes;
-
-            // Get Asset File Path
-            $file = APP_PATH."/lf-templates/{$name}";
-            if(!is_file($file)){
-                http_response_code(404);
-                return;
-            }
-
-            // Read File
-            $ext = pathinfo($file, PATHINFO_EXTENSION);
-            if (array_key_exists(strtolower($ext), $types)) {
-                header("Content-Type: {$types[$ext]}");
-            }
-            readfile($file);
-            return;
-        })->name('tpl.src');
+        })->name($this->named);
     }
 
     public function __isset($prop): bool
     {
-        return self::instance()->$prop;
+        return $this->{$prop};
     }
 
     public function __get($prop)
     {
-        return self::instance()->$prop;
+        return $this->{$prop};
     }
 }
