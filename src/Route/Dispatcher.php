@@ -13,14 +13,14 @@ declare(strict_types=1);
 namespace Laika\Core\Route;
 
 // use Laika\Core\Exceptions\Handler as ErrorHandler;
-use Laika\Core\Relay\Relays\Url as UrlHelper;
+use Laika\Core\Service\Url as UrlHelper;
 use Laika\Core\System\MemoryManager;
-use Laika\Core\Relay\Relays\Directory;
-use Laika\Core\Relay\Relays\Header;
-use Laika\Core\Relay\Relays\Config;
-use Laika\Core\Relay\Relays\Token;
-use Laika\Core\Relay\Relays\Csrf;
-use Laika\Core\Relay\Relays\Date;
+use Laika\Core\Service\Directory;
+use Laika\Core\Service\Header;
+use Laika\Core\Service\Config;
+use Laika\Core\Service\Token;
+use Laika\Core\Service\Csrf;
+use Laika\Core\Service\Date;
 
 class Dispatcher
 {
