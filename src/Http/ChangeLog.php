@@ -18,13 +18,75 @@ defined('APP_PATH') || http_response_code(403) . die('403 Direct Access Denied!'
 
 class ChangeLog
 {
+    /** @var array new */
+    protected array $new;
+
+    /** @var array old */
+    protected array $old;
+
+    ################################################################################
+    ################################# EXTERNAL API #################################
+    ################################################################################
+
+    public function __construct()
+    {
+        $this->reset();
+    }
+
+    /**
+     * Add Existing Value
+     * @param array $array Example: ['name' => 'John Doe', 'email' => '
+     * @return static
+     */
+    public function addExisting(array $array): static
+    {
+        $this->old = $array;
+        return $this;
+    }
+    /**
+     * Add New Value
+     * @param array $array Example: ['name' => 'John Doe', 'email' => '
+     * @return static
+     */
+    public function addNew(array $array): static
+    {
+        $this->new = $array;
+        return $this;
+    }
+
+    /**
+     * Get Change Logs
+     * @return array
+     */
+    public function getLogs(): array
+    {
+        return [
+            'new' => $this->new,
+            'old' => $this->old,
+            'changes' => $this->check($this->old, $this->new)
+        ];
+    }
+
+    ################################################################################
+    ################################# INTERNAL API #################################
+    ################################################################################
+    /**
+     * Reset Change Logs
+     * @return void
+     */
+    protected function reset(): void
+    {
+        $this->new = [];
+        $this->old = [];
+    }
+
     /**
      * Check Change Logs
      * @param array $existing Existing Value
      * @param array $input New Input Value
      * @return array
      */
-    public function check(array $existing, array $input): array
+    protected function check(array $existing, array $input): array
     {
         $changes = [];
         // Check Changes
@@ -34,6 +96,7 @@ class ChangeLog
                 $changes[$key] = ['old' => $old, 'new' => $new];
             }
         }
+        $this->reset();
         return $changes;
     }
 }

@@ -10,7 +10,7 @@
 
 namespace Laika\Core\Helper;
 
-use Laika\Core\Relay\Relays\Directory;
+use Laika\Core\Service\Directory;
 use RuntimeException;
 
 class File

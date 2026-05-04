@@ -13,8 +13,9 @@ declare(strict_types=1);
 
 namespace Laika\Core\Helper;
 
-use InvalidArgumentException;
 use ZipArchive;
+use InvalidArgumentException;
+use Laika\Core\Service\Directory;
 
 class Zip
 {

@@ -13,7 +13,7 @@ declare(strict_types=1);
 namespace Laika\Core\Console\Commands\Controller;
 
 use Laika\Core\Console\Command;
-use Laika\Core\Relay\Relays\File;
+use Laika\Core\Service\File;
 
 // Remove Controller Class
 class Pop extends Command

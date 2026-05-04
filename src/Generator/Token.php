@@ -12,9 +12,9 @@ declare(strict_types=1);
 
 namespace Laika\Core\Generator;
 
-use Laika\Core\Relay\Relays\Config;
-use Laika\Core\Relay\Relays\Vault;
-use Laika\Core\Relay\Relays\Url;
+use Laika\Core\Service\Config;
+use Laika\Core\Service\Vault;
+use Laika\Core\Service\Url;
 use Firebase\JWT\JWT;
 use Firebase\JWT\Key;
 

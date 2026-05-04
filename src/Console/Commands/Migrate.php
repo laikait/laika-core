@@ -46,8 +46,8 @@ class Migrate extends Command
         try {
             // Migrate Migration Tables
             $schemaClasses = $schema ?
-                    ["\\Laika\\App\\Migration\\{$schema}"] :
-                    \call_user_func([new \Laika\Core\App\Infra(), 'getSchemaClasses']);
+                    ["\\App\\Migration\\{$schema}"] :
+                    call_user_func([new \Laika\Core\App\Infra(), 'getSchemaClasses']);
 
             // Show Error if No Migration Exists
             if (empty($schemaClasses)) {

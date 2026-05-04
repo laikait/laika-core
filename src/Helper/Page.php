@@ -11,10 +11,23 @@
 
 namespace Laika\Core\Helper;
 
-use Laika\Core\Relay\Relays\Url;
+use Laika\Core\Service\Url;
+use Laika\Core\Service\Request;
 
 class Page
 {
+    /**
+     * Current Page Url
+     * @param ?string $key Request Key. Page Key Query String. Example: 'page'
+     * @return int
+     */
+    public function number(?string $key = null): int
+    {
+        $key = $key ?: 'page';
+        $number = (int) Request::input($key, 1);
+        return max(1, $number);
+    }
+
     /**
      * Next Page Url
      * @param ?string $key Request Key. Page Key Query String. Example: 'page'

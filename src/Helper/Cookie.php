@@ -11,7 +11,7 @@ declare(strict_types=1);
 
 namespace Laika\Core\Helper;
 
-use Laika\Core\Relay\Relays\Url;
+use Laika\Core\Service\Url;
 use InvalidArgumentException;
 
 class Cookie
@@ -23,7 +23,7 @@ class Cookie
     protected int $ttl = 604800; // 7 Days
 
     /** @var bool $httponly Http Only */
-    protected bool $httponly = true;
+    protected bool $httponly = false;
 
     /** @var string $path Cookie Path */
     protected string $path = '/';
@@ -79,9 +79,6 @@ class Cookie
      * Set a cookie (supports string, array, or object)
      * @param string $name Cookie name
      * @param mixed  $value String, array, or object to store
-     * @param int $expires Lifetime in seconds (default 7 days)
-     * @param string $path Cookie path (default '/')
-     * @param bool $httponly Cookie path (default '/')
      * @return bool
      */
     public function set(string $name, mixed $value): bool
@@ -113,7 +110,6 @@ class Cookie
     public function get(string $name, mixed $default = null): mixed
     {
         if (!isset($_COOKIE[$name])) {
-            $this->reset();
             return $default;
         }
 
@@ -121,11 +117,8 @@ class Cookie
 
         // Try to decode JSON; if fails, return raw string
         try {
-            $decoded = json_decode($value, true, 512, JSON_THROW_ON_ERROR);
-            $this->reset();
-            return $decoded;
+            return json_decode($value, true, 512, JSON_THROW_ON_ERROR);
         } catch (\JsonException $e) {
-            $this->reset();
             return $value;
         }
     }
@@ -138,7 +131,6 @@ class Cookie
     public function pop(string $name): void
     {
         if (!isset($_COOKIE[$name])) {
-            $this->reset();
             return;
         }
         setcookie($name, '', [
@@ -150,7 +142,6 @@ class Cookie
             'samesite' => $this->samesite
         ]);
         unset($_COOKIE[$name]);
-        $this->reset();
     }
 
     /*==============================================================================*/
@@ -164,7 +155,7 @@ class Cookie
     {
         $this->samesite = 'Strict';
         $this->ttl = 604800;
-        $this->httponly = true;
+        $this->httponly = false;
         $this->path = '/';
     }
 }

@@ -13,4 +13,5 @@ Laika PHP Framework Core for [Laika PHP Micro Framework](https://github.com/laik
 | **8.2** | ✅ | Stable & fully tested |
 | **8.3** | ✅ | Stable & fully tested |
 | **8.4** | ✅ | Stable & fully tested |
+| **8.5** | ✅ | Stable & fully tested |
 

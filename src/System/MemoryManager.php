@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Laika\Core\System;
 
-use Laika\Core\Relay\Relays\Config;
+use Laika\Core\Service\Config;
 use RuntimeException;
 
 final class MemoryManager

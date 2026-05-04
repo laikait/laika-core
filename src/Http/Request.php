@@ -14,39 +14,25 @@ namespace Laika\Core\Http;
 
 class Request
 {
-    /**
-     * @property array $get
-     */
+    /** @property array $get */
     protected array $get;
 
-    /**
-     * @property array $post
-     */
+    /** @property array $post */
     protected array $post;
 
-    /**
-     * @property array $files
-     */
+    /** @property array $files */
     protected array $files;
 
-    /**
-     * @property array $json
-     */
+    /** @property array $json */
     protected array $json;
 
-    /**
-     * @property string $rawBody
-     */
+    /** @property string $rawBody */
     protected string $rawBody;
 
-    /**
-     * @property string $method
-     */
+    /** @property string $method */
     protected string $method;
 
-    /**
-     * @property array $errors Request Validation Errors
-     */
+    /** @property array $errors Request Validation Errors */
     protected array $errors = [];
 
     ##################################################################
@@ -228,12 +214,12 @@ class Request
     /**
      * @param array $rules Required Argument. Example ['email'=>'required','age'=>'required|min:18|max:65']
      * @param array $customMessages Optional Argument. Example: ['email.required'=>'Email is Required!']
-     * @return array
+     * @return void
      */
-    public function validate(array $rules, array $customMessages = []): array
+    public function validate(array $rules, array $customMessages = []): void
     {
         $this->errors = Validator::make($this->inputs(), $rules, $customMessages);
-        return $this->errors;
+        return;
     }
 
     /**

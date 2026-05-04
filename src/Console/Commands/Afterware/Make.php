@@ -12,8 +12,8 @@ declare(strict_types=1);
 
 namespace Laika\Core\Console\Commands\Afterware;
 
-use Laika\Core\Relay\Relays\Directory;
-use Laika\Core\Relay\Relays\File;
+use Laika\Core\Service\Directory;
+use Laika\Core\Service\File;
 use Laika\Core\Console\Command;
 
 // Make Afterware Class

@@ -13,13 +13,14 @@ declare(strict_types=1);
 namespace Laika\Core\Route;
 
 // use Laika\Core\Exceptions\Handler as ErrorHandler;
-use Laika\Core\Relay\Relays\Url as UrlHelper;
+use Laika\Core\Service\Url as UrlHelper;
 use Laika\Core\System\MemoryManager;
-use Laika\Core\Relay\Relays\Directory;
-use Laika\Core\Relay\Relays\Header;
-use Laika\Core\Relay\Relays\Config;
-use Laika\Core\Relay\Relays\Token;
-use Laika\Core\Relay\Relays\Csrf;
+use Laika\Core\Service\Directory;
+use Laika\Core\Service\Header;
+use Laika\Core\Service\Config;
+use Laika\Core\Service\Token;
+use Laika\Core\Service\Csrf;
+use Laika\Core\Service\Date;
 
 class Dispatcher
 {
@@ -39,16 +40,15 @@ class Dispatcher
 
         // Check URL is for Web
         $asset = new Asset();
-        $isWebUrl = !str_starts_with($res['route'] ?? '', $asset->app) && !str_starts_with($res['route'] ?? '', $asset->template);
+        $isWebUrl = !str_starts_with((string) $res['route'], $asset->path);
 
         // When route is null, $isWebUrl is always true ('' does not start with asset prefixes),
-        // so without this reorder, DB/session/hooks boot on every 404 request unnecessarily.
         if ($res['route'] === null) {
             self::handleFallback($requestUrl, $params);
             return;
         }
 
-        // Register DB, Session, Hooks — only for valid web routes
+        // Register Headers & Hooks
         if ($isWebUrl) {
             self::registerInitiators();
         }
@@ -164,10 +164,13 @@ class Dispatcher
      */
     private static function preDispatcher(): void
     {
+        // Register Timezone
+        Date::setAppTimezone('UTC');
+
         // Apply memory limits. monitor() is intentionally called with no arguments
         // (silent / production-safe). To opt in to logging, change to:
-        //   $manager->monitor(enabled: true);               — uses error_log fallback
-        //   $manager->monitor(logger: fn($mb, $b) => ...);  — custom logger
+        // $manager->monitor(enabled: true);               — uses error_log fallback
+        // $manager->monitor(logger: fn($mb, $b) => ...);  — custom logger
         $manager = new MemoryManager();
         $manager->apply();
         $manager->monitor();
@@ -178,8 +181,8 @@ class Dispatcher
         // Load Routes
         Url::LoadRoutes();
 
-        // Load App & Template Asset Routes
-        call_user_func([new Asset(), 'registerAssetRoute']);
+        // Load Template Asset Routes
+        (new Asset())->registerAssetRoute();
         return;
     }
 

@@ -13,7 +13,7 @@ declare(strict_types=1);
 
 namespace Laika\Core\Storage;
 
-use Laika\Core\Helper\Config;
+use Laika\Core\Service\Config;
 use Redis as PhPRedis;
 use RuntimeException;
 use Exception;
