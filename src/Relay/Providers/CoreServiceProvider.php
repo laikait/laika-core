@@ -42,6 +42,7 @@ use Laika\Core\Generator\Token;
 use Laika\Core\Helper\Hook;
 use Laika\Core\Template\Asset;
 use Laika\Core\Template\Meta as TplMeta;
+use Laika\Core\Helper\Math;
 
 /**
  * CoreServiceProvider — Registers all built-in Laika core services.
@@ -91,6 +92,7 @@ class CoreServiceProvider extends RelayProvider
         $this->registry->singleton('hook', Hook::class);
         $this->registry->singleton('template.asset', Asset::class);
         $this->registry->singleton('template.meta', TplMeta::class);
+        $this->registry->singleton('math', Math::class);
     }
 
     public function boot(): void
