@@ -16,6 +16,9 @@ use Laika\Core\Service\Directory;
 
 class Url
 {
+    /** @var bool $routeLoaded */
+    private static bool $routeLoaded = false;
+
     /**
      * Normalize Uri
      * @param string $uri Uri to Normalize
@@ -52,7 +55,7 @@ class Url
     public static function matchRequestRoute(?string $requestUrl): array
     {
         // Get Routes by Request Method
-        $routes = Handler::getOnlyRoutes(self::method()) ?? null;
+        $routes = Router::getOnlyRoutes(self::method()) ?? null;
         if ($routes === null) {
             return [
                 'route'     =>  null,
@@ -97,8 +100,10 @@ class Url
     public static function LoadRoutes(): void
     {
         // Load Routes
+        if (self::$routeLoaded) return;
         $routes = Directory::files(APP_PATH . '/lf-routes', 'php');
         array_map(function ($route) { require_once $route; }, $routes);
+        self::$routeLoaded = true;
         return;
     }
 }

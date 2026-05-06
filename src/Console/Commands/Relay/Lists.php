@@ -13,7 +13,7 @@ declare(strict_types=1);
 namespace Laika\Core\Console\Commands\Relay;
 
 use Laika\Core\Console\Command;
-use Laika\Core\Relay\Relays\Infra;
+use Laika\Core\Service\Infra;
 
 // Make Relay Class
 class Lists extends Command

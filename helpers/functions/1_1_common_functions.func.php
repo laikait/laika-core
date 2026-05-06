@@ -10,7 +10,7 @@
 
 declare(strict_types=1);
 
-use Laika\Core\App\Router;
+use Laika\Core\App\Http;
 use Laika\Core\Service\Hook;
 use Laika\Session\Relay\Session;
 use Laika\Core\Service\Url;
@@ -105,49 +105,6 @@ function apply_hook(string $filter, mixed $value = null, mixed ...$args): mixed
     return Hook::apply($filter, $value, ...$args);
 }
 
-// /**
-//  * Register An Action.
-//  * @param string   $action   Action name.
-//  * @param callable $callback The function to execute.
-//  * @param int      $priority Priority for execution (lower runs first).
-//  * @return void
-//  */
-// function add_action(string $action, callable $callback, int $priority = 10): void
-// {
-//     Filter::add_action($action, $callback, $priority);
-// }
-
-// /**
-//  * Apply All Actions
-//  * @param string $action Action name.
-//  * @param mixed  ...$args Additional arguments to pass to callbacks.
-//  * @return mixed
-//  */
-// function do_action(string $action, mixed ...$args): mixed
-// {
-//     return Filter::apply_action($action, ...$args);
-// }
-
-// /**
-//  * Get Filter Info
-//  * @param ?string $hook Hook Name. Default is null.
-//  * @return array
-// */
-// function hooks(?string $hook = null): array
-// {
-//     return Filter::filters($hook);
-// }
-
-// /**
-//  * Get Actions
-//  * @param ?string $action Action Name. Default is null.
-//  * @return array
-// */
-// function actions(?string $action = null): array
-// {
-//     return Filter::actions($action);
-// }
-
 /**
  * Get Named Route
  * @param string $name Named Route Name. Example: 'client' or 'client?status=active'
@@ -162,32 +119,10 @@ function named(string $name, array $params = [], bool $url = false): string
     // Get Query String
     $qstring = parse_url($name, PHP_URL_QUERY);
     // Make Named Path
-    $path = trim(Router::url($named, $params), '/');
+    $path = trim(Http::url($named, $params), '/');
     $path = $qstring ? "{$path}?{$qstring}" : $path;
     // Return Named Path/URL
     return $url ? rtrim(Url::base(), '/') . "/{$path}" : $path;
-}
-
-/**
- * Throw Exception and Abort
- * @param int $code Error Code. Default is 500
- * @param ?string $message Error Message
- * @return void
- */
-function http_exception(int $code = 500, ?string $message = null): void
-{
-    $message = $message ?: (Header::statusCodes()[$code] ?? 'Unknown Error!');
-    throw new HttpException($code, $message);
-}
-
-/**
- * Report Error
- * @return void
- */
-function report_bug(Throwable $th): void
-{
-    $handler = new Handler();
-    $handler->handle($th);
 }
 
 /**

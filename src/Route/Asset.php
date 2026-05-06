@@ -12,7 +12,7 @@ declare(strict_types=1);
 
 namespace Laika\Core\Route;
 
-use Laika\Core\App\Router;
+use Laika\Core\App\Http;
 
 class Asset
 {
@@ -75,7 +75,7 @@ class Asset
     public function registerAssetRoute(): void
     {
         // Register App Resources
-        Router::get("{$this->path}/{path:.+}", function($path) {
+        Http::get("{$this->path}/{path:.+}", function($path) {
             // Trim leading/trailing slashes
             $path = trim($path, './\\');
 
@@ -103,5 +103,10 @@ class Asset
     public function __get($prop)
     {
         return $this->{$prop};
+    }
+
+    public function __debugInfo()
+    {
+        return [];
     }
 }
