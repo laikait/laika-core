@@ -21,7 +21,7 @@ class Pop extends Command
     protected string $path = APP_PATH . '/lf-app/Afterware';
 
     // Accepted Regular Expresion
-    private string $exp = '/^[a-zA-Z_\/]+$/';
+    private string $exp = '/^[a-zA-Z_\/][a-zA-Z0-9_\/]+$/';
 
     /**
      * @param array $params

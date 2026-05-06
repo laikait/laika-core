@@ -14,7 +14,7 @@ namespace Laika\Core\Route;
 
 use Laika\Core\Interfaces\MiddlewareInterface;
 use Laika\Core\Interfaces\AfterwareInterface;
-use RuntimeException;
+use Laika\Core\Exceptions\RouteException;
 
 class Invoke
 {
@@ -23,13 +23,15 @@ class Invoke
      * @param array $middlewares Middlewares to Invoke
      * @param callable|string|array|null|object $controller Controller to Call After Middlewares Run
      * @param array $params Parameters
-     * @return ?string Return Response From Controller
+     * @return array Return Response From Controller
      */
-    public static function middleware(array $middlewares, callable|string|array|null|object $controller, array $params = []): ?string
+    public static function middleware(array $middlewares, callable|string|array|null|object $controller, array $params = []): array
     {
+        $finalParams = $params;
+
         $next = array_reduce(
             array_reverse($middlewares),
-            function ($next, $middleware) use ($params) {
+            function ($next, $middleware) {
                 return function ($params) use ($middleware, $next) {
                     $parts = explode('|', $middleware);
                     $parts[0] = trim($parts[0], '\\');
@@ -46,42 +48,36 @@ class Invoke
                         $params = array_merge($params, $args);
                     }
 
-                    // it does NOT exit. Without return, execution falls through to `new $middleware`
-                    // on an unresolvable class, causing a fatal error.
                     if (!class_exists($middleware)) {
-                        throw new RuntimeException("Invalid Middleware: [{$middleware}]");
-                        // report_bug(new RuntimeException("Invalid Middleware: [{$middleware}]"));
-                        return null;
+                        throw new RouteException("Invalid Middleware: [{$middleware}]");
+                    }
+
+                    if (!is_subclass_of($middleware, MiddlewareInterface::class)) {
+                        throw new RouteException("Middleware Must Implement MiddlewareInterface: [{$middleware}]");
                     }
 
                     $obj = new $middleware;
 
-                    if (!is_subclass_of($middleware, MiddlewareInterface::class)) {
-                        throw new RuntimeException("Middleware Must Implement MiddlewareInterface: [{$middleware}]");
-                        return null;
-                    }
-
                     if (!method_exists($obj, 'handle')) {
-                        throw new RuntimeException("Method Not Found: [{$middleware}::handle()]");
-                        // report_bug(new RuntimeException("Method Not Found: [{$middleware}::handle()]"));
-                        return null;
+                        throw new RouteException("Method Not Found: [{$middleware}::handle()]");
                     }
 
                     try {
                         return $obj->handle($next, $params);
                     } catch (\Throwable $th) {
-                        throw new RuntimeException($th->getMessage(), (int) $th->getCode(), $th);
-                        // report_bug($th);
+                        throw new RouteException($th->getMessage(), (int) $th->getCode(), $th);
                     }
-                    return null;
                 };
             },
-            function ($params) use ($controller) {
+            function ($params) use ($controller, &$finalParams) {
+                $finalParams = $params;
                 return self::controller($controller, $params);
             }
         );
 
-        return $next($params);
+        $output = $next($params);
+
+        return [$output, $finalParams];
     }
 
     /**
@@ -113,11 +109,11 @@ class Invoke
                     }
 
                     if (!class_exists($afterware)) {
-                        throw new RuntimeException("Invalid Afterware: [{$afterware}]");
+                        throw new RouteException("Invalid Afterware: [{$afterware}]");
                     }
 
                     if (!is_subclass_of($afterware, AfterwareInterface::class)) {
-                        throw new RuntimeException("Afterware Must Implement Interface: [{$afterware}]");
+                        throw new RouteException("Afterware Must Implement Interface: [{$afterware}]");
                     }
 
                     $obj = new $afterware();
@@ -138,25 +134,16 @@ class Invoke
     }
 
     /**
-     * @param callable|string|array|null|object $handler Controller. Example: HomeController@index or Closure or null or Function
+     * @param callable|string|null $handler Controller. Example: HomeController@index or Closure or null or Function
      * @param array $args Args to Pass to Controller
-     * @throws RuntimeException
+     * @throws RouteException
      * @return ?string
      */
-    public static function controller(callable|string|array|null|object $handler, array $args): ?string
+    public static function controller(callable|string|null $handler, array $args): ?string
     {
         // Execute Null
         if (is_null($handler)) {
             return null;
-        }
-
-        // ['HomeController', 'index'] must get the namespace prefix just like the
-        // string format 'HomeController@index' does. Without this, array-format
-        // controllers require a fully qualified class name while string-format does not.
-        if (is_array($handler) && isset($handler[0], $handler[1]) && is_string($handler[0])) {
-            $handler[0] = class_exists($handler[0])
-                ? $handler[0]
-                : "App\\Controller\\{$handler[0]}";
         }
 
         // Execute Callable (closures, functions, and now namespace-resolved array callables)
@@ -164,44 +151,39 @@ class Invoke
             $reflection = new Reflection($handler, $args);
             try {
                 return call_user_func($handler, ...$reflection->namedArgs());
-            } catch (\Throwable $th) {
-                report_bug($th);
+            } catch (\Throwable $e) {
+                throw new RouteException($e->getMessage(), (int) $e->getCode(), $e);
             }
             return null;
         }
 
         // Execute String
         if (is_string($handler)) {
-            // Without this, explode('@', 'HomeController') returns a single-element array,
-            // and [$controller, $method] destructuring silently sets $method to null.
             if (!str_contains($handler, '@')) {
-                throw new RuntimeException("Invalid Controller Assigned: [{$handler}]. Expected 'ControllerClass@method' format.");
+                throw new RouteException("Invalid Controller: [{$handler}]. Expected 'ControllerClass@method' format.");
             }
 
             [$controller, $method] = explode('@', $handler, 2);
-
             $controller = "App\\Controller\\{$controller}";
 
-            // Check Controller Exists
             if (!class_exists($controller)) {
-                throw new RuntimeException("Invalid Controller: [{$controller}]");
+                throw new RouteException("Invalid Controller: [{$controller}]");
             }
-            // Check Method Exists
             if (!method_exists($controller, $method)) {
-                throw new RuntimeException("Invalid Method: [{$method}] on [{$controller}]");
+                throw new RouteException("Invalid Method: [{$method}] on [{$controller}]");
             }
-            // Call Controller
+
             $obj = new $controller();
             $reflection = new Reflection([$obj, $method], $args);
             try {
                 return call_user_func([$obj, $method], ...$reflection->namedArgs());
             } catch (\Throwable $th) {
-                report_bug($th);
+                throw new RouteException("Invalid Method: [{$method}] on [{$controller}]");
             }
             return null;
         }
 
-        // Throw RuntimeException
-        throw new RuntimeException("Invalid Controller: " . print_r($handler, true));
+        // Throw RouteException
+        throw new RouteException("Invalid Controller: " . print_r($handler, true));
     }
 }

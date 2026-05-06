@@ -24,8 +24,8 @@ Routes are defined using `string`:
 ```php
 use Laika\Core\App\Router;
 
-Router::get('/home', 'HomeController@index');
-Router::get('/user/store', 'HomeController@store');
+Http::get('/home', 'HomeController@index');
+Http::get('/user/store', 'HomeController@store');
 ```
 
 Routes are defined using the static `Route` class:
@@ -33,8 +33,8 @@ Routes are defined using the static `Route` class:
 ```php
 use Laika\Core\Route\Route;
 
-Router::get('/home', [HomeController::class, 'index']);
-Router::post('/user/store', [UserController::class, 'store']);
+Http::get('/home', [HomeController::class, 'index']);
+Http::post('/user/store', [UserController::class, 'store']);
 ```
 
 ---
@@ -43,11 +43,11 @@ Router::post('/user/store', [UserController::class, 'store']);
 
 | Method | Usage |
 |--------|-------|
-| `Router::get()` | GET requests |
-| `Router::post()` | POST requests |
-| `Router::put()` | PUT requests |
-| `Router::patch()` | PATCH requests |
-| `Router::delete()` | DELETE requests |
+| `Http::get()` | GET requests |
+| `Http::post()` | POST requests |
+| `Http::put()` | PUT requests |
+| `Http::patch()` | PATCH requests |
+| `Http::delete()` | DELETE requests |
 
 ---
 
@@ -57,20 +57,20 @@ Router::post('/user/store', [UserController::class, 'store']);
 Matches any value except `/`:
 
 ```php
-Router::get('/user/{id}', [UserController::class, 'show']);
+Http::get('/user/{id}', [UserController::class, 'show']);
 ```
 
 ### Custom Regex Parameter
 
 ```php
-Router::get('/user/{id:\d+}', [UserController::class, 'show']);
-Router::get('/post/{slug:[a-z0-9-]+}', [PostController::class, 'show']);
+Http::get('/user/{id:\d+}', [UserController::class, 'show']);
+Http::get('/post/{slug:[a-z0-9-]+}', [PostController::class, 'show']);
 ```
 
 ### Multiple Parameters
 
 ```php
-Router::get('/user/{id:\d+}/post/{slug}', [PostController::class, 'show']);
+Http::get('/user/{id:\d+}/post/{slug}', [PostController::class, 'show']);
 ```
 
 ### Parameter Reference
@@ -99,9 +99,9 @@ class UserController
 Group routes under a shared prefix:
 
 ```php
-Router::group('/admin', function () {
-    Router::get('/dashboard', [AdminController::class, 'dashboard']);
-    Router::get('/users', [AdminController::class, 'users']);
+Http::group('/admin', function () {
+    Http::get('/dashboard', [AdminController::class, 'dashboard']);
+    Http::get('/users', [AdminController::class, 'users']);
     // Resolves to: /admin/dashboard, /admin/users
 });
 ```
@@ -109,9 +109,9 @@ Router::group('/admin', function () {
 ### Nested Groups
 
 ```php
-Router::group('/api', function () {
-    Router::group('/v1', function () {
-        Router::get('/ping', [ApiController::class, 'ping']);
+Http::group('/api', function () {
+    Http::group('/v1', function () {
+        Http::get('/ping', [ApiController::class, 'ping']);
         // Resolves to: /api/v1/ping
     });
 });
@@ -124,13 +124,13 @@ Router::group('/api', function () {
 ### Single Middleware
 
 ```php
-Router::get('/dashboard', [DashboardController::class, 'index'])->middleware(AuthMiddleware::class);
+Http::get('/dashboard', [DashboardController::class, 'index'])->middleware(AuthMiddleware::class);
 ```
 
 ### Multiple Middleware
 
 ```php
-Router::get('/admin', [AdminController::class, 'index'])->middleware([
+Http::get('/admin', [AdminController::class, 'index'])->middleware([
     AuthMiddleware::class,
     AdminMiddleware::class,
 ]);
@@ -139,9 +139,9 @@ Router::get('/admin', [AdminController::class, 'index'])->middleware([
 ### Group Middleware & Afterware
 
 ```php
-Router::group('/admin', function () {
-    Router::get('/dashboard', [AdminController::class, 'dashboard']);
-}, [AuthMiddleware::class], [LogMiddleware::class]);
+Http::group('/admin', function () {
+    Http::get('/dashboard', [AdminController::class, 'dashboard']);
+})->middleware(AuthMiddleware::class)->afterware(LogMiddleware::class);
 ```
 
 ---
@@ -152,12 +152,12 @@ Handle unmatched routes:
 
 ```php
 // Global fallback
-Router::fallback(function () {
+Http::fallback(function () {
     // 404 handler
 });
 
 // Prefix-based fallback
-Router::fallback('/admin/', [AdminController::class, 'notFound']);
+Http::fallback('/admin/', [AdminController::class, 'notFound']);
 ```
 
 ---
@@ -167,7 +167,7 @@ Router::fallback('/admin/', [AdminController::class, 'notFound']);
 Assign a name to generate URLs:
 
 ```php
-Router::get('/user/{id:\d+}/profile', [UserController::class, 'profile'])->name('user.profile');
+Http::get('/user/{id:\d+}/profile', [UserController::class, 'profile'])->name('user.profile');
 ```
 
 Generate the URL using the `named()` helper:
@@ -196,4 +196,4 @@ app-path/
 ## License
 
 MIT — Part of the [Laika PHP MVC Framework](https://github.com/laikait).  
-Author: **Showket Ahmed** — riyadhtayf@gmail.com
+Author: **Showket Ahmed** — strblackhawk@gmail.com

@@ -13,7 +13,7 @@ declare(strict_types=1);
 namespace Laika\Core\Console\Commands\Secret;
 
 use Laika\Core\Console\Command;
-use Laika\Core\Relay\Relays\Config;
+use Laika\Core\Service\Config;
 
 class Pop extends Command
 {

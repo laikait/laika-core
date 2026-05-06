@@ -12,7 +12,7 @@ declare(strict_types=1);
 
 namespace Laika\Core\Console\Commands\Model;
 
-use Laika\Core\Relay\Relays\File;
+use Laika\Core\Service\File;
 use Laika\Core\Console\Command;
 
 class Pop extends Command

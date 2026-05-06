@@ -15,7 +15,7 @@ namespace Laika\Core\Console\Commands;
 use Laika\Core\Exceptions\MigrationException;
 use Laika\Core\Console\Command;
 use Laika\Model\Schema\Schema;
-use Laika\Core\Relay\Relays\Config;
+use Laika\Core\Service\Config;
 use Laika\Model\Connection;
 
 class Migrate extends Command

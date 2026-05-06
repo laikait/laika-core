@@ -12,7 +12,6 @@ declare(strict_types=1);
 
 namespace Laika\Core\Route;
 
-// use Laika\Core\Exceptions\Handler as ErrorHandler;
 use Laika\Core\Service\Url as UrlHelper;
 use Laika\Core\System\MemoryManager;
 use Laika\Core\Service\Directory;
@@ -54,12 +53,13 @@ class Dispatcher
         }
 
         // Get Matched Route Info
-        $routes = Handler::getRoutes(Url::method());
+        $routes = Router::getRoutes(Url::method());
         $route = $routes[$res['route']];
 
         // echo the output for asset routes — return value was silently discarded before.
         if (!$isWebUrl) {
-            echo Invoke::middleware([], $route['controller'], $params);
+            [$output, $params] = Invoke::middleware([], $route['controller'], $params);
+            echo $output;
             return;
         }
 
@@ -71,7 +71,7 @@ class Dispatcher
         );
 
         try {
-            $output = Invoke::middleware($middlewares, $route['controller'], $params);
+            [$output, $params] = Invoke::middleware($middlewares, $route['controller'], $params);
         } catch (\Throwable $e) {
             throw new \RuntimeException($e->getMessage(), (int) $e->getCode(), $e);
         }
@@ -102,25 +102,43 @@ class Dispatcher
         // 404 Response
         Header::code(404);
 
-        $fallbacks = Handler::getFallbacks();
+        $fallbacks = Router::getFallbacks();
+
+        if (empty($fallbacks)) {
+            echo _404::show();
+            return;
+        }
 
         uksort($fallbacks, fn($a, $b) => strlen($b) - strlen($a));
+
+        $normalizedUrl = Url::normalizeFallbackKey($requestUrl);
+
         foreach ($fallbacks as $key => $fallback) {
-            if (str_starts_with(Url::normalizeFallbackKey($requestUrl), $key)) {
-                try {
-                    echo Invoke::middleware(
-                        $fallback['middlewares'],
-                        empty($fallback['controller']) ? function () { return _404::show(); } : $fallback['controller'],
-                        $params
-                    );
-                } catch (\Throwable $e) {
-                    throw new \RuntimeException($e->getMessage(), (int) $e->getCode(), $e);
-                }
+            if (!str_starts_with($normalizedUrl, $key)) {
+                continue;
+            }
+
+            if ($fallback['controller'] === null) {
+                echo _404::show();
                 return;
             }
+
+            try {
+                $output = Invoke::middleware($fallback['middlewares'], $fallback['controller'], $params);
+            } catch (\Throwable $e) {
+                throw new \RuntimeException($e->getMessage(), (int) $e->getCode(), $e);
+            }
+
+            try {
+                echo Invoke::afterware($fallback['afterwares'], $output, $params);
+            } catch (\Throwable $e) {
+                throw new \RuntimeException($e->getMessage(), (int) $e->getCode(), $e);
+            }
+
+            return;
         }
+
         echo _404::show();
-        return;
     }
 
     /**
