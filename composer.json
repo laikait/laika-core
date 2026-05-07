@@ -12,12 +12,12 @@
         ]
     },
     "autoload-dev": {
-        "psr-4": {
-            "Laika\\Tests\\": "tests/"
-        },
         "files": [
             "helpers/loader.php"
-        ]
+        ],
+        "psr-4": {
+            "Laika\\Tests\\": "tests/"
+        }
     },
     "authors": [
         {
