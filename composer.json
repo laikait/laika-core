@@ -4,12 +4,12 @@
     "type": "package",
     "license": "MIT",
     "autoload": {
-        "psr-4": {
-            "Laika\\Core\\": "src/"
-        },
         "files": [
             "helpers/loader.php"
-        ]
+        ],
+        "psr-4": {
+            "Laika\\Core\\": "src/"
+        }
     },
     "autoload-dev": {
         "files": [
