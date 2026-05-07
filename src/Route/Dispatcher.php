@@ -13,6 +13,7 @@ declare(strict_types=1);
 namespace Laika\Core\Route;
 
 use Laika\Core\Service\Url as UrlHelper;
+use Laika\Core\Exceptions\RouteException;
 use Laika\Core\System\MemoryManager;
 use Laika\Core\Service\Directory;
 use Laika\Core\Service\Header;
@@ -73,7 +74,7 @@ class Dispatcher
         try {
             [$output, $params] = Invoke::middleware($middlewares, $route['controller'], $params);
         } catch (\Throwable $e) {
-            throw new \RuntimeException($e->getMessage(), (int) $e->getCode(), $e);
+            throw new RouteException($e->getMessage(), (int) $e->getCode(), $e);
         }
 
         // Run Afterwares
@@ -86,7 +87,7 @@ class Dispatcher
         try {
             echo Invoke::afterware($afterwares, $output, $params);
         } catch (\Throwable $e) {
-            throw new \RuntimeException($e->getMessage(), (int) $e->getCode(), $e);
+            throw new RouteException($e->getMessage(), (int) $e->getCode(), $e);
         }
         return;
     }
@@ -126,13 +127,13 @@ class Dispatcher
             try {
                 $output = Invoke::middleware($fallback['middlewares'], $fallback['controller'], $params);
             } catch (\Throwable $e) {
-                throw new \RuntimeException($e->getMessage(), (int) $e->getCode(), $e);
+                throw new RouteException($e->getMessage(), (int) $e->getCode(), $e);
             }
 
             try {
                 echo Invoke::afterware($fallback['afterwares'], $output, $params);
             } catch (\Throwable $e) {
-                throw new \RuntimeException($e->getMessage(), (int) $e->getCode(), $e);
+                throw new RouteException($e->getMessage(), (int) $e->getCode(), $e);
             }
 
             return;
