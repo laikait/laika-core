@@ -118,7 +118,7 @@ function named(string $name, array $params = []): string
     $path = trim(Router::namedUrl($named, $params), '/');
     $path = $qstring ? "{$path}?{$qstring}" : $path;
     // Return Named Path/URL
-    return Url::base() . "/{$path}";
+    return Url::base() . $path;
 }
 
 /**
