@@ -38,6 +38,11 @@ class Invoke
 
                     $middleware = class_exists($parts[0]) ? $parts[0] : "App\\Middleware\\{$parts[0]}";
 
+                    // Check Middleware is Exists
+                    if (!class_exists($middleware)) {
+                        throw new RouteException("Middleware Class [{$parts[0]}] Doesn't Exists!");
+                    }
+
                     if (isset($parts[1])) {
                         $args = [];
                         $paramParts = explode(',', $parts[1]);
@@ -98,6 +103,11 @@ class Invoke
                     $parts[0] = trim($parts[0], '\\');
 
                     $afterware = class_exists($parts[0]) ? $parts[0] : "App\\Afterware\\{$parts[0]}";
+
+                    // Check Afterware is Exists
+                    if (!class_exists($afterware)) {
+                        throw new RouteException("Afterware Class [{$parts[0]}] Doesn't Exists!");
+                    }
 
                     if (isset($parts[1])) {
                         $args = [];
