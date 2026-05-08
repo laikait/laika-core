@@ -64,10 +64,10 @@
     "extra": {
         "laika": {
             "functions": [
-                "helpers/functions/*.func.php"
+                "helpers/functions"
             ],
             "hooks": [
-                "helpers/hooks/*.hook.php"
+                "helpers/hooks"
             ]
         }
     }
