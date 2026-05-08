@@ -60,7 +60,6 @@ class Dispatcher
         // echo the output for asset routes — return value was silently discarded before.
         if (!$isWebUrl) {
             [$output, $params] = Invoke::middleware([], $route['controller'], $params);
-            echo $output;
             return;
         }
 

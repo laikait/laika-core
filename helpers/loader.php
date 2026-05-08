@@ -10,6 +10,7 @@
 
 declare(strict_types=1);
 
+use Laika\Core\App\Loader;
 use Laika\Core\Relay\Relay;
 use Laika\Core\Relay\RelayRegistry;
 use Laika\Core\Relay\ProviderRegistry;
@@ -46,8 +47,8 @@ if ($autoDiscoverJsonFile && is_file($autoDiscoverJsonFile)) {
 }
 
 // Auto Discover App Providers
-$appProviderDir = APP_PATH . '/lf-app/Provider';
-if ($appProviderDir && is_file($appProviderDir)) {
+$appProviderDir = APP_PATH . '/lf-app/Providers';
+if ($appProviderDir && is_dir($appProviderDir)) {
     $appProviderFiles = glob("{$appProviderDir}/*.php");
     foreach($appProviderFiles as $file) {
         require_once $file;
@@ -65,7 +66,7 @@ $providers->boot();
 ###############################################################################
 
 // Require All Functions File
-array_map(function($file) { require_once $file; }, glob(__DIR__ . '/functions/*.func.php'));
+// array_map(function($file) { require_once $file; }, glob(__DIR__ . '/functions/*.func.php'));
 
-// Require All Hooks File
-array_map(function($file) { require_once $file; }, glob(__DIR__ . '/hooks/*.hook.php'));
+// // Require All Hooks File
+// array_map(function($file) { require_once $file; }, glob(__DIR__ . '/hooks/*.hook.php'));
