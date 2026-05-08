@@ -49,9 +49,7 @@ class Dispatcher
         }
 
         // Register Headers & Hooks
-        if ($isWebUrl) {
-            self::registerInitiators();
-        }
+        if ($isWebUrl) self::registerHeaders();
 
         // Get Matched Route Info
         $routes = Router::getRoutes(Url::method());
@@ -202,17 +200,5 @@ class Dispatcher
         // Load Template Asset Routes
         (new Asset())->registerAssetRoute();
         return;
-    }
-
-    /**
-     * Register Initiators
-     * @return void
-     */
-    private static function registerInitiators(): void
-    {
-        // Register Headers
-        self::registerHeaders();
-        // Load Hook Files
-        self::loadHookFiles();
     }
 }
