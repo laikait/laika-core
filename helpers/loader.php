@@ -31,7 +31,11 @@ $providers = new ProviderRegistry($registry);
 // Register Core Services
 $providers->register(CoreServiceProvider::class);
 
-foreach (Provider::instance()->services() as $service) { $providers->register($service); }
+if (class_exists(Provider::class)) {
+    foreach (Provider::instance()->services() as $service) {
+        $providers->register($service);
+    }
+}
 
 // Auto Discover App Providers
 $appProviderDir = APP_PATH . '/lf-app/Service';
