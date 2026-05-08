@@ -65,11 +65,6 @@ class Console extends Command
                 'rename:template'       =>  \Laika\Core\Console\Commands\Template\Rename::class,
                 'pop:template'          =>  \Laika\Core\Console\Commands\Template\Pop::class,
                 'list:template'         =>  \Laika\Core\Console\Commands\Template\Lists::class,
-                /* Template Commands */
-                'make:relay'            =>  \Laika\Core\Console\Commands\Relay\Make::class,
-                'rename:relay'          =>  \Laika\Core\Console\Commands\Relay\Rename::class,
-                'pop:relay'             =>  \Laika\Core\Console\Commands\Relay\Pop::class,
-                'list:relay'            =>  \Laika\Core\Console\Commands\Relay\Lists::class,
                 /* Other Commands */
                 'help'                  =>  \Laika\Core\Console\Commands\Help::class,
                 'help:controller'       =>  \Laika\Core\Console\Commands\Help\ControllerHelp::class,

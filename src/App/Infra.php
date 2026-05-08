@@ -14,6 +14,7 @@ namespace Laika\Core\App;
 
 use Laika\Core\Service\Directory;
 use Laika\Core\Service\File;
+use Laika\Core\Relay\Relay;
 
 // Application Infrastructure Info
 class Infra
@@ -89,5 +90,15 @@ class Infra
             }
         }
         return $templates;
+    }
+
+    /*============================ Relay Info ============================*/
+    /**
+     * Get Relay Classes
+     * @return array
+     */
+    public function getRelayClasses(): array
+    {
+        return Relay::classes();
     }
 }

@@ -297,4 +297,42 @@ class RelayRegistry
 
         return $resolved;
     }
+
+    /**
+     * Return all registered binding keys.
+     * @return string[]
+     */
+    public function bindings(): array
+    {
+        return array_unique(array_merge(
+            array_keys($this->bindings),
+            array_keys($this->singletons),
+            array_keys($this->instances),
+        ));
+    }
+
+    /**
+     * Return all registered bindings with their concrete classes.
+     * @return array<string, string>
+     */
+    public function classes(): array
+    {
+        $result = [];
+
+        foreach ($this->singletons as $key => $entry) {
+            $concrete       = $entry['concrete'];
+            $result[$key]   = $concrete instanceof Closure ? 'Closure' : $concrete;
+        }
+
+        foreach ($this->bindings as $key => $entry) {
+            $concrete       = $entry['concrete'];
+            $result[$key]   = $concrete instanceof Closure ? 'Closure' : $concrete;
+        }
+
+        foreach ($this->instances as $key => $instance) {
+            $result[$key]   = $instance::class;
+        }
+
+        return $result;
+    }
 }

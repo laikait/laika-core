@@ -154,7 +154,6 @@ class Invoke
             } catch (\Throwable $e) {
                 throw new RouteException($e->getMessage(), (int) $e->getCode(), $e);
             }
-            return null;
         }
 
         // Execute String
@@ -178,9 +177,8 @@ class Invoke
             try {
                 return call_user_func([$obj, $method], ...$reflection->namedArgs());
             } catch (\Throwable $th) {
-                throw new RouteException("Invalid Method: [{$method}] on [{$controller}]");
+                throw new RouteException($th->getMessage(), (int) $th->getCode(), $th);
             }
-            return null;
         }
 
         // Throw RouteException

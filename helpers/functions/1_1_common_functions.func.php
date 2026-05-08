@@ -10,18 +10,15 @@
 
 declare(strict_types=1);
 
-use Laika\Core\App\Http;
+use Laika\Core\Route\Router;
 use Laika\Core\Service\Hook;
 use Laika\Session\Relay\Session;
 use Laika\Core\Service\Url;
 use Laika\Core\Service\Csrf;
-use Laika\Core\Exceptions\Handler;
-use Laika\Core\Service\Header;
 use Laika\Core\Service\Config;
 use Laika\Core\Service\Request;
 use Laika\Core\Service\Template\Meta;
 use Laika\Core\Service\Template\Asset;
-use Laika\Core\Exceptions\HttpException;
 
 /**
  * Dump Data & Die
@@ -86,11 +83,11 @@ function add_hook(string $filter, callable $callback, int $priority = 10): void
  * Do Hook
  * @param string $filter Filter Name.
  * @param mixed ...$args Optional Arguments.
- * @return mixed
+ * @return void
 */
-function do_hook(string $filter, mixed ...$args): mixed
+function do_hook(string $filter, mixed ...$args): void
 {
-    return Hook::do($filter, ...$args);
+    Hook::do($filter, ...$args);
 }
 
 /**
@@ -109,20 +106,19 @@ function apply_hook(string $filter, mixed $value = null, mixed ...$args): mixed
  * Get Named Route
  * @param string $name Named Route Name. Example: 'client' or 'client?status=active'
  * @param array $params Named Route Parameters. Example: ['id'=>1234]
- * @param bool $url Return as Url or Slug. Default is false
  * @return string
  */
-function named(string $name, array $params = [], bool $url = false): string
+function named(string $name, array $params = []): string
 {
     // Get Slug
     $named = parse_url($name, PHP_URL_PATH);
     // Get Query String
     $qstring = parse_url($name, PHP_URL_QUERY);
     // Make Named Path
-    $path = trim(Http::url($named, $params), '/');
+    $path = trim(Router::namedUrl($named, $params), '/');
     $path = $qstring ? "{$path}?{$qstring}" : $path;
     // Return Named Path/URL
-    return $url ? rtrim(Url::base(), '/') . "/{$path}" : $path;
+    return Url::base() . "/{$path}";
 }
 
 /**

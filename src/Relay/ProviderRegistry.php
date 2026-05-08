@@ -136,7 +136,6 @@ class ProviderRegistry
 
     /**
      * Return all registered provider instances.
-     *
      * @return RelayProvider[]
      */
     public function providers(): array

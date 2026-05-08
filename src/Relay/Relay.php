@@ -197,4 +197,14 @@ abstract class Relay
 
         return $instance->$method(...$args);
     }
+
+    public static function bindings(): array
+    {
+        return static::getRegistry()->bindings();
+    }
+
+    public static function classes(): array
+    {
+        return static::getRegistry()->classes();
+    }
 }
