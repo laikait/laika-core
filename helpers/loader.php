@@ -10,7 +10,6 @@
 
 declare(strict_types=1);
 
-use Laika\Core\App\Loader;
 use Laika\Core\Relay\Relay;
 use Laika\Core\Relay\RelayRegistry;
 use Laika\Core\Relay\ProviderRegistry;
@@ -26,47 +25,28 @@ if (!defined('APP_PATH')) {
 ####################################################################################
 
 // Get Relay Registry Object
-$register = new RelayRegistry();
-$providers = new ProviderRegistry($register);
+$registry = new RelayRegistry();
+$providers = new ProviderRegistry($registry);
 
 // Register Core Services
 $providers->register(CoreServiceProvider::class);
 
-// Auto-discover from installed packages
-$autoDiscoverJsonFile = APP_PATH . '/vendor/composer/installed.json';
-if ($autoDiscoverJsonFile && is_file($autoDiscoverJsonFile)) {
-    $installed = json_decode(file_get_contents($autoDiscoverJsonFile), true);
-    $installed = $installed['packages'] ?? $installed;
+foreach (Provider::instance()->services() as $service) { $providers->register($service); }
 
-    foreach ($installed as $package) {
-        $package = $package['extra']['laika']['providers'] ?? [];
-        foreach ($package as $provider) {
-            $providers->register($provider);
+// Auto Discover App Providers
+$appProviderDir = APP_PATH . '/lf-app/Service';
+if ($appProviderDir && is_dir($appProviderDir)) {
+    $appProviderFiles = glob("{$appProviderDir}/*.php");
+    foreach($appProviderFiles as $file) {
+        $className = 'App\\Relay\\' . basename($file, '.php');
+        if (class_exists($className)) {
+            $providers->register($className);
         }
     }
 }
 
-// Auto Discover App Providers
-$appProviderDir = APP_PATH . '/lf-app/Providers';
-if ($appProviderDir && is_dir($appProviderDir)) {
-    $appProviderFiles = glob("{$appProviderDir}/*.php");
-    foreach($appProviderFiles as $file) {
-        require_once $file;
-    }
-}
-
 // Wire Registry
-Relay::setRegistry($register);
+Relay::setRegistry($registry);
 
 // Boot Providers
 $providers->boot();
-
-###############################################################################
-/*------------------------- FUNCTION & HOOKS LOADER -------------------------*/
-###############################################################################
-
-// Require All Functions File
-// array_map(function($file) { require_once $file; }, glob(__DIR__ . '/functions/*.func.php'));
-
-// // Require All Hooks File
-// array_map(function($file) { require_once $file; }, glob(__DIR__ . '/hooks/*.hook.php'));

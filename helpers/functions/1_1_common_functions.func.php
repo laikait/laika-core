@@ -70,11 +70,11 @@ function purify(array $data): array
 /**
  * Add Hook
  * @param string $filter Filter Name.
- * @param string|callable $callback Required Argument.
+ * @param callable $callback Required Argument.
  * @param int $priority Optional Argument. Default is 10
  * @return void
 */
-function add_hook(string $filter, string|callable $callback, int $priority = 10): void
+function add_hook(string $filter, callable $callback, int $priority = 10): void
 {
     Hook::add($filter, $callback, $priority);
 }

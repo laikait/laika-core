@@ -42,10 +42,6 @@ class Help extends Command
                 (new \Laika\Core\Console\Commands\Help\AfterwareHelp())->run($params, $options);
                 break;
 
-            case 'relay':
-                (new \Laika\Core\Console\Commands\Help\RelayHelp())->run($params, $options);
-                break;
-
             case 'template':
                 (new \Laika\Core\Console\Commands\Help\TemplateHelp())->run($params, $options);
                 break;
@@ -101,15 +97,6 @@ class Help extends Command
             Delete  :   php laika pop:model <name>
             List    :   php laika list:model <sub_path::optional>\n\n
         MODEL;
-
-        // RELAY
-        echo <<<RELAY
-        {$this->txt_green('## RELAY   [php laika help:relay]')}\n
-            Make    :   php laika make:relay <name> <optioanl:-k|--key>
-            Rename  :   php laika rename:relay <old_name> <new_name>
-            Delete  :   php laika pop:relay <name>
-            List    :   php laika list:relay\n\n
-        RELAY;
 
         // TEMPLATE
         echo <<<TEMPLATE
