@@ -315,6 +315,17 @@ function asset(string $path): void
 }
 
 /**
+ * Load App Asset
+ * @param string $path
+ * @return void
+ */
+function app_asset(string $path): void
+{
+    $path = trim($path, '/.');
+    echo named('app.src', ['path' => $path]);
+}
+
+/**
  * Enqueue Meta
  * @param string $name
  * @param string $content

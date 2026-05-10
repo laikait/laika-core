@@ -19,8 +19,14 @@ class Asset
     /** @var string $path */
     private string $path = '/tpl-src';
 
+    /** @var string $app_path */
+    private string $app_path = '/app-src';
+
     /** @var string $named */
     private string $named = 'asset.src';
+
+    /** @var string $app_named */
+    private string $app_named = 'app.src';
 
     /** @var array $mimes */
     private array $mimes = [
@@ -74,7 +80,7 @@ class Asset
      */
     public function registerAssetRoute(): void
     {
-        // Register App Resources
+        // Register Template Resources
         Http::get("{$this->path}/{path:.+}", function($path) {
             // Trim leading/trailing slashes
             $path = trim($path, './\\');
@@ -93,6 +99,26 @@ class Asset
             readfile($file);
             return;
         })->name($this->named);
+
+        // Register App Resources
+        Http::get("{$this->app_path}/{path:.+}", function($path) {
+            // Trim leading/trailing slashes
+            $path = trim($path, './\\');
+
+            // Get Asset File Path
+            $file = APP_PATH . "/lf-assets/{$path}";
+            if(!is_file($file)){
+                http_response_code(404);
+                return;
+            }
+
+            // Read File
+            $ext = pathinfo($file, PATHINFO_EXTENSION);
+            $mime = $this->mimes[$ext] ?? 'application/octet-stream';
+            header("Content-Type: {$mime}");
+            readfile($file);
+            return;
+        })->name($this->app_named);
     }
 
     public function __isset($prop): bool
