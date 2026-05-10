@@ -305,13 +305,13 @@ function page_number(): int
  * @param string $path
  * @return void
  */
-function asset_src(string $path): void
+function asset(string $path): void
 {
     if(parse_url($path, PHP_URL_HOST)){
         echo $path;
     }
     $path = trim($path, '/.');
-    echo named('asset.src', ['path' => $path], true);
+    echo named('asset.src', ['path' => $path]);
 }
 
 /**

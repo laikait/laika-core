@@ -16,7 +16,7 @@ add_hook('app_host', 'app_host', 1000);
 
 /*=================================== ASSET HOOKS ===================================*/
 // Load Template Asset
-add_hook('asset', 'asset_src', 1000);
+add_hook('asset', 'asset', 1000);
 
 // Local Language Value
 add_hook('local', 'local', 1000);
