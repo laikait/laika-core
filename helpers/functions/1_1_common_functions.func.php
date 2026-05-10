@@ -439,3 +439,13 @@ function app_host(): string
 {
     return Url::base();
 }
+
+/**
+ * Check Current Url is Loggedin Url
+ * @param string $named
+ * @return bool
+ */
+function is_loggedin_url(string $named): bool
+{
+    return str_starts_with(Url::current(), named($named));
+}
