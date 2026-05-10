@@ -122,7 +122,7 @@ class Dispatcher
             }
 
             try {
-                $output = Invoke::middleware($fallback['middlewares'], $fallback['controller'], $params);
+                [$output, $params] = Invoke::middleware($fallback['middlewares'], $fallback['controller'], $params);
             } catch (\Throwable $e) {
                 throw new RouteException($e->getMessage(), (int) $e->getCode(), $e);
             }
