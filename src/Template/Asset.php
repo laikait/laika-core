@@ -89,8 +89,18 @@ class Asset
      */
     public static function headerScripts(): void
     {
-        $authorizarion = Header::get('authorization');
-        $appuri = rtrim(Url::base(), '/');
-        echo "<!-- System Default Scripts -->\n<script>\nCONST TOKEN = '{$authorizarion}';\nCONST APPURI = '{$appuri}';\n</script>\n";
+        $str = "<!-- System Default Scripts -->\n<script>\n";
+        $vars = [
+            'token' => Header::get('authorization'),
+            'appuri' => rtrim(Url::base(), '/'),
+        ];
+
+        foreach ($vars as $k => $v) {
+            $str .= "const " . strtoupper($k) . " = '{$v}';\n";
+        }
+
+        $str .= "</script>\n";
+        
+        echo $str;
     }
 }
