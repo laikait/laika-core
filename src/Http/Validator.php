@@ -233,6 +233,18 @@ class Validator
                         }
                         break;
 
+                    case 'upper':
+                        if (!ctype_upper((string) $value)) {
+                            $errors[$field][] = $customMessage ?? "The [{$field}] must contain upper alphabetic characters.";
+                        }
+                        break;
+
+                    case 'lower':
+                        if (!ctype_lower((string) $value)) {
+                            $errors[$field][] = $customMessage ?? "The [{$field}] must contain lower alphabetic characters.";
+                        }
+                        break;
+
                     case 'alpha_num':
                         if (!ctype_alnum((string) $value)) {
                             $errors[$field][] = $customMessage ?? "The [{$field}] must contain only alphanumeric characters.";
