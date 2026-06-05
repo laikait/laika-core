@@ -230,12 +230,11 @@ class Config
     {
         $content = "[\n";
         foreach ($array as $key => $value) {
-            $comment = ucwords((string) str_replace('.', ' ', $key));
             if (is_array($value)) {
-                $content .= str_repeat(' ', $spaces) . "// {$comment}\n" . str_repeat(' ', $spaces) . "'{$key}' => " . trim(self::allign($value, $spaces + 4), ';') . ",\n\n";
+                $content .= str_repeat(' ', $spaces) . str_repeat(' ', $spaces) . "'{$key}' => " . trim(self::allign($value, $spaces + 4), ';') . ",\n\n";
             } else {
                 $value = self::exportValue($value);
-                $content .= str_repeat(' ', $spaces) . "// {$comment}\n" . str_repeat(' ', $spaces) . "'{$key}' => {$value},\n\n";
+                $content .= str_repeat(' ', $spaces) . str_repeat(' ', $spaces) . "'{$key}' => {$value},\n\n";
             }
         }
         return "{$content}" . str_repeat(' ', $spaces) . "];";

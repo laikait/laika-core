@@ -16,7 +16,10 @@ add_hook('app_host', 'app_host', 1000);
 
 /*=================================== ASSET HOOKS ===================================*/
 // Load Template Asset
-add_hook('asset', 'asset_src', 1000);
+add_hook('asset', 'asset', 1000);
+
+// Load App Asset
+add_hook('app_asset', 'app_asset', 1000);
 
 // Local Language Value
 add_hook('local', 'local', 1000);
@@ -80,3 +83,6 @@ add_hook('lf_footer', 'lf_footer', 1000);
 /*================================== COMMON HOOKS ==================================*/
 /** Get All Timezones */
 add_hook('time_zones', 'time_zones', 1000);
+
+/** App Name */
+add_hook('app_name', 'app_name', 1000);

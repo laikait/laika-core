@@ -10,13 +10,14 @@
 
 declare(strict_types=1);
 
+use Laika\Core\Service\Url;
 use Laika\Core\Route\Router;
 use Laika\Core\Service\Hook;
-use Laika\Session\Relay\Session;
-use Laika\Core\Service\Url;
 use Laika\Core\Service\Csrf;
 use Laika\Core\Service\Config;
 use Laika\Core\Service\Request;
+use Laika\Session\Relay\Session;
+use Laika\Core\Exceptions\Handler;
 use Laika\Core\Service\Template\Meta;
 use Laika\Core\Service\Template\Asset;
 
@@ -66,6 +67,16 @@ function purify(array $data): array
         };
     }, $data);
 }
+
+/**
+ * App Name
+ * @return string
+ */
+function app_name(): string
+{
+    return config('app', 'name', 'Laika Framework');
+}
+
 
 /**
  * Add Hook
@@ -118,7 +129,7 @@ function named(string $name, array $params = []): string
     $path = trim(Router::namedUrl($named, $params), '/');
     $path = $qstring ? "{$path}?{$qstring}" : $path;
     // Return Named Path/URL
-    return Url::base() . "/{$path}";
+    return Url::base() . $path;
 }
 
 /**
@@ -200,6 +211,19 @@ function slugify(string $name): string
 function time_zones(): array
 {
     return \DateTimeZone::listIdentifiers(DateTimeZone::ALL);
+}
+
+######################################################################################
+/*================================== ERROR HANDLE ==================================*/
+######################################################################################
+/**
+ * Report Error
+ * @param Throwable
+ * @return void
+ */
+function report_error(Throwable $throwable): void
+{
+    call_user_func([new Handler(), 'handle'], $throwable);
 }
 
 #######################################################################################
@@ -305,13 +329,24 @@ function page_number(): int
  * @param string $path
  * @return void
  */
-function asset_src(string $path): void
+function asset(string $path): void
 {
     if(parse_url($path, PHP_URL_HOST)){
         echo $path;
     }
     $path = trim($path, '/.');
-    echo named('asset.src', ['path' => $path], true);
+    echo named('asset.src', ['path' => $path]);
+}
+
+/**
+ * Load App Asset
+ * @param string $path
+ * @return void
+ */
+function app_asset(string $path): void
+{
+    $path = trim($path, '/.');
+    echo named('app.src', ['path' => $path]);
 }
 
 /**
@@ -438,4 +473,30 @@ function local(string $property, ...$args): string
 function app_host(): string
 {
     return Url::base();
+}
+
+/**
+ * Check Current Url is Loggedin Url
+ * @param string $named
+ * @return bool
+ */
+function is_loggedin_url(string $named): bool
+{
+    return str_starts_with(Url::current(), named($named));
+}
+
+/**
+ * Make API Data
+ * @param bool $success
+ * @param int|string $message
+ * @param array $data
+ * @return array
+ */
+function api_data(bool $success, int|string $message, array $data = []): array
+{
+    return [
+        'success' => $success,
+        'message' => $message,
+        'data' => $data
+    ];
 }

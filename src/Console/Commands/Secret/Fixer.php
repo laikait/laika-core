@@ -1,0 +1,49 @@
+<?php
+/**
+ * Laika Framework
+ * Author: Showket Ahmed
+ * Email: riyadhtayf@gmail.com
+ * License: MIT
+ * This file is part of the Laika PHP MMC Framework.
+ * For the full copyright and license information, please view the LICENSE file that was distributed with this source code.
+ */
+
+declare(strict_types=1);
+
+namespace Laika\Core\Console\Commands\Secret;
+
+use Laika\Core\Console\Command;
+use Laika\Core\Service\Config;
+
+class Fixer extends Command
+{
+    /**
+     * Run the command to create a new controller.
+     *
+     * @param array $params
+     * @return void
+     */
+    public function run(array $params, array $options = []): void
+    {
+        $byte = $params[0] ?? 32;
+        if (!is_numeric($byte) || ((int) $byte < 1)) {
+            $this->error("USAGE: php laika generate:secret <byte_number::optional>");
+            return;
+        }
+
+        $byte = (int) $byte;
+        // Create Secret Config File if Not Exist
+        if (!Config::has('secret')) {
+            Config::create('secret', ['key' => bin2hex(random_bytes($byte))]);
+            // Set Message
+            $this->success("{$byte} Byte Secret Generated Successfully");
+        }
+        // Create Secret If Key Does Not Exists
+        elseif (!Config::get('secret', 'key')) {
+            Config::set('secret', 'key', bin2hex(random_bytes($byte)));
+            // Set Message
+            $this->success("{$byte} Byte Secret Generated Successfully");
+        }
+        return;
+    }
+}

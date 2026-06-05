@@ -70,7 +70,7 @@ class Invoke
                     try {
                         return $obj->handle($next, $params);
                     } catch (\Throwable $th) {
-                        throw new RouteException($th->getMessage(), (int) $th->getCode(), $th);
+                        report_error($th);
                     }
                 };
             },
@@ -162,7 +162,7 @@ class Invoke
             try {
                 return call_user_func($handler, ...$reflection->namedArgs());
             } catch (\Throwable $e) {
-                throw new RouteException($e->getMessage(), (int) $e->getCode(), $e);
+                report_error($e);
             }
         }
 
@@ -185,9 +185,9 @@ class Invoke
             $obj = new $controller();
             $reflection = new Reflection([$obj, $method], $args);
             try {
-                return call_user_func([$obj, $method], ...$reflection->namedArgs());
+                return $obj->{$method}(...$reflection->namedArgs());
             } catch (\Throwable $th) {
-                throw new RouteException($th->getMessage(), (int) $th->getCode(), $th);
+                report_error($th);
             }
         }
 

@@ -210,7 +210,7 @@ class Template
         $this->addFilter('query', function (string $key) { return Url::query($key); });
         // Register Named
         $this->addFilter('named', function(string $name, array $params = []){
-            return named($name, $params, true);
+            return named($name, $params);
         });
         // Register Asset
         $this->addFilter('asset', 'asset');

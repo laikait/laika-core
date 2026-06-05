@@ -15,12 +15,12 @@ namespace Laika\Core\Service;
 use Laika\Core\Relay\Relay;
 
 /**
- * @method static 
+ * @method static void run(string $name = 'default')
  */
-class Auth extends Relay
+class DB extends Relay
 {
     protected static function getRelayAccessor(): string
     {
-        return 'auth';
+        return 'db';
     }
 }

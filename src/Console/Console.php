@@ -78,6 +78,7 @@ class Console extends Command
                 /* Route */
                 'list:route'            =>  \Laika\Core\Console\Commands\Route\Lists::class,
                 /* Secret Key */
+                'fix:secret'            =>  \Laika\Core\Console\Commands\Secret\Fixer::class,
                 'generate:secret'       =>  \Laika\Core\Console\Commands\Secret\Generate::class,
                 'pop:secret'            =>  \Laika\Core\Console\Commands\Secret\Pop::class,
             ];
