@@ -1,5 +1,4 @@
 <?php
-
 /**
  * Laika PHP Micro Framework
  * Author: Showket Ahmed
@@ -11,227 +10,215 @@ declare(strict_types=1);
 
 namespace Laika\Core\Auth;
 
+use PDO;
+use PDOException;
 use Laika\Model\Model;
+use Laika\Core\Service\DB;
 use Laika\Model\Schema\Schema;
-use Laika\Session\Relay\Session;
+use Laika\Session\Service\Session;
 use Laika\Model\Schema\Blueprint;
-use RuntimeException;
 
-class Auth extends Model
+class Auth
 {
-    /** @var string $type Auth Type (e.g. admin, client) */
-    protected string $type = 'client';
+    private Model $model;
+    private string $table;
+    private int $lifetime;
+    private static bool $booted = false;
 
-    /** @var string $table DB Table Name */
-    protected string $table = 'laika_auth_app';
-
-    /** @var string $cookie Cookie Name */
-    protected string $cookie = 'CLIENT_AUTH_TOKEN';
-
-    /** @var int $ttl Cookie Expire After TTL */
-    protected int $ttl = 1800;
-
-    /** @var ?array $user User Data */
-    protected ?array $user = null;
-
-    /** @var ?string $event Event ID */
-    protected ?string $event = null;
-
-    /** @var int $time Real Time */
-    protected int $time = 0;
-
-    /** @var bool $booted Whether init() has been called */
-    protected bool $booted = false;
-
-    /*======================================================================*/
-    /*============================= PUBLIC API =============================*/
-    /*======================================================================*/
-
-    /**
-     * Set the auth type. Derives table name and cookie name automatically.
-     * @param  string $type e.g. 'ADMIN', 'CLIENT'. Default: 'CLIENT'
-     * @return static
-     */
-    public function setType(string $type = 'CLIENT'): static
+    public function __construct(string $guard = 'client', int $lifetime = 3600)
     {
-        $this->type   = strtolower($type);
-        $this->table  = "laika_auth_{$this->type}";
-        $this->cookie = strtoupper($type) . '_AUTH_TOKEN';
-        $this->booted = false;
-        return $this;
-    }
+        //Validate guard name
+        if (!preg_match('/^[a-z]+$/i', $guard)) throw new RuntimeException("Invalid guard name: {$guard}");
 
-    /**
-     * Set the database connection name.
-     * @param  string $connection Default: 'default'
-     * @return static
-     */
-    public function setConnection(string $connection = 'default'): static
-    {
-        $this->connection = $connection;
-        $this->booted = false;
-        return $this;
-    }
+        DB::run(); // Ensure DB is initialized
 
-    /**
-     * Set TTL in seconds. Default: 1800 (30 minutes).
-     * @param int $ttl
-     * @return static
-     */
-    public function setTtl(int $ttl): static
-    {
-        $this->ttl = $ttl;
-        $this->booted = false;
-        return $this;
-    }
+        $this->model    = new Model();
+        $this->table    = strtolower($guard) . '_auth';
+        $this->lifetime = $lifetime;
 
-    /**
-     * Bootstrap the Auth instance.
-     * Must be called after setType() / setConnection() and before any auth operation.
-     * @return void
-     */
-    public function init(): void
-    {
-        if ($this->booted) {
-            return;
+        if (!self::$booted) {
+            $this->createTable();
+            self::$booted = true;
         }
 
-        // Boot parent Model with the chosen connection
-        parent::__construct($this->connection);
+        $this->purgeExpired();
+    }
 
-        // Resolve current session event and timestamp
-        Session::for($this->type);
-        $this->event = Session::get($this->cookie);
-        $this->time = time();
-        $this->booted = true;
+    // ── Table ───────────────────────────────────────────────────────────────
 
-        // Create auth table if it does not exist yet
-        if (!Schema::on($this->connection)->hasTable($this->table)) {
-            Schema::on($this->connection)->create($this->table, function (Blueprint $t) {
-                $t->string($this->id);
-                $t->binary('data');
-                $t->unsignedInteger('expire');
-                $t->unsignedInteger('created');
+    // ── Token ────────────────────────────────────────────────────────────────
 
-                $t->unique($this->id);
-                $t->index('expire');
-                $t->index('created');
-            });
+    private function buildToken(string $sessionId, int $expiresAt, int $userId): string
+    {
+        $parts = implode('|', [
+            $sessionId,
+            $expiresAt,
+            $userId,
+            $_SERVER['HTTP_USER_AGENT'] ?? '',
+            $this->getIp(),
+        ]);
+
+        return hash_hmac('sha256', $parts, $sessionId);
+    }
+
+    // ── Login ────────────────────────────────────────────────────────────────
+
+    public function login(int $userId, array $userData = []): string
+    {
+        if (session_status() === PHP_SESSION_NONE) {
+            session_start();
         }
 
-        return;
+        $sessionId = session_id();
+        $now       = time();
+        $expiresAt = $now + $this->lifetime;
+        $token     = $this->buildToken($sessionId, $expiresAt, $userId);
+
+        $stmt = $this->pdo->prepare("
+            INSERT INTO `{$this->table}`
+                (token, session_id, user_id, user_agent, ip, user_data, expires_at, created_at)
+            VALUES
+                (:token, :session_id, :user_id, :user_agent, :ip, :user_data, :expires_at, :created_at)
+            ON DUPLICATE KEY UPDATE
+                expires_at = VALUES(expires_at),
+                user_data  = VALUES(user_data)
+        ");
+
+        $stmt->execute([
+            ':token'      => $token,
+            ':session_id' => $sessionId,
+            ':user_id'    => $userId,
+            ':user_agent' => $_SERVER['HTTP_USER_AGENT'] ?? null,
+            ':ip'         => $this->getIp(),
+            ':user_data'  => json_encode($userData),
+            ':expires_at' => $expiresAt,
+            ':created_at' => $now,
+        ]);
+
+        $_SESSION[$this->table . '_token'] = $token;
+
+        return $token;
     }
 
-    /**
-     * Create an auth token row in the DB and bind it to the session.
-     *
-     * @param  array  $user User data to persist
-     * @return string Event ID
-     */
-    public function create(array $user): string
+    // ── Check / Refresh ──────────────────────────────────────────────────────
+
+    public function check(): bool
     {
-        $this->checkBooted();
-        $this->user  = $user;
-        $this->event = $this->generateEventKey();
-        $expire = $this->time + $this->ttl;
-
-        $this->transaction(function ($m) use ($user, $expire) {
-            $m->insert([
-                $this->id => $this->event,
-                'data'    => json_encode($user),
-                'expire'  => $expire,
-                'created' => $this->time,
-            ]);
-        });
-
-        Session::set($this->cookie, $this->event);
-
-        return $this->event;
+        return $this->getRow() !== null;
     }
 
-    /**
-     * Retrieve authenticated user data, or null if unauthenticated / expired.
-     * Automatically regenerates the token when nearing expiry.
-     *
-     * @return ?array
-     */
     public function user(): ?array
     {
-        $this->checkBooted();
-        if (empty($this->event)) {
-            Session::pop($this->cookie);
-            return null;
-        }
+        $row = $this->getRow();
+        if (!$row) return null;
 
-        $row = $this->where([$this->id => $this->event], '=', 'AND')
-                    ->where(['expire' => $this->time], '>')
-                    ->first();
-
-        if (empty($row)) {
-            Session::pop($this->cookie);
-            return null;
-        }
-
-        $this->user = json_decode($row['data'], true);
-
-        if (($row['expire'] - $this->time) < ($this->ttl / 2)) {
-            $this->regenerate();
-        }
-
-        return $this->user;
+        $data           = json_decode($row['user_data'] ?? '[]', true) ?? [];
+        $data['id']     = $row['user_id'];
+        return $data;
     }
 
-    /**
-     * Regenerate Auth Event ID, preserving the current user data.
-     * @return string New event ID
-     */
-    public function regenerate(): string
+    public function refresh(): void
     {
-        $this->checkBooted();
-        $this->destroy(true);
-        return $this->create($this->user);
+        if (session_status() === PHP_SESSION_NONE) {
+            session_start();
+        }
+
+        $token = $_SESSION[$this->table . '_token'] ?? null;
+        if (!$token) return;
+
+        $newExpiry = time() + $this->lifetime;
+
+        $stmt = $this->pdo->prepare("
+            UPDATE `{$this->table}`
+            SET expires_at = :expires_at
+            WHERE token = :token AND expires_at > :now
+        ");
+
+        $stmt->execute([
+            ':expires_at' => $newExpiry,
+            ':token'      => $token,
+            ':now'        => time(),
+        ]);
     }
 
+    // ── Logout ───────────────────────────────────────────────────────────────
+
+    public function logout(): void
+    {
+        if (session_status() === PHP_SESSION_NONE) {
+            session_start();
+        }
+
+        $token = $_SESSION[$this->table . '_token'] ?? null;
+
+        if ($token) {
+            $stmt = $this->pdo->prepare("DELETE FROM `{$this->table}` WHERE token = :token");
+            $stmt->execute([':token' => $token]);
+        }
+
+        unset($_SESSION[$this->table . '_token']);
+    }
+
+    ##################################################################################
+    ################################## INTERNAL API ##################################
+    ##################################################################################
+
     /**
-     * Destroy Auth Session.
-     * @param bool $soft If true, only removes the token without ending the PHP session.
+     * Create Table
      * @return void
      */
-    public function destroy(bool $soft = false): void
+    private function createTable(): void
     {
-        $this->checkBooted();
-        $this->where([$this->id => $this->event])->delete();
-        Session::pop($this->cookie);
-        $this->event = null;
+        Schema::on()->createIfNotExists($this->table, function (Blueprint $table) {
+            $table->id('id');
+            $table->string('token', 512);
+            $table->string('session_id', 128);
+            $table->unsignedInteger('user_id');
+            $table->string('user_agent', 512)->nullable();
+            $table->string('ip', 40)->nullable();
+            $table->serialize('user_data')->nullable()->comment('Serialized Data');
+            $table->unsignedInteger('expires_at');
+            $table->unsignedInteger('created_at');
 
-        if (!$soft) {
-            Session::end();
-        }
-    }
-
-    /*======================================================================*/
-    /*============================ INTERNAL API ============================*/
-    /*======================================================================*/
-    /**
-     * Validate Auth is Booted
-     * @throws RuntimeException
-     * @return void
-     */
-    protected function checkBooted(): void
-    {
-        if (!$this->booted) {
-            throw new RuntimeException("Auth Not Booted. Run Auth::init().");
-        }
+            // Indexes
+            $table->unique('token');
+            $table->index('session_id');
+            $table->index('expires_at');
+        });
     }
 
     /**
-     * Generate a unique, collision-free event key.
-     * @return string
+     * Get a Single Session
+     * @retunr ?array
      */
-    private function generateEventKey(): string
+    private function getRow(): ?array
     {
-        $key  = bin2hex(random_bytes(32));
-        $rows = $this->select($this->id)->where([$this->id => $key])->count();
-        return ($rows === 0) ? $key : $this->generateEventKey();
+        $token = Session::get("{$this->table}_token");
+        if (empty($token)) return null;
+
+        $row = $this->model->table($this->table)->where(['token' => $token])->where(['expires_at' => time()], '>')->first();
+
+        if (empty($row)) return null;
+
+        // Validate IP + UA
+        if ($row['ip'] !== $this->getIp()) return null;
+        if ($row['user_agent'] !== ($_SERVER['HTTP_USER_AGENT'] ?? '')) return null;
+
+        $this->refresh();
+
+        return $row;
+    }
+
+    private function purgeExpired(): void
+    {
+        $this->pdo->prepare("DELETE FROM `{$this->table}` WHERE expires_at <= :now")
+                  ->execute([':now' => time()]);
+    }
+
+    private function getIp(): string
+    {
+        return $_SERVER['HTTP_X_FORWARDED_FOR']
+            ?? $_SERVER['REMOTE_ADDR']
+            ?? '0.0.0.0';
     }
 }

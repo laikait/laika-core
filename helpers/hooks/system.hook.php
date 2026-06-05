@@ -83,3 +83,6 @@ add_hook('lf_footer', 'lf_footer', 1000);
 /*================================== COMMON HOOKS ==================================*/
 /** Get All Timezones */
 add_hook('time_zones', 'time_zones', 1000);
+
+/** App Name */
+add_hook('app_name', 'app_name', 1000);

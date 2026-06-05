@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Laika\Core\System;
 
-use Laika\Core\Service\Config;
 use RuntimeException;
 
 final class MemoryManager
@@ -12,16 +11,10 @@ final class MemoryManager
     /** @var bool $monitorRegistered */
     private static bool $monitorRegistered = false;
 
-    /** @var string $memory_limit */
-    private string $memory_limit;
-
-    /** @var string $cli_memory_limit */
-    private string $cli_memory_limit;
-
     public function __construct()
     {
-        $this->memory_limit = Config::get('env', 'memory.limit', '256M');
-        $this->cli_memory_limit = Config::get('env', 'cli.memory.limit', '256M');
+        if (!defined('MEMORY_LIMIT')) define('MEMORY_LIMIT', '256M');
+        if (!defined('CLI_MEMORY_LIMIT')) define('CLI_MEMORY_LIMIT', '256M');
     }
 
     /**
@@ -31,11 +24,11 @@ final class MemoryManager
     public function apply(): void
     {
         // Check Argumentrs are Valid
-        if (!preg_match('/^\d+[kmg]$/i', $this->memory_limit)) {
-            throw new \InvalidArgumentException("Invalid Memory Limit Parameter: [{$this->memory_limit}]. Valid Format: '256M', '512K', '1G'.");
+        if (!preg_match('/^\d+[kmg]$/i', MEMORY_LIMIT)) {
+            throw new \InvalidArgumentException("MEMORY_LIMIT Constant Has Invalid Value: Valid Format: '256M', '512K', '1G'.");
         }
-        if (!preg_match('/^\d+[kmg]$/i', $this->cli_memory_limit)) {
-            throw new \InvalidArgumentException("Invalid CLI Memory Limit Parameter: [{$this->cli_memory_limit}]. Valid Format: '256M', '512K', '1G'.");
+        if (!preg_match('/^\d+[kmg]$/i', CLI_MEMORY_LIMIT)) {
+            throw new \InvalidArgumentException("CLI_MEMORY_LIMIT Constant Has Invalid Value: Valid Format: '256M', '512K', '1G'.");
         }
 
         $current = ini_get('memory_limit');
@@ -43,7 +36,7 @@ final class MemoryManager
             return;
         }
 
-        $target = $this->isCli() ? $this->cli_memory_limit : $this->memory_limit;
+        $target = $this->isCli() ? CLI_MEMORY_LIMIT : MEMORY_LIMIT;
 
         $this->setMemoryLimitSafely($target);
         return;

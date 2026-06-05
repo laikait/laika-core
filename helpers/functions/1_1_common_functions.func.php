@@ -69,6 +69,16 @@ function purify(array $data): array
 }
 
 /**
+ * App Name
+ * @return string
+ */
+function app_name(): string
+{
+    return config('app', 'name', 'Laika Framework');
+}
+
+
+/**
  * Add Hook
  * @param string $filter Filter Name.
  * @param callable $callback Required Argument.
