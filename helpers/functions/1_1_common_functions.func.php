@@ -484,3 +484,19 @@ function is_loggedin_url(string $named): bool
 {
     return str_starts_with(Url::current(), named($named));
 }
+
+/**
+ * Make API Data
+ * @param bool $success
+ * @param int|string $message
+ * @param array $data
+ * @return array
+ */
+function api_data(bool $success, int|string $message, array $data = []): array
+{
+    return [
+        'success' => $success,
+        'message' => $message,
+        'data' => $data
+    ];
+}

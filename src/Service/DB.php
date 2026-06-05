@@ -21,6 +21,6 @@ class DB extends Relay
 {
     protected static function getRelayAccessor(): string
     {
-        return 'db.init';
+        return 'db';
     }
 }
