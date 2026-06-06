@@ -15,6 +15,7 @@ namespace Laika\Core\Helper;
 use PDO;
 use PDOException;
 use Laika\Model\Connection;
+use Laika\Session\Service\Session;
 
 class DB
 {
@@ -22,7 +23,7 @@ class DB
 
     /**
      * Run Connection
-     * @param string $name Connection Name
+     * @param string $name Connection Name. Default is 'default'
      * @return void
      */
     public function run(string $name = 'default'): void
@@ -43,11 +44,21 @@ class DB
 
     /**
      * Get Connection
-     * @param string $name Connection Name
+     * @param string $name Connection Name. Default is 'default'
      * @return PDO
      */
     public function connection(string $name = 'default'): PDO
     {
         return Connection::get($name);
+    }
+
+    /**
+     * Session in DB
+     * @param string $name Connection Name. Default is 'default'
+     * @return void
+     */
+    public function session(string $name = 'default'): void
+    {
+        Session::config($this->connection($name));
     }
 }
