@@ -209,14 +209,19 @@ abstract class Command
     protected function success(string $message): never
     {
         // Green Text
-        echo "\e[32m[{$this->txt_green('SUCCESS')}]>> \e[0m{$message}\n";
+        echo "\e[32m[{$this->txt_green('SUCCESS')}] => \e[0m{$message}\n";
         exit(0);
     }
 
-    protected function warning(string $message): never
+        /**
+     * @param string $message
+     * This method is used to print informational messages to the console.
+     * @return never
+     */
+    protected function error(string $message): never
     {
-        // Green Text
-        echo "\e[32m[{$this->txt_yellow('WARNING')}]>> \e[0m{$message}\n";
+        // Red Text
+        echo "{$this->txt_red('[ERROR]')} => {$message}\n";
         exit(0);
     }
 
@@ -225,9 +230,17 @@ abstract class Command
      * This method is used to print informational messages to the console.
      * @return never
      */
-    protected function error(string $message): never
+    protected function info(string $message): never
     {
-        echo "\e[31m[{$this->txt_red('ERROR')}]>> \e[0m{$message}\n";
+        // Blue Text
+        echo "{$this->txt_blue('[INFO]')} => {$message}\n";
+        exit(0);
+    }
+
+    protected function warning(string $message): never
+    {
+        // Green Text
+        echo "{$this->txt_yellow('[WARNING]')} => {$message}\n";
         exit(0);
     }
 }
