@@ -12,6 +12,7 @@ declare(strict_types=1);
 
 namespace Laika\Core\Helper;
 
+use PDO;
 use PDOException;
 use Laika\Model\Connection;
 
@@ -19,6 +20,11 @@ class DB
 {
     protected bool $booted = false;
 
+    /**
+     * Run Connection
+     * @param string $name Connection Name
+     * @return void
+     */
     public function run(string $name = 'default'): void
     {
         // Skip If Already Booted
@@ -33,5 +39,15 @@ class DB
                 $this->booted = true;
             }
         }
+    }
+
+    /**
+     * Get Connection
+     * @param string $name Connection Name
+     * @return PDO
+     */
+    public function connection(string $name = 'default'): PDO
+    {
+        return Connection::get($name);
     }
 }

@@ -16,6 +16,7 @@ use Laika\Core\Relay\Relay;
 
 /**
  * @method static void run(string $name = 'default')
+ * @method static \PDO connection(string $name = 'default')
  */
 class DB extends Relay
 {
