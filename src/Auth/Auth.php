@@ -46,22 +46,15 @@ class Auth
     private CONST INVALID_DEVICE = 5;
     private CONST INVALID_OS = 6;
 
-    /**
-     * @param string $guard Example: ADMIN, CLIENT
-     * @param int $lifetime Default is 3600 Seconds
-     */
-    public function __construct(string $guard, int $lifetime = 3600)
+    public function __construct()
     {
-        // Validate guard name
-        if (!preg_match('/^[a-z]+$/i', $guard)) throw new RuntimeException("Invalid Auth Guard Name: [{$guard}]". " Only Letters Allowed.");
-
         DB::run(); // Ensure DB is initialized
-        Session::config(DB::connection()); // Config Session
+        DB::session(); // Ensure Session in DB
 
         $this->model        =   new Model();
-        $this->token_key    =   'TOKEN_' . strtoupper($guard);
-        $this->table        =   'lf_auth_' . strtolower($guard);
-        $this->lifetime     =   $lifetime;
+        $this->token_key    =   'AUTH_TOKEN';
+        $this->table        =   'lf_authorizations';
+        $this->lifetime     =   3600;
         $this->realtime     =   time();
 
         // Create Table if Does Not Exists
@@ -72,25 +65,37 @@ class Auth
     ################################### PUBLIC API ###################################
     ##################################################################################
     /**
+     * Set Lifetime
+     * @param int $ttl In Seconds
+     * @return void
+     */
+    public function setLifeTime(int $ttl): void
+    {
+        $this->lifetime = $ttl;
+    }
+
+    /**
      * Login
+     * @param string $userType
      * @param int $userId
      * @param array $userData
      * @return string
      */
-    public function login(int $userId, array $userData = []): string
+    public function login(string $userType, int $userId, array $userData = []): string
     {
-        $token = $this->buildToken($userId);
+        $token = $this->buildToken($userType, $userId);
 
         $sql = "INSERT INTO `{$this->table}`
-                (token, session_id, user_id, user_agent, device, os, user_data, expires_at, created_at)
+                (token, session_id, user_type, user_id, user_agent, device, os, user_data, expires_at, created_at)
             VALUES
-                (:token, :session_id, :user_id, :user_agent, :device, :os, :user_data, :expires_at, :created_at)
+                (:token, :session_id, :user_type, :user_id, :user_agent, :device, :os, :user_data, :expires_at, :created_at)
             ON DUPLICATE KEY UPDATE
                 expires_at = VALUES(expires_at),
                 user_data  = VALUES(user_data)";
         $params = [
             ':token'        =>  $token,
             ':session_id'   =>  Session::id(),
+            ':user_type'    =>  $userType,
             ':user_id'      =>  $userId,
             ':user_data'    =>  serialize($userData),
             ':user_agent'   =>  Visitor::userAgent(),
@@ -153,15 +158,17 @@ class Auth
     ##################################################################################
     /**
      * Build Token
+     * @param string $userType
      * @param int|string $userId
      * @return string
      */
-    private function buildToken(int|string $userId): string
+    private function buildToken(string $userType, int|string $userId): string
     {
         $expiresAt = $this->realtime + $this->lifetime;
         $str = implode('|', [
             Session::id(),
             $expiresAt,
+            $userType,
             $userId,
             Visitor::userAgent(),
             Visitor::deviceType(),
@@ -182,6 +189,7 @@ class Auth
             $table->id('id');
             $table->string('token', 512);
             $table->string('session_id', 128);
+            $table->string('user_type', 50);
             $table->unsignedInteger('user_id');
             $table->string('user_agent', 512)->nullable();
             $table->string('device', 40)->nullable();
