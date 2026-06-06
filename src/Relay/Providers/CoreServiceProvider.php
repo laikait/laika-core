@@ -12,6 +12,7 @@ namespace Laika\Core\Relay\Providers;
 
 use Laika\Core\IP\IP;
 use Laika\Core\Api\Api;
+use Laika\Core\Auth\Auth;
 use Laika\Core\Helper\DB;
 use Laika\Core\App\Infra;
 use Laika\Core\Helper\Url;
@@ -66,6 +67,7 @@ class CoreServiceProvider extends RelayProvider
         $this->registry->singleton('ip', IP::class);
         $this->registry->singleton('url', Url::class);
         $this->registry->singleton('api', Api::class);
+        $this->registry->singleton('auth', Auth::class);
         $this->registry->singleton('date', Date::class);
         $this->registry->singleton('meta', Meta::class);
         $this->registry->singleton('page', Page::class);

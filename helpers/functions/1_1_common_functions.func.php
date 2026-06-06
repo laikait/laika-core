@@ -492,7 +492,7 @@ function is_loggedin_url(string $named): bool
  * @param array $data
  * @return array
  */
-function api_data(bool $success, int|string $message, array $data = []): array
+function response(bool $success, int|string $message, array $data = []): array
 {
     return [
         'success' => $success,

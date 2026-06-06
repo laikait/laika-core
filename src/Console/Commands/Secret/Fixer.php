@@ -44,6 +44,8 @@ class Fixer extends Command
             // Set Message
             $this->success("{$byte} Byte Secret Generated Successfully");
         }
+        // Set Message
+        $this->info("Secret Already Exists!");
         return;
     }
 }

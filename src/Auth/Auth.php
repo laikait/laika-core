@@ -46,58 +46,61 @@ class Auth
     private CONST INVALID_DEVICE = 5;
     private CONST INVALID_OS = 6;
 
-    /**
-     * @param string $guard Example: ADMIN, CLIENT
-     * @param int $lifetime Default is 3600 Seconds
-     */
-    public function __construct(string $guard, int $lifetime = 3600)
+    public function __construct()
     {
-        // Validate guard name
-        if (!preg_match('/^[a-z]+$/i', $guard)) throw new RuntimeException("Invalid Auth Guard Name: [{$guard}]". " Only Letters Allowed.");
-
         DB::run(); // Ensure DB is initialized
+        DB::session(); // Ensure Session in DB
 
         $this->model        =   new Model();
-        $this->token_key    =   'TOKEN_' . strtoupper($guard);
-        $this->table        =   'lf_auth_' . strtolower($guard);
-        $this->lifetime     =   $lifetime;
+        $this->token_key    =   'AUTH_TOKEN';
+        $this->table        =   'lf_authorizations';
+        $this->lifetime     =   3600;
         $this->realtime     =   time();
 
+        // Create Table if Does Not Exists
         $this->createTable();
-        $this->purgeExpired();
     }
 
     ##################################################################################
     ################################### PUBLIC API ###################################
     ##################################################################################
-    // ── Login ────────────────────────────────────────────────────────────────
+    /**
+     * Set Lifetime
+     * @param int $ttl In Seconds
+     * @return void
+     */
+    public function setLifeTime(int $ttl): void
+    {
+        $this->lifetime = $ttl;
+    }
 
     /**
      * Login
-     * @param string $type
-     * @param int $id
+     * @param string $userType
+     * @param int $userId
      * @param array $userData
      * @return string
      */
-    public function login(string $type, int $id, array $userData = []): string
+    public function login(string $userType, int $userId, array $userData = []): string
     {
-        $token = $this->buildToken($type, $id);
+        $token = $this->buildToken($userType, $userId);
 
         $sql = "INSERT INTO `{$this->table}`
-                (token, session_id, user_id, user_agent, device, os, user_data, expires_at, created_at)
+                (token, session_id, user_type, user_id, user_agent, device, os, user_data, expires_at, created_at)
             VALUES
-                (:token, :session_id, :user_id, :user_agent, :device, :os, :user_data, :expires_at, :created_at)
+                (:token, :session_id, :user_type, :user_id, :user_agent, :device, :os, :user_data, :expires_at, :created_at)
             ON DUPLICATE KEY UPDATE
                 expires_at = VALUES(expires_at),
                 user_data  = VALUES(user_data)";
         $params = [
             ':token'        =>  $token,
             ':session_id'   =>  Session::id(),
-            ':user_id'      =>  $id,
+            ':user_type'    =>  $userType,
+            ':user_id'      =>  $userId,
+            ':user_data'    =>  serialize($userData),
             ':user_agent'   =>  Visitor::userAgent(),
             ':device'       =>  Visitor::deviceType(),
             ':os'           =>  Visitor::os(),
-            ':user_data'    =>  serialize($userData),
             ':expires_at'   =>  $this->realtime + $this->lifetime,
             ':created_at'   =>  $this->realtime,
         ];
@@ -112,15 +115,19 @@ class Auth
         return $token;
     }
 
+    /**
+     * Get Logged-in User
+     * @return array{success:string,status:int|string,data:array}
+     */
     public function user(): array
     {
         $row = $this->getRow();
-        if (!$row['success'] || ($row['message'] !== Auth::AUTHORIZED)) return api_data(false, Auth::UNAUTHORIZED, []);
+        if (!$row['success'] || ($row['message'] !== Auth::AUTHORIZED)) return response(false, Auth::UNAUTHORIZED, []);
         $user = unserialize($row['data']['user_data'] ?? '[]') ?? [];
 
-        if (empty($user)) return api_data(false, Auth::UNAUTHORIZED, []);
+        if (empty($user)) return response(false, Auth::UNAUTHORIZED, []);
 
-        return api_data(true, Auth::AUTHORIZED, $user);
+        return response(true, Auth::AUTHORIZED, $user);
     }
 
     public function refresh(): void
@@ -141,9 +148,9 @@ class Auth
     public function logout(): void
     {
         $token = Session::get('token', null, $this->token_key);
+        Session::destroy();
         if (!$token) return;
         $this->model->table($this->table)->where(['token' => $token])->delete();
-        Session::purge($this->token_key);
     }
 
     ##################################################################################
@@ -151,25 +158,24 @@ class Auth
     ##################################################################################
     /**
      * Build Token
-     * @param string $type
-     * @param int $id
+     * @param string $userType
+     * @param int|string $userId
      * @return string
      */
-    private function buildToken(string $type, int $id): string
+    private function buildToken(string $userType, int|string $userId): string
     {
-        $type = strtolower($type);
         $expiresAt = $this->realtime + $this->lifetime;
-        $parts = implode('|', [
+        $str = implode('|', [
             Session::id(),
             $expiresAt,
-            $type,
-            $id,
+            $userType,
+            $userId,
             Visitor::userAgent(),
             Visitor::deviceType(),
             Visitor::os(),
         ]);
 
-        return hash_hmac('sha256', $parts, config('secret', 'key'));
+        return hash_hmac('sha256', $str, config('secret', 'key'));
     }
 
     /**
@@ -183,6 +189,7 @@ class Auth
             $table->id('id');
             $table->string('token', 512);
             $table->string('session_id', 128);
+            $table->string('user_type', 50);
             $table->unsignedInteger('user_id');
             $table->string('user_agent', 512)->nullable();
             $table->string('device', 40)->nullable();
@@ -206,7 +213,7 @@ class Auth
     private function getRow(): array
     {
         $token = Session::get('token', null, $this->token_key);
-        if (!$token) return api_data(false, Auth::INVALID_TOKEN, []);
+        if (!$token) return response(false, Auth::INVALID_TOKEN, []);
 
         $row = $this->model
                     ->table($this->table)
@@ -214,36 +221,27 @@ class Auth
                     ->where(['expires_at' => $this->realtime], '>')
                     ->first();
 
-        if (empty($row)) return api_data(false, Auth::INVALID_TOKEN, []);
+        if (empty($row)) return response(false, Auth::INVALID_TOKEN, []);
 
         // Validate User Agent
         if ($row['user_agent'] !== Visitor::userAgent()) {
             $this->logout();
-            return api_data(false, Auth::INVALID_USER_AGENT, []);
+            return response(false, Auth::INVALID_USER_AGENT, []);
         }
         // Validate Device
         if ($row['device'] !== Visitor::deviceType()) {
             $this->logout();
-            return api_data(false, Auth::INVALID_DEVICE, []);
+            return response(false, Auth::INVALID_DEVICE, []);
         }
         // Validate OS
         if ($row['os'] !== Visitor::os()) {
             $this->logout();
-            return api_data(false, Auth::INVALID_OS, []);
+            return response(false, Auth::INVALID_OS, []);
         }
 
         // Refresh Expire Time
         $this->refresh();
 
-        return api_data(true, Auth::AUTHORIZED, $row);
-    }
-
-    /**
-     * Purge Expired Token Data
-     * @return void
-     */
-    private function purgeExpired(): void
-    {
-        $this->model->table($this->table)->where(['expires_at' => $this->realtime], '<=')->delete();
+        return response(true, Auth::AUTHORIZED, $row);
     }
 }
