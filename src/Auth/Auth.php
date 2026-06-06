@@ -39,12 +39,12 @@ class Auth
     private static bool $booted = false;
 
     /** Constants */
-    private CONST AUTHORIZED = 1;
-    private CONST UNAUTHORIZED = 2;
-    private CONST INVALID_TOKEN = 3;
-    private CONST INVALID_USER_AGENT = 4;
-    private CONST INVALID_DEVICE = 5;
-    private CONST INVALID_OS = 6;
+    public CONST AUTHORIZED = 1;
+    public CONST UNAUTHORIZED = 2;
+    public CONST INVALID_TOKEN = 3;
+    public CONST INVALID_USER_AGENT = 4;
+    public CONST INVALID_DEVICE = 5;
+    public CONST INVALID_OS = 6;
 
     public function __construct()
     {
