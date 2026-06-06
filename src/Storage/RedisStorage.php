@@ -1,5 +1,4 @@
 <?php
-
 /**
  * Laika PHP MVC Framework
  * Author: Showket Ahmed
@@ -52,7 +51,7 @@ class RedisStorage
     {
         // Check Extension Loaded
         if (!\extension_loaded('redis')) {
-            throw new RuntimeException("Memcached Extension Not Loaded!");
+            throw new RuntimeException("Extension Not Loaded: [php-redis]!");
         }
 
         // Get Config

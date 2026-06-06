@@ -17,7 +17,10 @@ use Laika\Core\Route\Dispatcher;
 
 class Http
 {
+    /** @var string $context */
     private string $context    = 'route';
+
+    /** @var string $contextKey */
     private string $contextKey = '';
 
     /**

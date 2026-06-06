@@ -15,8 +15,8 @@ use Laika\Model\Model;
 use Laika\Core\Service\DB;
 use Laika\Model\Schema\Schema;
 use Laika\Core\Service\Visitor;
-use Laika\Session\Service\Session;
 use Laika\Model\Schema\Blueprint;
+use Laika\Session\Service\Session;
 
 class Auth
 {

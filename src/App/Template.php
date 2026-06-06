@@ -17,7 +17,6 @@ use Twig\Loader\FilesystemLoader as Engine;
 use Laika\Core\Service\Directory;
 use Laika\Core\Service\Visitor;
 use Laika\Core\Service\Request;
-use Laika\Core\Service\Config;
 use Laika\Core\Service\Local;
 use Laika\Core\Service\File;
 use Laika\Core\Service\Page;
@@ -63,7 +62,7 @@ class Template
         // Run Template Engine
         $engine = new Engine($this->templateDirectory);
         $this->twig = new Environment($engine, [
-            'debug' =>  Config::get('env', 'debug', true),
+            'debug' =>  DEBUG,
             'cache' =>  $this->cacheDirectory
         ]);
 

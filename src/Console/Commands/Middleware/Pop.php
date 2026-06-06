@@ -12,8 +12,8 @@ declare(strict_types=1);
 
 namespace Laika\Core\Console\Commands\Middleware;
 
-use Laika\Core\Console\Command;
 use Laika\Core\Service\File;
+use Laika\Core\Console\Command;
 
 // Remove Middleware Class
 class Pop extends Command

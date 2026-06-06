@@ -22,12 +22,8 @@ class Response
      * @param array $meta
      * @return void
      */
-    public static function success(
-        array $data = [],
-        string $message = 'Success',
-        int $status = 200,
-        array $meta = []
-    ) {
+    public static function success(array $data = [], string $message = 'Success', int $status = 200, array $meta = [])
+    {
         http_response_code($status);
 
         echo json_encode([
@@ -48,12 +44,8 @@ class Response
      * @param array $meta
      * @return void
      */
-    public static function error(
-        string $message = 'Error',
-        int $status = 400,
-        array $errors = [],
-        array $meta = []
-    ) {
+    public static function error(string $message = 'Error', int $status = 400, array $errors = [], array $meta = [])
+    {
         http_response_code($status);
 
         echo json_encode([

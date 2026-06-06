@@ -12,11 +12,11 @@ declare(strict_types=1);
 
 namespace Laika\Core\Console\Commands;
 
-use Laika\Core\Exceptions\MigrationException;
-use Laika\Core\Console\Command;
-use Laika\Model\Schema\Schema;
-use Laika\Core\Service\Config;
 use Laika\Model\Connection;
+use Laika\Model\Schema\Schema;
+use Laika\Core\Console\Command;
+use Laika\Core\Service\{Infra, Config, DB};
+use Laika\Core\Exceptions\MigrationException;
 
 class Migrate extends Command
 {
@@ -40,47 +40,44 @@ class Migrate extends Command
             return;
         }
         // Connect DB
-        Connection::add($config);
+        try {
+            DB::run();
+        } catch (\Throwable $th) {
+            $this->error("Database Connection Error");
+            return;
+        }
 
         // Create Table
         try {
             // Migrate Migration Tables
-            $schemaClasses = $schema ?
-                    ["\\App\\Migration\\{$schema}"] :
-                    call_user_func([new \Laika\Core\App\Infra(), 'getSchemaClasses']);
+            $schemaClasses = $schema ? ["\\App\\Migration\\{$schema}"] : Infra::getSchemaClasses();
 
             // Show Error if No Migration Exists
             if (empty($schemaClasses)) {
-                $this->error("No Migrations Found to Run!");
+                $this->warning("No Migrations Found to Run!");
                 return;
             }
 
             // Migrate Tables
-            try {
-                // Disable Foreign Key Check
-                Schema::on()->statement('SET foreign_key_checks = 0');
+            // Disable Foreign Key Check
+            Schema::on()->statement('SET foreign_key_checks = 0');
 
-                // Migrate Schema
-                array_map(function ($table) {
-                    $tblModel = new $table();
-                    if (!method_exists($tblModel, 'migrate')) {
-                        throw new MigrationException("{$table}::migrate() Method Doesn't Exists!");
-                    }
-                    $tblModel->migrate();
-                }, $schemaClasses);
+            // Migrate Schema
+            array_map(function ($table) {
+                $tblModel = new $table();
+                if (!method_exists($tblModel, 'migrate')) {
+                    throw new MigrationException("{$table}::migrate() Method Doesn't Exists!");
+                }
+                $tblModel->migrate();
+            }, $schemaClasses);
 
-                // Migrate Default Column Values
-                array_map(function ($table) {
-                    $tblModel = new $table();
-                    if (method_exists($tblModel, 'default')) {
-                        $tblModel->default();
-                    }
-                }, $schemaClasses);
-
-            } catch (\Throwable $th) {
-                $this->error($th->getMessage());
-                return;
-            }
+            // Migrate Default Column Values
+            array_map(function ($table) {
+                $tblModel = new $table();
+                if (method_exists($tblModel, 'default')) {
+                    $tblModel->default();
+                }
+            }, $schemaClasses);
 
             // Create Secret Config File if Not Exist
             if (!Config::has('secret')) {
@@ -94,7 +91,8 @@ class Migrate extends Command
             $this->success("Database Migrated Successfully");
             return;
         } catch (\Throwable $th) {
-            $this->error($th->getMessage() . ' ' . $th->getFile() . ':' . $th->getLine());
+            $message = DEBUG ? "{$th->getMessage()} {$th->getFile()}:{$th->getLine()}" : "Migration Failed!";
+            $this->error($message);
             return;
         }
     }

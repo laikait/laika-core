@@ -11,8 +11,7 @@
 
 namespace Laika\Core\Helper;
 
-use Laika\Core\Service\Url;
-use Laika\Core\Service\Request;
+use Laika\Core\Service\{Url, Request};
 
 class Page
 {

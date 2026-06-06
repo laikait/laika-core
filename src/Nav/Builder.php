@@ -12,8 +12,7 @@ declare(strict_types=1);
 
 namespace Laika\Core\Nav;
 
-use Laika\Core\Nav\Helper\Node;
-use Laika\Core\Nav\Helper\Item;
+use Laika\Core\Nav\Helper\{Node, Item};
 
 class Builder extends Node
 {

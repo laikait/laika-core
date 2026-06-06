@@ -12,14 +12,8 @@ declare(strict_types=1);
 
 namespace Laika\Core\Route;
 
-use Laika\Core\Service\Url as UrlHelper;
 use Laika\Core\System\MemoryManager;
-use Laika\Core\Service\Directory;
-use Laika\Core\Service\Header;
-use Laika\Core\Service\Config;
-use Laika\Core\Service\Token;
-use Laika\Core\Service\Csrf;
-use Laika\Core\Service\Date;
+use Laika\Core\Service\{Directory, Header, Config, Token, Csrf, Date, Url as UrlHelper};
 
 class Dispatcher
 {

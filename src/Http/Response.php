@@ -34,6 +34,7 @@ class Response
             "Cache-Control"                     =>  "no-store, no-cache, must-revalidate",
             "Pragma"                            =>  "no-cache",
             "Expires"                           =>  "0",
+            "Accept"                            =>  "*/*",
         ];
     }
 
@@ -60,7 +61,7 @@ class Response
      * Set or overwrite headers
      * @return void
      */
-    public function setHeader(array $headers = []): void
+    public function set(array $headers = []): void
     {
         foreach ($headers as $key => $value) {
             header(trim($key) . ": " . trim((string) $value), true);
@@ -102,7 +103,7 @@ class Response
      * Response Status Codes With Message & Reference
      * @return array
      */
-    public function codes()
+    public function statusCodes(): array
     {
         return [
             // 1xx Informational Responses

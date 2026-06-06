@@ -12,8 +12,7 @@ declare(strict_types=1);
 
 namespace Laika\Core\Route;
 
-use Laika\Core\Interfaces\MiddlewareInterface;
-use Laika\Core\Interfaces\AfterwareInterface;
+use Laika\Core\Interfaces\{MiddlewareInterface, AfterwareInterface};
 use Laika\Core\Exceptions\RouteException;
 
 class Invoke
