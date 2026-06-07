@@ -13,7 +13,7 @@ declare(strict_types=1);
 namespace Laika\Core\Route;
 
 use Laika\Core\System\MemoryManager;
-use Laika\Core\Service\{Directory, Header, Config, Token, Csrf, Date, Url as UrlHelper};
+use Laika\Core\Service\{Directory, Header, Config, Token, Csrf, Date, Activity, Url as UrlHelper};
 
 class Dispatcher
 {
@@ -75,7 +75,11 @@ class Dispatcher
         );
 
         try {
-            echo Invoke::afterware($afterwares, $output, $params);
+            $str = Invoke::afterware($afterwares, $output, $params);
+            // Insert Log
+            if (DB_LOG) Activity::insert();
+            // Return String
+            echo $str;
         } catch (\Throwable $e) {
             report_error($e);
         }

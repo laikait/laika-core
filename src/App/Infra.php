@@ -36,8 +36,10 @@ class Infra
      */
     public function getSchemaClasses(): array
     {
+        $defaults = Directory::files(__DIR__ . '/../Migration', 'php');
+        $classes = array_map(function ($file) { return 'Laika\\Core\\Migration\\' . File::name($file); }, $defaults);
         $files = Directory::files(APP_PATH . '/lf-app/Migration', 'php');
-        return array_map(function ($file) { return 'App\\Migration\\' . File::name($file); }, $files);
+        return array_merge($classes, array_map(function ($file) { return 'App\\Migration\\' . File::name($file); }, $files));
     }
 
     /*============================ Controllers Info ============================*/
