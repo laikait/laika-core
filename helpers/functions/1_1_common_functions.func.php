@@ -11,6 +11,7 @@
 declare(strict_types=1);
 
 use Laika\Core\Service\Url;
+use Laika\Model\Connection;
 use Laika\Core\Route\Router;
 use Laika\Core\Service\Hook;
 use Laika\Core\Service\Csrf;
@@ -142,6 +143,26 @@ function named(string $name, array $params = []): string
 function config(string $name, ?string $key = null, mixed $default = null): mixed
 {
     return Config::get($name, $key, $default);
+}
+
+/**
+ * Add Connection
+ * @param string $name Connection Name
+ * @return void
+ */
+function add_connection(string $name = 'default'): void
+{
+    if (!Connection::has($name)) Connection::add(config('database', $name, []));
+}
+
+/**
+ * Gete Connection
+ * @param string $name Connection Name
+ * @return \PDO
+ */
+function get_connection(string $name = 'default'): \PDO
+{
+    return Connection::get($name);
 }
 
 /**

@@ -26,6 +26,7 @@ use Laika\Core\Helper\Page;
 use Laika\Core\Helper\Hook;
 use Laika\Core\Helper\Math;
 use Laika\Core\Regex\Regex;
+use Laika\Core\Log\Activity;
 use Laika\Core\Http\Request;
 use Laika\Core\Helper\Image;
 use Laika\Core\Helper\Local;
@@ -90,6 +91,7 @@ class CoreServiceProvider extends RelayProvider
         $this->registry->singleton('email', Sendmail::class);
         $this->registry->singleton('visitor', Client::class);
         $this->registry->singleton('request', Request::class);
+        $this->registry->singleton('activity', Activity::class);
         $this->registry->singleton('redirect', Redirect::class);
         $this->registry->singleton('changelog', ChangeLog::class);
         $this->registry->singleton('directory', Directory::class);

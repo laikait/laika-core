@@ -16,8 +16,11 @@ namespace Laika\Core\Log;
 // Deny Direct Access
 defined('APP_PATH') || http_response_code(403) . die('403 Direct Access Denied!');
 
-use Laika\Core\Service\Visitor;
+use Laika\Model\Model;
+use Laika\Core\Service\DB;
 use InvalidArgumentException;
+use Laika\Core\Service\Visitor;
+use Laika\Core\Exceptions\LogException;
 
 final class Activity
 {
@@ -45,87 +48,42 @@ final class Activity
      * Set Author
      * @param ?string $type Example: client/admin/system
      * @param ?int $id Example: 1/2/3
-     * @return self
+     * @return static
      */
-    public function author(?string $type = null, ?int $id = null): self
+    public function author(?string $type = null, ?int $id = null): static
     {
         $this->author = [
             'type'  =>  strtolower($type ?? 'system'),
             'id'    =>  $id,
         ];
+        return $this;
     }
 
     /**
      * Log Details
      * @param string $log
-     * @return self
+     * @return static
      */
-    public function log(string $log): self
+    public function log(string $log): static
     {
         $this->log = trim($log);
+        return $this;
     }
 
     /**
-     * Create Create Activity
-     * @return void
-     */
-    public function create()
-    {
-        $this->activities['create'][] = [
-            'author_type'   =>  $this->author['type'],
-            'author_id'     =>  $this->author['id'],
-            'event'         =>  'create',
-            'log'           =>  $this->log,
-            'changes'       =>  serialize([]),
-            'from_ip'       =>  Visitor::ip()
-        ];
-    }
-
-    /**
-     * Create Read Activity
-     * @return void
-     */
-    public function read()
-    {
-        $this->activities['create'][] = [
-            'author_type'   =>  $this->author['type'],
-            'author_id'     =>  $this->author['id'],
-            'event'         =>  'read',
-            'log'           =>  $this->log,
-            'changes'       =>  serialize([]),
-            'from_ip'       =>  Visitor::ip()
-        ];
-    }
-
-    /**
-     * Create Update Activity
+     * Create Custom Activity
+     * @param string $event
      * @param array $changes
      * @return void
      */
-    public function update(array $changes = [])
+    public function event(string $event, array $changes = []): void
     {
-        $this->activities['create'][] = [
+        $this->activities[$event][] = [
             'author_type'   =>  $this->author['type'],
             'author_id'     =>  $this->author['id'],
-            'event'         =>  'update',
+            'event'         =>  strtolower(trim($event)),
             'log'           =>  $this->log,
             'changes'       =>  serialize($changes),
-            'from_ip'       =>  Visitor::ip()
-        ];
-    }
-
-    /**
-     * Create Update Activity
-     * @return void
-     */
-    public function delete()
-    {
-        $this->activities['create'][] = [
-            'author_type'   =>  $this->author['type'],
-            'author_id'     =>  $this->author['id'],
-            'event'         =>  'update',
-            'log'           =>  $this->log,
-            'changes'       =>  serialize([]),
             'from_ip'       =>  Visitor::ip()
         ];
     }
@@ -136,7 +94,7 @@ final class Activity
      * @return array
      * @throws InvalidArgumentException
      */
-    public function actions(?string $event = null): array
+    public function events(?string $event = null): array
     {
         $event = strtolower($event);
         if ($event === null) {
@@ -145,6 +103,36 @@ final class Activity
             return $this->activities[$event];
         }
         throw new InvalidArgumentException("Invalid Activity Event Key: [{$event}]");
+    }
+
+    /**
+     * Insert Activities
+     * @param ?string $connection Connection Name
+     * @return int
+     */
+    public function insert(?string $connection = null): int
+    {
+        // Initiate Database
+        DB::run();
+
+        // Start Count
+        $effected = 0;
+
+        $model = new Model($connection);
+        try {
+            foreach($this->activities as $event => $logs) {
+                $model->transaction(function (Model $m) use ($effected) {
+                    $effected += $m->table('activities')->insert($logs);
+                });
+            }
+        } catch (\Throwable $th) {
+            if (DEBUG) throw new LogException($th->getMessage());
+        }
+
+        // Reset
+        $this->reset();
+
+        return $effected;
     }
 
     ####################################################################################
