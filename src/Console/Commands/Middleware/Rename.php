@@ -12,9 +12,9 @@ declare(strict_types=1);
 
 namespace Laika\Core\Console\Commands\Middleware;
 
-use Laika\Core\Service\Directory;
 use Laika\Core\Service\File;
 use Laika\Core\Console\Command;
+use Laika\Core\Service\Directory;
 
 // Rename Middleware Class
 class Rename extends Command

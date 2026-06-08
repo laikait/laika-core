@@ -12,14 +12,8 @@ declare(strict_types=1);
 
 namespace Laika\Core\Route;
 
-use Laika\Core\Service\Url as UrlHelper;
 use Laika\Core\System\MemoryManager;
-use Laika\Core\Service\Directory;
-use Laika\Core\Service\Header;
-use Laika\Core\Service\Config;
-use Laika\Core\Service\Token;
-use Laika\Core\Service\Csrf;
-use Laika\Core\Service\Date;
+use Laika\Core\Service\{Directory, Config, Token, Csrf, Date, Activity, Response, Url as UrlHelper};
 
 class Dispatcher
 {
@@ -81,7 +75,12 @@ class Dispatcher
         );
 
         try {
-            echo Invoke::afterware($afterwares, $output, $params);
+            $str = Invoke::afterware($afterwares, $output, $params);
+            // Insert Log
+            if (DB_LOG) Activity::insert();
+            // Send Response
+            // echo $str;
+            Response::body($str)->send();
         } catch (\Throwable $e) {
             report_error($e);
         }
@@ -97,12 +96,13 @@ class Dispatcher
     private static function handleFallback(string $requestUrl, array $params): void
     {
         // 404 Response
-        Header::code(404);
+        // Header::code(404);
+        Response::status(404);
 
         $fallbacks = Router::getFallbacks();
 
         if (empty($fallbacks)) {
-            echo _404::show();
+            Response::body(_404::show())->send();
             return;
         }
 
@@ -116,7 +116,7 @@ class Dispatcher
             }
 
             if ($fallback['controller'] === null) {
-                echo _404::show();
+                Response::body(_404::show())->send();
                 return;
             }
 
@@ -127,7 +127,8 @@ class Dispatcher
             }
 
             try {
-                echo Invoke::afterware($fallback['afterwares'], $output, $params);
+                $str = Invoke::afterware($fallback['afterwares'], $output, $params);
+                Response::body($str)->send();
             } catch (\Throwable $e) {
                 report_error($e);
             }
@@ -135,7 +136,7 @@ class Dispatcher
             return;
         }
 
-        echo _404::show();
+        Response::body(_404::show())->send();
     }
 
     /**
@@ -145,14 +146,14 @@ class Dispatcher
     private static function registerHeaders(): void
     {
         $headers = [
-            "Request-Time"  =>  (int) Config::get('env', 'start.time', time()),
+            "Request-Time"  =>  (int) Config::get('env', 'start_time', time()),
             "App-Name"      =>  Config::get('app', 'name', 'Laika Framework'),
             "Authorization" =>  Token::generate([
                     'uid' =>  mt_rand(100001, 999999),
                     'requestor' =>  UrlHelper::base()
                 ])
         ];
-        Header::set($headers);
+        Response::setHeaders($headers);
         Csrf::generate();
         return;
     }
@@ -189,9 +190,6 @@ class Dispatcher
         $manager = new MemoryManager();
         $manager->apply();
         $manager->monitor();
-
-        // Set Default Headers
-        Header::register();
 
         // Load Routes
         Url::LoadRoutes();

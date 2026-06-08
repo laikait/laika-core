@@ -16,9 +16,13 @@ use Laika\Core\Relay\ProviderRegistry;
 use Laika\Core\Relay\Providers\CoreServiceProvider;
 
 // Define APP_PATH
-if (!defined('APP_PATH')) {
-    define('APP_PATH', realpath(__DIR__ . '/../../../../'));
-}
+if (!defined('APP_PATH')) define('APP_PATH', realpath(__DIR__ . '/../../../../'));
+
+// Define DEBUG
+if (!defined('DEBUG')) define('DEBUG', true);
+
+// Define DB_LOG
+if (!defined('DB_LOG')) define('DB_LOG', false);
 
 ####################################################################################
 /*--------------------------------- RELAY LOADER ---------------------------------*/

@@ -12,7 +12,7 @@ declare(strict_types=1);
 
 namespace Laika\Core\Http;
 
-use Laika\Session\Session;
+use Laika\Session\Service\Session;
 use Laika\Core\Exceptions\HttpException;
 
 class Redirect
@@ -29,6 +29,7 @@ class Redirect
      */
     public function with(string $message, bool $status): static
     {
+        Session::config();
         Session::set('alert', ['message' => $message, 'status' => $status]);
         return $this;
     }

@@ -15,12 +15,20 @@ namespace Laika\Core\Service;
 use Laika\Core\Relay\Relay;
 
 /**
- * @method static 
+ * @method static static    setLifetime(int $ttl)
+ * @method static string    login(int $userId, array $userData)
+ * @method static bool      check()
+ * @method static bool      guest()
+ * @method static array     data()
+ * @method static array     user()
+ * @method static ?int      id()
+ * @method static ?string   type()
+ * @method static void      logout()
  */
-class Auth extends Relay
+class ClientAuth extends Relay
 {
     protected static function getRelayAccessor(): string
     {
-        return 'auth';
+        return 'client.auth';
     }
 }

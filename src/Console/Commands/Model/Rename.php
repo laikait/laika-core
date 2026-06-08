@@ -12,9 +12,9 @@ declare(strict_types=1);
 
 namespace Laika\Core\Console\Commands\Model;
 
-use Laika\Core\Service\Directory;
 use Laika\Core\Service\File;
 use Laika\Core\Console\Command;
+use Laika\Core\Service\Directory;
 
 // Rename Model Class
 class Rename extends Command

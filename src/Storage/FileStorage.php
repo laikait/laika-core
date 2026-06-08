@@ -1,5 +1,4 @@
 <?php
-
 /**
  * Laika PHP MVC Framework
  * Author: Showket Ahmed
@@ -73,14 +72,14 @@ class FileStorage
     public function __construct(string $disk = 'local', array $config = [], ?string $publicBaseUrl = null)
     {
         // Check Disk is Supported
-        $disk = \strtolower($disk);
-        if (!\in_array($disk, ['local', 's3'])) {
+        $disk = strtolower($disk);
+        if (!in_array($disk, ['local', 's3'])) {
             throw new RuntimeException("Unsupported Disk [{$disk}]. Accepted Disk Types Are: [local], [s3]");
         }
 
         $this->disk = $disk;
         $this->config = $config;
-        $this->publicBaseUrl = $publicBaseUrl ? \rtrim($publicBaseUrl, '/') . '/' : $publicBaseUrl;
+        $this->publicBaseUrl = $publicBaseUrl ? rtrim($publicBaseUrl, '/') . '/' : $publicBaseUrl;
 
         if ($this->disk === 's3') {
             $this->path = 'lf-storage';
@@ -107,7 +106,7 @@ class FileStorage
                 ]
             ]);
         } else {
-            $this->path = \realpath(APP_PATH . '/lf-storage');
+            $this->path = realpath(APP_PATH . '/lf-storage');
             Directory::make($this->path);
         }
     }
@@ -121,21 +120,21 @@ class FileStorage
     public function upload(array|string $file, ?string $destination = null): string|false
     {
         // Normalize destination
-        $this->path .= $destination ? '/' . \trim($destination, '/') : \date('/Y/m/d');
+        $this->path .= $destination ? '/' . trim($destination, '/') : date('/Y/m/d');
 
         // Determine temp file and name
-        if (\is_array($file) && isset($file['tmp_name'])) {
+        if (is_array($file) && isset($file['tmp_name'])) {
             $tmpFile = $file['tmp_name'];
-            $this->name = \basename($file['name']);
-        } elseif (\is_string($file) && \file_exists($file)) {
+            $this->name = basename($file['name']);
+        } elseif (is_string($file) && file_exists($file)) {
             $tmpFile = $file;
-            $this->name = \basename($file);
+            $this->name = basename($file);
         } else {
             throw new RuntimeException("Invalid file input. Must be \$_FILES or valid file path.");
         }
 
         // Safe MIME detection
-        $this->mime = \mime_content_type($tmpFile) ?: 'application/octet-stream';
+        $this->mime = mime_content_type($tmpFile) ?: 'application/octet-stream';
 
         // Ensure local directory exists
         if ($this->disk === 'local') {
@@ -143,16 +142,16 @@ class FileStorage
         }
 
         // Make File Version
-        $ext = \pathinfo($this->name, PATHINFO_EXTENSION);
-        $base = \pathinfo($this->name, PATHINFO_FILENAME);
-        $this->name = $base . '-' . \uniqid() . '-' . \time() . ($ext ? ".{$ext}" : '');
+        $ext = pathinfo($this->name, PATHINFO_EXTENSION);
+        $base = pathinfo($this->name, PATHINFO_FILENAME);
+        $this->name = $base . '-' . uniqid() . '-' . time() . ($ext ? ".{$ext}" : '');
 
         // Final target path
         $this->path = "{$this->path}/{$this->name}";
 
         // Handle per disk
         return match ($this->disk) {
-            's3' => $this->uploadS3($tmpFile, \ltrim($this->path, '/')),
+            's3' => $this->uploadS3($tmpFile, ltrim($this->path, '/')),
             'local' => $this->uploadLocal($tmpFile, $this->path),
             default => false,
         };
@@ -165,7 +164,7 @@ class FileStorage
      */
     public function delete(string $file): bool
     {
-        $file = \ltrim($file, '/');
+        $file = ltrim($file, '/');
         $path = "{$this->path}/{$file}";
         return match ($this->disk) {
             's3'    => $this->deleteS3($path),
@@ -189,7 +188,7 @@ class FileStorage
      */
     public function path(): string
     {
-        return \str_replace("/{$this->name()}", '', $this->path);
+        return str_replace("/{$this->name()}", '', $this->path);
     }
 
     /**
@@ -202,7 +201,7 @@ class FileStorage
             throw new Exception("Please Upload The  File First!");
         }
 
-        return \strtolower($this->mime);
+        return strtolower($this->mime);
     }
 
     ###################################################################
@@ -216,12 +215,12 @@ class FileStorage
      */
     protected function url(string $file): string
     {
-        $file = \ltrim($file, '/');
+        $file = ltrim($file, '/');
         return match ($this->disk) {
-            'local' => \str_replace(ltrim(APP_PATH, '/'), '', ltrim(\do_hook('app.host') . "{$file}", '/')),
+            'local' => str_replace(ltrim(APP_PATH, '/'), '', ltrim(\do_hook('app.host') . "{$file}", '/')),
             's3'    => $this->publicBaseUrl
                 ? $this->publicBaseUrl . $file
-                : \sprintf("https://%s.s3.%s.amazonaws.com/%s", $this->config['bucket'], $this->config['region'], $file),
+                : sprintf("https://%s.s3.%s.amazonaws.com/%s", $this->config['bucket'], $this->config['region'], $file),
             default => ''
         };
     }
@@ -235,12 +234,12 @@ class FileStorage
     protected function uploadLocal(string $tmpFile, string $destination): string
     {
         // Move uploaded or copy from existing file
-        if (\is_uploaded_file($tmpFile)) {
-            if (!\move_uploaded_file($tmpFile, $destination)) {
+        if (is_uploaded_file($tmpFile)) {
+            if (!move_uploaded_file($tmpFile, $destination)) {
                 throw new RuntimeException("Failed to move uploaded file to [{$destination}]");
             }
         } else {
-            if (!\copy($tmpFile, $destination)) {
+            if (!copy($tmpFile, $destination)) {
                 throw new RuntimeException("Failed to copy file to [{$destination}]");
             }
         }
@@ -277,7 +276,7 @@ class FileStorage
      */
     protected function deleteLocal(string $file): bool
     {
-        return \file_exists($file) ? \unlink($file) : false;
+        return file_exists($file) ? unlink($file) : false;
     }
 
     /**

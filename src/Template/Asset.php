@@ -12,8 +12,7 @@ declare(strict_types=1);
 
 namespace Laika\Core\Template;
 
-use Laika\Core\Service\Header;
-use Laika\Core\Service\Url;
+use Laika\Core\Service\{Response, Url};
 
 class Asset
 {
@@ -91,7 +90,7 @@ class Asset
     {
         $str = "<!-- System Default Scripts -->\n<script>\n";
         $vars = [
-            'token' => Header::get('authorization'),
+            'token' => Response::getHeader('Authorization'),
             'appuri' => rtrim(Url::base(), '/'),
         ];
 

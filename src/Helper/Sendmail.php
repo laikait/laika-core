@@ -12,11 +12,9 @@ declare(strict_types=1);
 
 namespace Laika\Core\Helper;
 
-use Laika\Core\Service\Config;
-use Laika\Core\Service\File;
+use Laika\Core\Service\{Config, File, Url};
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
-use Laika\Core\Service\Url;
 use PHPMailer\PHPMailer\SMTP;
 use Throwable;
 
@@ -49,7 +47,7 @@ class Sendmail
         $this->config = $config ?? Config::get('mail');
 
         // Check Driver is Set in Mail Config File
-        if (!isset($this->config['mail.driver'])) {
+        if (!isset($this->config['driver'])) {
             throw new Exception("Mail Driver Not Specified in Mail Config File.");
         }
         // Load Mailer
@@ -60,14 +58,14 @@ class Sendmail
         $this->maxAttachmentSize = 5 * 1024 * 1024; // 5MB
 
         // Check Driver is Supported
-        $this->loadDriver($this->config['mail.driver']);
+        $this->loadDriver($this->config['driver']);
 
         // Set Charset
-        $this->setCharset($this->config['mail.charset'] ?? 'UTF-8');
+        $this->setCharset($this->config['charset'] ?? 'UTF-8');
         
         // Set Sender Info
-        $from_email = (empty($this->config['from.email']) && filter_var($this->config['from.email'], FILTER_VALIDATE_EMAIL)) ? Url::host() : $this->config['from.email'];
-        $from_name = $this->config['from.name'] ?? 'Laika App';
+        $from_email = (empty($this->config['from_email']) && filter_var($this->config['from_email'], FILTER_VALIDATE_EMAIL)) ? Url::host() : $this->config['from_email'];
+        $from_name = $this->config['from_name'] ?? config('app', 'name', 'Laika Framework');
         $this->addFrom($from_email, $from_name);
 
         return $this;
@@ -404,7 +402,7 @@ class Sendmail
      */
     private function loadDriver(): static
     {
-        switch (strtolower($this->config['mail.driver'])) {
+        switch (strtolower($this->config['driver'])) {
             case 'smtp':
                 $this->useSmtp();
                 break;
@@ -418,7 +416,7 @@ class Sendmail
                 $this->useMail();
                 break;            
             default:
-                throw new Exception("Unsupported Mail Driver: [{$this->config['mail.driver']}]. Sendmail Only Supports " . join(', ', $this->supported_drivers));
+                throw new Exception("Unsupported Mail Driver: [{$this->config['driver']}]. Sendmail Only Supports " . join(', ', $this->supported_drivers));
         }
         return $this;
     }
@@ -429,28 +427,28 @@ class Sendmail
      */
     private function useSmtp(): static
     {
-        if (!isset($this->config['smtp.host']) || empty($this->config['smtp.host'])) {
+        if (!isset($this->config['host']) || empty($this->config['host'])) {
             throw new Exception("SMTP Config Key 'host' is Not Configured.");
         }
-        if (!isset($this->config['smtp.username']) || empty($this->config['smtp.username'])) {
+        if (!isset($this->config['username']) || empty($this->config['username'])) {
             throw new Exception("SMTP Config Key 'username' is Not Configured.");
         }
-        if (!isset($this->config['smtp.password']) || empty($this->config['smtp.password'])) {
+        if (!isset($this->config['password']) || empty($this->config['password'])) {
             throw new Exception("SMTP Config Key 'password' is Not Configured.");
         }
-        if (!isset($this->config['smtp.port']) || empty($this->config['smtp.port'])) {
+        if (!isset($this->config['port']) || empty($this->config['port'])) {
             throw new Exception("SMTP Config Key 'port' is Not Configured.");
         }
 
         $this->mailer->isSMTP();
-        $this->mailer->Host     =   $this->config['smtp.host'];
-        $this->mailer->SMTPAuth =   $this->config['smtp.auth'] ?? true;
-        $this->mailer->Username =   $this->config['smtp.username'];
-        $this->mailer->Password =   $this->config['smtp.password']; // Decrypt Before Use. Require Edit This Line
-        $this->mailer->Port     =   (int) ($this->config['smtp.port'] ?? 587);
+        $this->mailer->Host     =   $this->config['host'];
+        $this->mailer->SMTPAuth =   $this->config['auth'] ?? true;
+        $this->mailer->Username =   $this->config['username'];
+        $this->mailer->Password =   $this->config['password']; // Decrypt Before Use. Require Edit This Line
+        $this->mailer->Port     =   (int) ($this->config['port'] ?? 587);
         $this->mailer->SMTPKeepAlive = true;
         // Check SMTP Secure Type
-        $secure = strtolower($this->config['smtp.secure'] ?? '');
+        $secure = strtolower($this->config['secure'] ?? '');
         $map = [
             'starttls' => PHPMailer::ENCRYPTION_STARTTLS,
             'tls'      => PHPMailer::ENCRYPTION_STARTTLS,
@@ -464,11 +462,11 @@ class Sendmail
 
         $this->mailer->SMTPSecure = $map[$secure];
         // Advanced SMTP Options
-        if (isset($this->config['smtp.options'])) {
-            $this->mailer->SMTPOptions = $this->config['smtp.options'];
+        if (isset($this->config['options'])) {
+            $this->mailer->SMTPOptions = $this->config['options'];
         }
         // Debug level
-        if (isset($this->config['mail.debug']) && $this->config['mail.debug'] === true) {
+        if (isset($this->config['debug']) && $this->config['debug'] === true) {
             $this->mailer->SMTPDebug = SMTP::DEBUG_SERVER;
         }
         return $this;

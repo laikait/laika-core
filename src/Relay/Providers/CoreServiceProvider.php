@@ -21,11 +21,13 @@ use Laika\Core\Helper\CSRF;
 use Laika\Core\Helper\Date;
 use Laika\Core\Nav\Builder;
 use Laika\Core\Http\Header;
+use Laika\Core\Http\Response;
 use Laika\Core\Helper\Meta;
 use Laika\Core\Helper\Page;
 use Laika\Core\Helper\Hook;
 use Laika\Core\Helper\Math;
 use Laika\Core\Regex\Regex;
+use Laika\Core\Log\Activity;
 use Laika\Core\Http\Request;
 use Laika\Core\Helper\Image;
 use Laika\Core\Helper\Local;
@@ -67,7 +69,6 @@ class CoreServiceProvider extends RelayProvider
         $this->registry->singleton('ip', IP::class);
         $this->registry->singleton('url', Url::class);
         $this->registry->singleton('api', Api::class);
-        $this->registry->singleton('auth', Auth::class);
         $this->registry->singleton('date', Date::class);
         $this->registry->singleton('meta', Meta::class);
         $this->registry->singleton('page', Page::class);
@@ -84,17 +85,20 @@ class CoreServiceProvider extends RelayProvider
         $this->registry->singleton('local', Local::class);
         $this->registry->singleton('config', Config::class);
         $this->registry->singleton('cookie', Cookie::class);
-        $this->registry->singleton('header', Header::class);
         $this->registry->singleton('unique', Unique::class);
         $this->registry->singleton('upload', Upload::class);
         $this->registry->singleton('email', Sendmail::class);
         $this->registry->singleton('visitor', Client::class);
         $this->registry->singleton('request', Request::class);
+        $this->registry->singleton('activity', Activity::class);
         $this->registry->singleton('redirect', Redirect::class);
+        $this->registry->singleton('response', Response::class);
         $this->registry->singleton('changelog', ChangeLog::class);
         $this->registry->singleton('directory', Directory::class);
         $this->registry->singleton('template.asset', Asset::class);
         $this->registry->singleton('template.meta', TplMeta::class);
+        $this->registry->singleton('staff.auth', Auth::class, ['guard' => 'staff']);
+        $this->registry->singleton('client.auth', Auth::class, ['guard' => 'client']);
     }
 
     public function boot(): void

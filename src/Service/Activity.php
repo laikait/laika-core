@@ -15,17 +15,16 @@ namespace Laika\Core\Service;
 use Laika\Core\Relay\Relay;
 
 /**
- * @method static int code(int $code = 200)
- * @method static void poweredBy(string $str)
- * @method static void register()
- * @method static void set(array $headers = [])
- * @method static array|string get(?string $key = null)
- * @method static array statusCodes()
+ * @method static static    author(?string $type = null, ?int $id = null)
+ * @method static static    log(string $log)
+ * @method static void      event(string $event, array $changes = [])
+ * @method static array     events(?string $event = null)
+ * @method static int       insert(?string $connection = null)
  */
-class Header extends Relay
+class Activity extends Relay
 {
     protected static function getRelayAccessor(): string
     {
-        return 'header';
+        return 'activity';
     }
 }

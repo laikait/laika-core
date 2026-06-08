@@ -12,22 +12,13 @@ declare(strict_types=1);
 
 namespace Laika\Core\Exceptions;
 
-use Laika\Core\Service\Directory;
-use Laika\Core\Service\Header;
-use Laika\Core\Service\Config;
-use RuntimeException;
 use Throwable;
+use RuntimeException;
+use Laika\Core\Service\Response;
+use Laika\Core\Service\Directory;
 
 class Handler
 {
-    /** @var bool */
-    protected bool $debug;
-
-    public function __construct()
-    {
-        $this->debug = Config::get('env', 'debug', false);
-    }
-
     /**
      * Register Handler For Application
      * @return void
@@ -60,9 +51,8 @@ class Handler
      */
     protected function log(Throwable $e): void
     {
-        if (!$this->debug) {
-            return;
-        }
+        if (!DEBUG) return;
+
         $logDir = APP_PATH . '/lf-logs';
         // Create Directory If Not Exists
         Directory::make($logDir);
@@ -90,7 +80,7 @@ class Handler
     protected function render(Throwable $e): void
     {
         if ($this->wantsJson()) {
-            Header::set(['content-type'=>'application/json']);
+            Response::contentType('application/json');
             $this->renderJson($e);
         } else {
             $this->renderHtml($e);
@@ -142,13 +132,13 @@ class Handler
 
         echo json_encode([
             'message' => 'Application Error!',
-            'exception' => $this->debug ? $e->getMessage() : null,
+            'exception' => DEBUG ? $e->getMessage() : null,
         ]);
     }
 
     private function renderHtml(Throwable $e)
     {
-        if ($this->debug) {
+        if (DEBUG) {
             $this->renderDebug($e);
             return;
         }
