@@ -79,7 +79,6 @@ class Dispatcher
             // Insert Log
             if (DB_LOG) Activity::insert();
             // Send Response
-            // echo $str;
             Response::body($str)->send();
         } catch (\Throwable $e) {
             report_error($e);
