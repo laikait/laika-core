@@ -12,91 +12,275 @@ declare(strict_types=1);
 
 namespace Laika\Core\Http;
 
-/**
- * @deprecated Use Laika\Core\Http\Header Class Instead
- */
 class Response
 {
-    /** @var array $headers Default Headers */
-    protected array $headers;
+    /** @var int Status Code */
+    protected int $statusCode = 200;
+
+    /** @var string Content Type */
+    protected string $contentType = 'text/html; charset=UTF-8';
+
+    /** @var array Headers */
+    protected array $headers = [];
+
+    /** @var mixed Body */
+    protected mixed $body = null;
+
+    /** @var array Default Headers */
+    protected array $defaultHeaders = [
+        "X-Content-Type-Options"            =>  "nosniff",
+        "X-XSS-Protection"                  =>  "1; mode=block",
+        "Referrer-Policy"                   =>  "strict-origin-when-cross-origin",
+        "Access-Control-Allow-Origin"       =>  "*",
+        "Access-Control-Allow-Methods"      =>  "GET, POST, PUT, PATCH, DELETE, OPTIONS",
+        "Access-Control-Allow-Headers"      =>  "Authorization, Origin, X-Requested-With, Content-Type, Accept, X-Laika-Token",
+        "X-Powered-By"                      =>  "Laika Framework",
+        "X-Frame-Options"                   =>  "sameorigin",
+        "Content-Security-Policy"           =>  "frame-ancestors 'self'",
+        "Cache-Control"                     =>  "no-store, no-cache, must-revalidate",
+        "Pragma"                            =>  "no-cache",
+        "Expires"                           =>  "0",
+        "Accept"                            =>  "*/*",
+
+    ];
 
     public function __construct()
     {
-        $this->headers = [
-            "Access-Control-Allow-Origin"       =>  "*",
-            "Access-Control-Allow-Methods"      =>  "GET, POST, PUT, PATCH, DELETE, OPTIONS",
-            "Access-Control-Allow-Headers"      =>  "Authorization, Origin, X-Requested-With, Content-Type, Accept, X-Laika-Token",
-            "Access-Control-Allow-Credentials"  =>  "true",
-            "X-Powered-By"                      =>  "Laika Framework",
-            "X-Frame-Options"                   =>  "sameorigin",
-            "Content-Security-Policy"           =>  "frame-ancestors 'self'",
-            "Referrer-Policy"                   =>  "origin-when-cross-origin",
-            "Cache-Control"                     =>  "no-store, no-cache, must-revalidate",
-            "Pragma"                            =>  "no-cache",
-            "Expires"                           =>  "0",
-            "Accept"                            =>  "*/*",
-        ];
+        $this->setHeaders($this->defaultHeaders);
+    }
+
+    ##############################################################################
+    ################################ EXTERNAL API ################################
+    ##############################################################################
+    /**
+     * Set Status Code
+     * @param int $code
+     * @return static
+     */
+    public function status(int $code): static
+    {
+        $this->statusCode = $code;
+        return $this;
     }
 
     /**
-     * Set HTTP response code
+     * Get Status Code
      * @return int
      */
-    public function code(int $code = 200): int
+    public function getStatus(): int
     {
-        http_response_code($code);
-        return $code;
+        return $this->statusCode;
     }
 
     /**
-     * Set custom "X-Powered-By" header
-     * return void
+     * Set Content Type
+     * @param string $type
+     * @return static
      */
-    public function poweredBy(string $str): void
+    public function contentType(string $type): static
     {
-        header("X-Powered-By: {$str}", true);
+        $this->contentType = $type;
+        return $this;
     }
 
     /**
-     * Set or overwrite headers
-     * @return void
+     * Get Content Type
+     * @return string
      */
-    public function set(array $headers = []): void
+    public function getContentType(): string
     {
-        foreach ($headers as $key => $value) {
-            header(trim($key) . ": " . trim((string) $value), true);
-        }
+        return $this->contentType;
     }
 
     /**
-     * Send default headers + framework-specific ones
-     * @return void
+     * Set Header
+     * @param string $name
+     * @param string $value
+     * @return static
      */
-    public function register(): void
+    public function setHeader(string $name, string $value): static
     {
-        foreach ($this->headers as $key => $value) {
-            header(trim($key) . ": " . trim((string) $value), true);
-        }
+        $this->headers[static::normalizeHeaderName($name)] = $value;
+        return $this;
     }
 
     /**
-     * Get sent response headers
-     * @param string|null $key  Header key to fetch (case-insensitive)
-     * @return array|string
+     * Set Headers
+     * @param array<non-empty-string,string> $headers
+     * @return static
      */
-    public function get(?string $key = null): array|string
+    public function setHeaders(array $headers): static
     {
-        $val = [];
-        foreach (headers_list() as $header) {
-            $parts = explode(':', $header, 2);
-            $val[strtolower(trim($parts[0]))] = trim($parts[1] ?? '');
+        foreach ($headers as $name => $value) {
+            $this->setHeader($name, (string) $value);
+        }
+        return $this;
+    }
+
+    /**
+     * Get Header
+     * @param string $name
+     * @return ?string
+     */
+    public function getHeader(string $name): ?string
+    {
+        return $this->headers[static::normalizeHeaderName($name)] ?? null;
+    }
+
+    /**
+     * Get Headers
+     * @return array
+     */
+    public function getHeaders(): array
+    {
+        return $this->headers;
+    }
+
+    /**
+     * Remove Header
+     * @param string $name
+     * @return static
+     */
+    public function removeHeader(string $name): static
+    {
+        unset($this->headers[static::normalizeHeaderName($name)]);
+        return $this;
+    }
+
+    /**
+     * Get Request Header
+     * @param string $name
+     * @return ?string
+     */
+    public static function requestHeader(string $name): ?string
+    {
+        $key = 'HTTP_' . strtoupper(str_replace('-', '_', $name));
+
+        if (isset($_SERVER[$key])) return $_SERVER[$key];
+
+        if (isset($_SERVER[$name])) return $_SERVER[$name];
+
+        $normalized = static::normalizeHeaderName($name);
+        foreach (static::requestHeaders() as $k => $v) {
+            if (static::normalizeHeaderName($k) === $normalized) {
+                return $v;
+            }
         }
 
-        if ($key !== null) {
-            return $val[strtolower($key)] ?? '';
+        return null;
+    }
+
+    /**
+     * Get Request Headers
+     * @return array
+     */
+    public static function requestHeaders(): array
+    {
+        if (function_exists('getallheaders')) return getallheaders();
+
+        $headers = [];
+        foreach ($_SERVER as $key => $value) {
+            if (str_starts_with($key, 'HTTP_')) {
+                $name = ucwords(strtolower(str_replace('_', '-', substr($key, 5))), '-');
+                $headers[$name] = $value;
+            } elseif (in_array($key, ['CONTENT_TYPE', 'CONTENT_LENGTH', 'CONTENT_MD5'])) {
+                $name = ucwords(strtolower(str_replace('_', '-', $key)), '-');
+                $headers[$name] = $value;
+            }
+        }
+        return $headers;
+    }
+
+    /**
+     * Set Body
+     * @param mixed $body
+     * @return static
+     */
+    public function body(mixed $body): static
+    {
+        $this->body = $body;
+        return $this;
+    }
+
+    /**
+     * Get Body
+     * @return mixed
+     */
+    public function getBody(): mixed
+    {
+        return $this->body;
+    }
+
+    /**
+     * Set JSON Content Type
+     * @param mixed $data
+     * @param int $status
+     * @return static
+     */
+    public function json(mixed $data, int $status = 200): static
+    {
+        $this->status($status)
+             ->contentType('application/json; charset=UTF-8')
+             ->body(json_encode($data, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
+        return $this;
+    }
+
+    /**
+     * Set HTML Content Type
+     * @param mixed $data
+     * @param int $status
+     * @return static
+     */
+    public function html(string $html, int $status = 200): static
+    {
+        $this->status($status)
+             ->contentType('text/html; charset=UTF-8')
+             ->body($html);
+        return $this;
+    }
+
+    /**
+     * Set TEXT Content Type
+     * @param mixed $data
+     * @param int $status
+     * @return static
+     */
+    public function text(string $text, int $status = 200): static
+    {
+        $this->status($status)
+             ->contentType('text/plain; charset=UTF-8')
+             ->body($text);
+        return $this;
+    }
+
+    /**
+     * Set No Content Header
+     * @return static
+     */
+    public function noContent(): static
+    {
+        $this->status(204)->body(null);
+        return $this;
+    }
+
+    /**
+     * Send Response
+     */
+    public function send(): void
+    {
+        // Check If Alredy Sent
+        if (headers_sent()) return;
+
+        http_response_code($this->statusCode);
+        header("Content-Type: {$this->contentType}");
+
+        foreach ($this->headers as $name => $value) {
+            header("{$name}: {$value}");
         }
 
-        return $val;
+        if ($this->body !== null) {
+            echo $this->body;
+        }
     }
 
     /**
@@ -202,5 +386,18 @@ class Response
             // 512–599 Unassigned
             512 => ['message' => 'Unassigned', 'reference' => 'Unassigned'],
         ];
+    }
+
+    ##############################################################################
+    ################################ INTERNAL API ################################
+    ##############################################################################
+    /**
+     * Normalize Header Name
+     * @param string $name
+     * @return string
+     */
+    protected static function normalizeHeaderName(string $name): string
+    {
+        return ucwords(strtolower(trim($name)), '-');
     }
 }

@@ -21,6 +21,7 @@ use Laika\Core\Helper\CSRF;
 use Laika\Core\Helper\Date;
 use Laika\Core\Nav\Builder;
 use Laika\Core\Http\Header;
+use Laika\Core\Http\Response;
 use Laika\Core\Helper\Meta;
 use Laika\Core\Helper\Page;
 use Laika\Core\Helper\Hook;
@@ -84,7 +85,6 @@ class CoreServiceProvider extends RelayProvider
         $this->registry->singleton('local', Local::class);
         $this->registry->singleton('config', Config::class);
         $this->registry->singleton('cookie', Cookie::class);
-        $this->registry->singleton('header', Header::class);
         $this->registry->singleton('unique', Unique::class);
         $this->registry->singleton('upload', Upload::class);
         $this->registry->singleton('email', Sendmail::class);
@@ -92,6 +92,7 @@ class CoreServiceProvider extends RelayProvider
         $this->registry->singleton('request', Request::class);
         $this->registry->singleton('activity', Activity::class);
         $this->registry->singleton('redirect', Redirect::class);
+        $this->registry->singleton('response', Response::class);
         $this->registry->singleton('changelog', ChangeLog::class);
         $this->registry->singleton('directory', Directory::class);
         $this->registry->singleton('template.asset', Asset::class);

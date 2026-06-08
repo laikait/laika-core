@@ -12,6 +12,9 @@ declare(strict_types=1);
 
 namespace Laika\Core\Http;
 
+/**
+ * @deprecated Use Laika\Core\Service\Response
+ */
 class Header
 {
     /** @var array $headers Default Headers */

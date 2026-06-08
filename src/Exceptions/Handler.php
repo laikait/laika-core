@@ -14,7 +14,7 @@ namespace Laika\Core\Exceptions;
 
 use Throwable;
 use RuntimeException;
-use Laika\Core\Service\Header;
+use Laika\Core\Service\Response;
 use Laika\Core\Service\Directory;
 
 class Handler
@@ -80,7 +80,7 @@ class Handler
     protected function render(Throwable $e): void
     {
         if ($this->wantsJson()) {
-            Header::set(['content-type'=>'application/json']);
+            Response::contentType('application/json');
             $this->renderJson($e);
         } else {
             $this->renderHtml($e);
