@@ -28,11 +28,11 @@ class AuthMigration
     {
         Schema::on()->createIfNotExists('lf_authorizations', function (Blueprint $table) {
             $table->id('id');
-            $table->string('token', 512);
+            $table->string('token', 128);
             $table->string('session_id', 128);
             $table->string('user_type', 50);
             $table->unsignedInteger('user_id');
-            $table->string('user_agent', 512)->nullable();
+            $table->string('user_agent')->nullable();
             $table->string('device', 40)->nullable();
             $table->string('os', 40)->nullable();
             $table->json('user_data')->nullable()->comment('JSON Data');
@@ -42,6 +42,7 @@ class AuthMigration
             // Indexes
             $table->unique('token');
             $table->index('session_id');
+            $table->index('user_type');
             $table->index('user_id');
             $table->index('expires_at');
         });

@@ -68,7 +68,6 @@ class CoreServiceProvider extends RelayProvider
         $this->registry->singleton('ip', IP::class);
         $this->registry->singleton('url', Url::class);
         $this->registry->singleton('api', Api::class);
-        $this->registry->singleton('auth', Auth::class);
         $this->registry->singleton('date', Date::class);
         $this->registry->singleton('meta', Meta::class);
         $this->registry->singleton('page', Page::class);
@@ -97,6 +96,8 @@ class CoreServiceProvider extends RelayProvider
         $this->registry->singleton('directory', Directory::class);
         $this->registry->singleton('template.asset', Asset::class);
         $this->registry->singleton('template.meta', TplMeta::class);
+        $this->registry->singleton('staff.auth', Auth::class, ['guard', 'staff']);
+        $this->registry->singleton('client.auth', Auth::class, ['guard', 'client']);
     }
 
     public function boot(): void

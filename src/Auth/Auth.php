@@ -39,6 +39,9 @@ class Auth
     /** @var ?array $session */
     private ?array $session;
 
+    /** @var string $guard */
+    private string $guard;
+
     /** Constants */
     public CONST AUTHORIZED = 1;
     public CONST UNAUTHORIZED = 2;
@@ -47,13 +50,17 @@ class Auth
     public CONST INVALID_DEVICE = 5;
     public CONST INVALID_OS = 6;
 
-    public function __construct()
+    public function __construct(string $guard = 'user')
     {
+        // Validate Guard
+        if (!preg_match('/^[\w]+$/', $guard)) throw new InvalidArgumentException("Guard Has Unsupported Character: [{$guard}]");
+
         DB::run(); // Ensure DB is initialized
         DB::session(); // Ensure Session in DB
 
         $this->model        =   new Model();
-        $this->token_key    =   'AUTH_TOKEN';
+        $this->guard        =   strtolower($guard);
+        $this->token_key    =   strtoupper($guard) . '_AUTH_TOKEN';
         $this->table        =   'lf_authorizations';
         $this->lifetime     =   3600;
         $this->realtime     =   time();
@@ -68,7 +75,7 @@ class Auth
      * @param int $ttl In Seconds
      * @return static
      */
-    public function setLifeTime(int $ttl): static
+    public function setLifetime(int $ttl): static
     {
         if ($ttl < 120) throw new InvalidArgumentException("Lifetime Should Be Greater Than 120 Seconds!");
         $this->lifetime = $ttl;
@@ -77,13 +84,15 @@ class Auth
 
     /**
      * Login
-     * @param string $userType
      * @param int $userId
      * @param array $userData
      * @return string
      */
-    public function login(string $userType, int $userId, array $userData = []): string
+    public function login(int $userId, array $userData): string
     {
+        // Check User Data
+        if (empty($userData)) throw new InvalidArgumentException('User data cannot be empty.');
+
         Session::regenerate();
         $token = $this->buildToken();
 
@@ -97,7 +106,7 @@ class Auth
         $params = [
             ':token'        =>  $token,
             ':session_id'   =>  Session::id(),
-            ':user_type'    =>  $userType,
+            ':user_type'    =>  $this->guard,
             ':user_id'      =>  $userId,
             ':user_data'    =>  json_encode($userData, JSON_UNESCAPED_UNICODE),
             ':user_agent'   =>  Visitor::userAgent(),
@@ -113,6 +122,7 @@ class Auth
         }
 
         Session::set('token', $token, $this->token_key);
+        $this->session = null;
 
         return $token;
     }
@@ -133,6 +143,15 @@ class Auth
     public function guest(): bool
     {
         return !$this->check();
+    }
+
+    /**
+     * Get User Data
+     * @return array
+     */
+    public function data(): array
+    {
+        return $this->getRow()['data'] ?? [];
     }
 
     /**
@@ -177,6 +196,7 @@ class Auth
         $token = Session::get('token', null, $this->token_key);
         if (!$token) return;
         Session::pop('token', $this->token_key);
+        $this->session = null;
         $this->model->table($this->table)->where(['token' => $token])->delete();
     }
 
@@ -193,9 +213,10 @@ class Auth
         if (!$token) return;
 
         $newExpiry = $this->realtime + $this->lifetime;
+        $this->session['expires_at'] = $newExpiry;
 
         $this->model->table($this->table)
-                    ->where(['token' => $token])
+                    ->where(['token' => $token, 'session_id' => Session::id(), 'user_type' => $this->guard])
                     ->where(['expires_at' => $this->realtime], '>')
                     ->update(['expires_at' => $newExpiry]);
     }
@@ -206,8 +227,7 @@ class Auth
      */
     private function buildToken(): string
     {
-        return Session::id() . bin2hex(random_bytes(64));
-        return hash_hmac('sha256', Session::id() . bin2hex(random_bytes(16)), config('secret', 'key'));
+        return $this->guard . bin2hex(random_bytes(32));
     }
 
     /**
@@ -217,14 +237,14 @@ class Auth
     private function getRow(): array
     {
         // Return If Already Session Exists
-        if ($this->session !== null) return $this->session;
+        if ($this->session !== null) return response(true, Auth::AUTHORIZED, $this->session);
 
         $token = Session::get('token', null, $this->token_key);
         if (!$token) return response(false, Auth::INVALID_TOKEN, []);
 
         $this->session = $this->model
                             ->table($this->table)
-                            ->where(['token' => $token, 'session_id' => Session::id()])
+                            ->where(['token' => $token, 'session_id' => Session::id(), 'user_type' => $this->guard])
                             ->where(['expires_at' => $this->realtime], '>')
                             ->first();
 
