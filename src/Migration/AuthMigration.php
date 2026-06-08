@@ -31,11 +31,11 @@ class AuthMigration
             $table->string('token', 128);
             $table->string('session_id', 128);
             $table->string('user_type', 50);
+            $table->serialize('user_data')->nullable()->comment('Serialize Data');
             $table->unsignedInteger('user_id');
             $table->string('user_agent')->nullable();
             $table->string('device', 40)->nullable();
             $table->string('os', 40)->nullable();
-            $table->json('user_data')->nullable()->comment('JSON Data');
             $table->unsignedInteger('expires_at');
             $table->unsignedInteger('created_at');
 

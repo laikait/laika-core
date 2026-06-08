@@ -93,7 +93,7 @@ class Auth
         // Check User Data
         if (empty($userData)) throw new InvalidArgumentException('User data cannot be empty.');
 
-        Session::regenerate();
+        // Session::regenerate();
         $token = $this->buildToken();
 
         $sql = "INSERT INTO `{$this->table}`
@@ -108,7 +108,7 @@ class Auth
             ':session_id'   =>  Session::id(),
             ':user_type'    =>  $this->guard,
             ':user_id'      =>  $userId,
-            ':user_data'    =>  json_encode($userData, JSON_UNESCAPED_UNICODE),
+            ':user_data'    =>  serialize($userData),
             ':user_agent'   =>  Visitor::userAgent(),
             ':device'       =>  Visitor::deviceType(),
             ':os'           =>  Visitor::os(),
@@ -151,7 +151,7 @@ class Auth
      */
     public function data(): array
     {
-        return $this->getRow()['data'] ?? [];
+        return unserialize($this->getRow()['data']['user_data'] ?? 'N;') ?? [];
     }
 
     /**
@@ -162,7 +162,7 @@ class Auth
     {
         $row = $this->getRow();
         if (!$row['success'] || ($row['message'] !== Auth::AUTHORIZED)) return response(false, Auth::UNAUTHORIZED, []);
-        $user = json_decode($row['data']['user_data'] ?? '[]', true) ?? [];
+        $user = unserialize($row['data']['user_data'] ?? 'N;') ?? [];
 
         if (empty($user)) return response(false, Auth::UNAUTHORIZED, []);
 
