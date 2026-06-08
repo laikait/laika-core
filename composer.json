@@ -33,6 +33,7 @@
     "require": {
         "php": ">=8.1",
         "ext-openssl": "*",
+        "vlucas/phpdotenv": "^5",
         "laikait/laika-model": "^3",
         "laikait/laika-session": "^2",
         "laikait/laika-shield": "^1",
