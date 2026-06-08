@@ -1,6 +1,6 @@
 <?php
 /**
- * Laika PHP Micro Framework
+ * Laika PHP MVC Framework
  * Author: Showket Ahmed
  * Email: riyadhtayf@gmail.com
  * License: MIT
