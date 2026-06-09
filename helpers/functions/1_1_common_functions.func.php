@@ -255,7 +255,7 @@ function time_zones(): array
 /*================================== OPTION HANDLE ==================================*/
 #######################################################################################
 /**
- * Get Single Value
+ * Get Option Value
  * @param string $key
  * @param ?string $default
  * @return ?string
@@ -263,6 +263,43 @@ function time_zones(): array
 function option(string $key, ?string $default = null): string
 {
     return Option::single($key, $default);
+}
+
+/**
+ * Get Option Value as Bool
+ * @param string $key
+ * @return bool
+ */
+function option_bool(string $key): bool
+{
+    return (bool) preg_match('/^true$/i', option($key, 'false'));
+}
+
+/**
+ * Get Option Value as Int
+ * @param string $key
+ * @param int $default
+ * @return int
+ */
+function option_int(string $key, int $default = 0): int
+{
+    return (int) preg_match('/^[\d]+$/i', option($key, (string) $default));
+}
+
+/**
+ * Get Option Value as Array
+ * @param string $key
+ * @param array $default
+ * @return array
+ */
+function option_array(string $key, array $default = []): array
+{
+    $str = option($key, "");
+    try {
+        $arr = json_decode($str, true, 512, JSON_THROW_ON_ERROR);
+        if (is_array($arr)) return $arr;
+    } catch (\Throwable $th) {}
+    return $default;
 }
 
 /**
