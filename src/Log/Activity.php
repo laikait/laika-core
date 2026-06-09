@@ -127,6 +127,12 @@ final class Activity
      */
     public function insert(?string $connection = null): int
     {
+        // Define ACTIVITY_LOG if Not Defined
+        if (!defined('ACTIVITY_LOG')) define('ACTIVITY_LOG', false);
+
+        // Return if ACTIVITY_LOG Is false
+        if (!ACTIVITY_LOG) return 0;
+
         // Start Count
         $effected = 0;
 
