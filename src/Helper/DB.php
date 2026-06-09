@@ -23,13 +23,15 @@ class DB
 
     /**
      * Run Connection
-     * @param string $name Connection Name. Default is 'default'
+     * @param ?string $name Connection Name. Default is 'default'
      * @return void
      */
-    public function run(string $name = 'default'): void
+    public function run(?string $name = null): void
     {
         // Skip If Already Booted
         if ($this->booted) return;
+
+        $name = $name ?? 'default';
 
         if (!Connection::has($name)) {
             try {

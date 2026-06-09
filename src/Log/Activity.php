@@ -41,8 +41,9 @@ final class Activity
     /** @var array Activities */
     protected array $activities;
 
-    public function __construct()
+    public function __construct(?string $connection = null)
     {
+        DB::run($connection);
         $this->reset();
     }
 
@@ -126,8 +127,11 @@ final class Activity
      */
     public function insert(?string $connection = null): int
     {
-        // Initiate Database
-        DB::run();
+        // Define ACTIVITY_LOG if Not Defined
+        if (!defined('ACTIVITY_LOG')) define('ACTIVITY_LOG', false);
+
+        // Return if ACTIVITY_LOG Is false
+        if (!ACTIVITY_LOG) return 0;
 
         // Start Count
         $effected = 0;

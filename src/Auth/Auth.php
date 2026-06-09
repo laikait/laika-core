@@ -61,7 +61,7 @@ class Auth
         $this->model        =   new Model();
         $this->guard        =   strtolower($guard);
         $this->token_key    =   strtoupper($guard) . '_AUTH_TOKEN';
-        $this->table        =   'lf_authorizations';
+        $this->table        =   'authorizations';
         $this->lifetime     =   3600;
         $this->realtime     =   time();
         $this->session      =   null;

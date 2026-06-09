@@ -43,6 +43,7 @@ use Laika\Core\Generator\Token;
 use Laika\Core\Helper\Sendmail;
 use Laika\Core\Helper\Directory;
 use Laika\Core\Generator\Unique;
+use Laika\Core\Model\OptionModel;
 use Laika\Core\Exceptions\Handler;
 use Laika\Core\Relay\RelayProvider;
 use Laika\Core\Template\Meta as TplMeta;
@@ -93,6 +94,7 @@ class CoreServiceProvider extends RelayProvider
         $this->registry->singleton('activity', Activity::class);
         $this->registry->singleton('redirect', Redirect::class);
         $this->registry->singleton('response', Response::class);
+        $this->registry->singleton('option', OptionModel::class);
         $this->registry->singleton('changelog', ChangeLog::class);
         $this->registry->singleton('directory', Directory::class);
         $this->registry->singleton('template.asset', Asset::class);

@@ -15,6 +15,7 @@ use Laika\Model\Connection;
 use Laika\Core\Route\Router;
 use Laika\Core\Service\Hook;
 use Laika\Core\Service\Csrf;
+use Laika\Core\Service\Option;
 use Laika\Core\Service\Config;
 use Laika\Core\Service\Request;
 use Laika\Session\Relay\Session;
@@ -67,6 +68,22 @@ function purify(array $data): array
             default => $val
         };
     }, $data);
+}
+
+/**
+ * Convert Any Value To String.
+ * @param mixed $value
+ * @return string
+ */
+function convert_to_string(mixed $value): string
+{
+    return match (true) {
+        is_string($value) => $value,
+        is_bool($value) => $value ? 'true' : 'false',
+        is_null($value) => '',
+        is_scalar($value) => (string) $value,
+        default => json_encode($value, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?: '',
+    };
 }
 
 /**
@@ -232,6 +249,79 @@ function slugify(string $name): string
 function time_zones(): array
 {
     return \DateTimeZone::listIdentifiers(DateTimeZone::ALL);
+}
+
+#######################################################################################
+/*================================== OPTION HANDLE ==================================*/
+#######################################################################################
+/**
+ * Get Option Value
+ * @param string $key
+ * @param ?string $default
+ * @return ?string
+ */
+function option(string $key, ?string $default = null): string
+{
+    return Option::single($key, $default);
+}
+
+/**
+ * Get Option Value as Bool
+ * @param string $key
+ * @return bool
+ */
+function option_bool(string $key): bool
+{
+    return (bool) preg_match('/^true$/i', option($key, 'false'));
+}
+
+/**
+ * Get Option Value as Int
+ * @param string $key
+ * @param int $default
+ * @return int
+ */
+function option_int(string $key, int $default = 0): int
+{
+    return (int) preg_match('/^[\d]+$/i', option($key, (string) $default));
+}
+
+/**
+ * Get Option Value as Array
+ * @param string $key
+ * @param array $default
+ * @return array
+ */
+function option_array(string $key, array $default = []): array
+{
+    $str = option($key, "");
+    try {
+        $arr = json_decode($str, true, 512, JSON_THROW_ON_ERROR);
+        if (is_array($arr)) return $arr;
+    } catch (\Throwable $th) {}
+    return $default;
+}
+
+/**
+ * Insert Option
+ * @param string $ksy
+ * @param mixed $value
+ * @return bool
+ */
+function option_insert(string $key, mixed $value): bool
+{
+    return Option::insert($key, $value);
+}
+
+/**
+ * Update Option
+ * @param string $ksy
+ * @param mixed $value
+ * @return bool
+ */
+function option_update(string $key, mixed $value): bool
+{
+    return Option::update($key, $value);
 }
 
 ######################################################################################
