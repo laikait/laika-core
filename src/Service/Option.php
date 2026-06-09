@@ -12,20 +12,17 @@ declare(strict_types=1);
 
 namespace Laika\Core\Service;
 
-use PDO;
 use Laika\Core\Relay\Relay;
 
 /**
- * CLASS: Laika\Core\Helper\DB
- * 
- * @method static void run(?string $name = null)
- * @method static PDO connection(string $name = 'default')
- * @method static void session(string $name = 'default')
+ * @method static ?string   single(string $key, ?string $default = null)
+ * @method static bool      insert(string $key, mixed $value)
+ * @method static bool      update(string $key, mixed $value)
  */
-class DB extends Relay
+class Option extends Relay
 {
     protected static function getRelayAccessor(): string
     {
-        return 'db';
+        return 'option';
     }
 }
