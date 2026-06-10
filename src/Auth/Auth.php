@@ -96,27 +96,30 @@ class Auth
         // Session::regenerate();
         $token = $this->buildToken();
 
-        $sql = "INSERT INTO `{$this->table}`
-                (token, session_id, user_type, user_id, user_agent, device, os, user_data, expires_at, created_at)
-            VALUES
-                (:token, :session_id, :user_type, :user_id, :user_agent, :device, :os, :user_data, :expires_at, :created_at)
-            ON DUPLICATE KEY UPDATE
-                expires_at = VALUES(expires_at),
-                user_data  = VALUES(user_data)";
-        $params = [
-            ':token'        =>  $token,
-            ':session_id'   =>  Session::id(),
-            ':user_type'    =>  $this->guard,
-            ':user_id'      =>  $userId,
-            ':user_data'    =>  serialize($userData),
-            ':user_agent'   =>  Visitor::userAgent(),
-            ':device'       =>  Visitor::deviceType(),
-            ':os'           =>  Visitor::os(),
-            ':expires_at'   =>  $this->realtime + $this->lifetime,
-            ':created_at'   =>  $this->realtime,
-        ];
         try {
-            $this->model->execute($sql, $params);
+            $sql = "INSERT INTO `{$this->table}`
+                    (token, session_id, user_type, user_id, user_agent, device, os, user_data, expires_at, created_at)
+                VALUES
+                    (:token, :session_id, :user_type, :user_id, :user_agent, :device, :os, :user_data, :expires_at, :created_at)
+                ON DUPLICATE KEY UPDATE
+                    expires_at = VALUES(expires_at),
+                    user_data  = VALUES(user_data)";
+
+            $params = [
+                ':token'        =>  $token,
+                ':session_id'   =>  Session::id(),
+                ':user_type'    =>  $this->guard,
+                ':user_id'      =>  $userId,
+                ':user_data'    =>  json_encode($userData, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR),
+                ':user_agent'   =>  Visitor::userAgent(),
+                ':device'       =>  Visitor::deviceType(),
+                ':os'           =>  Visitor::os(),
+                ':expires_at'   =>  $this->realtime + $this->lifetime,
+                ':created_at'   =>  $this->realtime,
+            ];
+            $this->model->transaction(function (Model $m) use ($sql, $params) {
+                $m->execute($sql, $params);
+            });
         } catch (\Throwable $th) {
             throw new RuntimeException("Failed to create auth session: " . $th->getMessage());
         }
@@ -149,20 +152,22 @@ class Auth
      * Get User Data
      * @return array
      */
-    public function data(): array
+    public function user(): array
     {
-        return unserialize($this->getRow()['data']['user_data'] ?? 'N;') ?? [];
+        return $this->decodeUserData($this->getRow()['data']['user_data'] ?? null);
     }
 
     /**
-     * Get Logged-in User
+     * Get User Api Data
      * @return array{success:string,message:int|string,data:array}
      */
-    public function user(): array
+    public function data(): array
     {
         $row = $this->getRow();
         if (!$row['success'] || ($row['message'] !== Auth::AUTHORIZED)) return response(false, Auth::UNAUTHORIZED, []);
-        $user = unserialize($row['data']['user_data'] ?? 'N;') ?? [];
+
+        // Get User
+        $user = $this->decodeUserData($row['data']['user_data'] ?? null);
 
         if (empty($user)) return response(false, Auth::UNAUTHORIZED, []);
 
@@ -284,5 +289,21 @@ class Auth
             ->table($this->table)
             ->where(['expires_at' => $this->realtime], '<')
             ->delete();
+    }
+
+    /**
+     * Decode User Data
+     * @param ?string $json
+     * @return array
+     */
+    private function decodeUserData(?string $json): array
+    {
+        if (empty($json)) return [];
+
+        try {
+            return json_decode($json, true, 512, JSON_THROW_ON_ERROR);
+        } catch (\JsonException) {
+            return [];
+        }
     }
 }
