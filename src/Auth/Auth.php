@@ -184,12 +184,12 @@ class Auth
     }
 
     /**
-     * Get User Type
-     * @return ?string
+     * Get Guard
+     * @return string
      */
-    public function type(): ?string
+    public function guard(): string
     {
-        return $this->getRow()['data']['user_type'] ?? null;
+        return $this->guard;
     }
 
     /**
