@@ -18,7 +18,7 @@ use Laika\Core\Service\Csrf;
 use Laika\Core\Service\Option;
 use Laika\Core\Service\Config;
 use Laika\Core\Service\Request;
-use Laika\Session\Relay\Session;
+use Laika\Session\Service\Session;
 use Laika\Core\Exceptions\Handler;
 use Laika\Core\Service\Template\Meta;
 use Laika\Core\Service\Template\Asset;
