@@ -159,7 +159,7 @@ class Auth
 
     /**
      * Get User Api Data
-     * @return array{success:string,message:int|string,data:array}
+     * @return array{success:bool,message:int|string,data:array}
      */
     public function data(): array
     {
