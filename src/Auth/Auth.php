@@ -150,11 +150,12 @@ class Auth
 
     /**
      * Get User Data
-     * @return array
+     * @return ?array
      */
-    public function user(): array
+    public function user(): ?array
     {
-        return $this->decodeUserData($this->getRow()['data']['user_data'] ?? null);
+        $user = $this->decodeUserData($this->getRow()['data']['user_data'] ?? null);
+        return !empty($user) ? $user : null;
     }
 
     /**

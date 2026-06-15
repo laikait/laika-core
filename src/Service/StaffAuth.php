@@ -20,7 +20,7 @@ use Laika\Core\Relay\Relay;
  * @method static bool      check()
  * @method static bool      guest()
  * @method static array     data()
- * @method static array     user()
+ * @method static ?array    user()
  * @method static ?int      id()
  * @method static string    guard()
  * @method static void      logout()
