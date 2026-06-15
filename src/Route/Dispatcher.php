@@ -76,9 +76,6 @@ class Dispatcher
 
         try {
             $str = Invoke::afterware($afterwares, $output, $params);
-            // Insert Log
-            Activity::insert();
-
             // Send Response
             Response::body($str)->send();
         } catch (\Throwable $e) {

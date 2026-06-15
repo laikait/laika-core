@@ -22,7 +22,6 @@ use InvalidArgumentException;
 use Laika\Core\Service\Request;
 use Laika\Core\Service\Visitor;
 use Laika\Core\Exceptions\LogException;
-use Laika\Core\Migration\ActivityMigration;
 
 final class Activity
 {
