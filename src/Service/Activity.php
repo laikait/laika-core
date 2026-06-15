@@ -20,6 +20,7 @@ use Laika\Core\Relay\Relay;
  * @method static void      event(string $event, array $changes = [])
  * @method static array     events(?string $event = null)
  * @method static int       insert(?string $connection = null)
+ * @method static array     changelog(array $existing)
  */
 class Activity extends Relay
 {

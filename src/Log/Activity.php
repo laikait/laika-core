@@ -26,12 +26,6 @@ use Laika\Core\Migration\ActivityMigration;
 
 final class Activity
 {
-    /** @var array new */
-    protected array $new;
-
-    /** @var array old */
-    protected array $old;
-
     /** @var array Author */
     protected array $author;
 
@@ -40,6 +34,9 @@ final class Activity
 
     /** @var array Activities */
     protected array $activities;
+
+    /** @var array Change Log */
+    protected array $changelog;
 
     public function __construct(?string $connection = null)
     {
@@ -89,7 +86,7 @@ final class Activity
             'author_id'     =>  $this->author['id'],
             'event'         =>  strtolower(trim($event)),
             'log'           =>  $this->log,
-            'changes'       =>  serialize($this->changeLog($changes)),
+            'changes'       =>  serialize($this->changelog),
             'from_ip'       =>  Visitor::ip()
         ];
 
@@ -99,8 +96,7 @@ final class Activity
             'id'    =>  null,
         ];
         $this->log = '';
-        $this->new = [];
-        $this->old = [];
+        $this->changelog = [];
     }
 
     /**
@@ -118,6 +114,26 @@ final class Activity
             return $this->activities[$event];
         }
         throw new InvalidArgumentException("Invalid Activity Event Key: [{$event}]");
+    }
+
+    /**
+     * Check Change Logs
+     * @param array $existing Existing Value
+     * @return array
+     */
+    public function changelog(array $existing): array
+    {
+        // Return if Empty
+        if (empty($existing)) return $changes;
+
+        // Check Changes
+        foreach (Request::inputs() as $key => $input) {
+            $old = $existing[$key] ?? '';
+            if ($old !== $input) {
+                $this->changelog[$key] = ['old' => $old, 'new' => $input];
+            }
+        }
+        return $this->changelog;
     }
 
     /**
@@ -154,26 +170,6 @@ final class Activity
     ####################################################################################
     ################################### INTERNAL API ###################################
     ####################################################################################
-    /**
-     * Check Change Logs
-     * @param array $existing Existing Value
-     * @return array
-     */
-    private function changeLog(array $existing): array
-    {
-        $changes = [];
-        // Return if Empty
-        if (empty($existing)) return $changes;
-
-        // Check Changes
-        foreach (Request::inputs() as $key => $input) {
-            $old = $existing[$key] ?? '';
-            if ($old !== $input) {
-                $changes[$key] = ['old' => $old, 'new' => $input];
-            }
-        }
-        return $changes;
-    }
 
     /**
      * Reset
@@ -194,7 +190,6 @@ final class Activity
         $this->activities = [];
 
         // Change Log
-        $this->new = [];
-        $this->old = [];
+        $this->changelog = [];
     }
 }
