@@ -587,11 +587,11 @@ function app_host(): string
 }
 
 /**
- * Check Current Url is Loggedin Url
+ * Match Current Url With Named
  * @param string $named
  * @return bool
  */
-function is_loggedin_url(string $named): bool
+function match_url(string $named): bool
 {
     return str_starts_with(Url::current(), named($named));
 }
