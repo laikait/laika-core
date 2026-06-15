@@ -124,13 +124,17 @@ final class Activity
     {
         $changelog = [];
         // Return if Empty
-        if (empty($existing)) return $changes;
+        if (empty($existing)) return $changelog;
+
+        $inputs = Request::inputs();
 
         // Check Changes
-        foreach (Request::inputs() as $key => $input) {
-            $old = $existing[$key] ?? '';
-            if ($old !== $input) {
-                $changelog[$key] = ['old' => $old, 'new' => $input];
+        foreach ($existing as $k => $v) {
+            if (isset($inputs[$k]) && ($inputs[$k] != $v)) {
+                $changelog[$k] = [
+                    'old'   =>  $v,
+                    'new'   =>  $inputs[$k]
+                ];
             }
         }
         return $changelog;
