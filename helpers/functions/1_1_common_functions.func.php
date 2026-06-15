@@ -262,7 +262,9 @@ function time_zones(): array
  */
 function option(string $key, ?string $default = null): string
 {
-    return Option::single($key, $default);
+    static $options = [];
+    if (!isset($options[$key])) $options[$key] = Option::single($key, $default);
+    return $options[$key];
 }
 
 /**
@@ -283,7 +285,9 @@ function option_bool(string $key): bool
  */
 function option_int(string $key, int $default = 0): int
 {
-    return (int) preg_match('/^[\d]+$/i', option($key, (string) $default));
+    $v = option($key, (string) $default);
+    if (is_numeric($v)) return (int) $v;
+    return $default;
 }
 
 /**
