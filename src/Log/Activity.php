@@ -76,10 +76,9 @@ final class Activity
     /**
      * Create Custom Activity
      * @param string $event
-     * @param array{old?:array,new?:array} $changes
      * @return void
      */
-    public function event(string $event, array $changes = []): void
+    public function event(string $event): void
     {
         $this->activities[$event][] = [
             'author_type'   =>  $this->author['type'],
@@ -123,6 +122,7 @@ final class Activity
      */
     public function changelog(array $existing): array
     {
+        $changelog = [];
         // Return if Empty
         if (empty($existing)) return $changes;
 
@@ -130,10 +130,10 @@ final class Activity
         foreach (Request::inputs() as $key => $input) {
             $old = $existing[$key] ?? '';
             if ($old !== $input) {
-                $this->changelog[$key] = ['old' => $old, 'new' => $input];
+                $changelog[$key] = ['old' => $old, 'new' => $input];
             }
         }
-        return $this->changelog;
+        return $changelog;
     }
 
     /**
