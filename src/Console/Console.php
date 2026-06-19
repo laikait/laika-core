@@ -50,6 +50,8 @@ class Console extends Command
                 'rename:middleware'     =>  \Laika\Core\Console\Commands\Middleware\Rename::class,
                 'pop:middleware'        =>  \Laika\Core\Console\Commands\Middleware\Pop::class,
                 'list:middleware'       =>  \Laika\Core\Console\Commands\Middleware\Lists::class,
+                /* Migrations Commands */
+                'list:migration'        =>  \Laika\Core\Console\Commands\Migration\Lists::class,
                 /* Afterware Commands */
                 'make:afterware'        =>  \Laika\Core\Console\Commands\Afterware\Make::class,
                 'rename:afterware'      =>  \Laika\Core\Console\Commands\Afterware\Rename::class,

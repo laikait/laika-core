@@ -18,7 +18,7 @@ use Laika\Core\Service\Csrf;
 use Laika\Core\Service\Option;
 use Laika\Core\Service\Config;
 use Laika\Core\Service\Request;
-use Laika\Session\Relay\Session;
+use Laika\Session\Service\Session;
 use Laika\Core\Exceptions\Handler;
 use Laika\Core\Service\Template\Meta;
 use Laika\Core\Service\Template\Asset;
@@ -262,7 +262,9 @@ function time_zones(): array
  */
 function option(string $key, ?string $default = null): string
 {
-    return Option::single($key, $default);
+    static $options = [];
+    if (!isset($options[$key])) $options[$key] = Option::single($key, $default);
+    return $options[$key];
 }
 
 /**
@@ -283,7 +285,9 @@ function option_bool(string $key): bool
  */
 function option_int(string $key, int $default = 0): int
 {
-    return (int) preg_match('/^[\d]+$/i', option($key, (string) $default));
+    $v = option($key, (string) $default);
+    if (is_numeric($v)) return (int) $v;
+    return $default;
 }
 
 /**
@@ -587,11 +591,11 @@ function app_host(): string
 }
 
 /**
- * Check Current Url is Loggedin Url
+ * Match Current Url With Named
  * @param string $named
  * @return bool
  */
-function is_loggedin_url(string $named): bool
+function match_url(string $named): bool
 {
     return str_starts_with(Url::current(), named($named));
 }

@@ -77,7 +77,6 @@ class Auth
      */
     public function setLifetime(int $ttl): static
     {
-        if ($ttl < 120) throw new InvalidArgumentException("Lifetime Should Be Greater Than 120 Seconds!");
         $this->lifetime = $ttl;
         return $this;
     }
@@ -150,16 +149,17 @@ class Auth
 
     /**
      * Get User Data
-     * @return array
+     * @return ?array
      */
-    public function user(): array
+    public function user(): ?array
     {
-        return $this->decodeUserData($this->getRow()['data']['user_data'] ?? null);
+        $user = $this->decodeUserData($this->getRow()['data']['user_data'] ?? null);
+        return !empty($user) ? $user : null;
     }
 
     /**
      * Get User Api Data
-     * @return array{success:string,message:int|string,data:array}
+     * @return array{success:bool,message:int|string,data:array}
      */
     public function data(): array
     {
@@ -185,11 +185,11 @@ class Auth
 
     /**
      * Get User Type
-     * @return ?string
+     * @return string
      */
-    public function type(): ?string
+    public function guard(): string
     {
-        return $this->getRow()['data']['user_type'] ?? null;
+        return $this->guard;
     }
 
     /**
@@ -218,12 +218,12 @@ class Auth
         if (!$token) return;
 
         $newExpiry = $this->realtime + $this->lifetime;
-        $this->session['expires_at'] = $newExpiry;
 
         $this->model->table($this->table)
-                    ->where(['token' => $token, 'session_id' => Session::id(), 'user_type' => $this->guard])
-                    ->where(['expires_at' => $this->realtime], '>')
+                    ->where(['token' => $token, 'user_type' => $this->guard])
                     ->update(['expires_at' => $newExpiry]);
+
+        $this->session['expires_at'] = $newExpiry;
     }
 
     /**
@@ -232,7 +232,7 @@ class Auth
      */
     private function buildToken(): string
     {
-        return $this->guard . bin2hex(random_bytes(32));
+        return $this->guard . '_' . bin2hex(random_bytes(32));
     }
 
     /**
@@ -272,7 +272,7 @@ class Auth
         }
 
         // Refresh Expire Time
-        if (($this->session['expires_at'] - $this->realtime) < 120) {
+        if (($this->session['expires_at'] - $this->realtime) < ($this->lifetime / 2)) {
             $this->refresh();
         }
 

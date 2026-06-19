@@ -22,16 +22,9 @@ use InvalidArgumentException;
 use Laika\Core\Service\Request;
 use Laika\Core\Service\Visitor;
 use Laika\Core\Exceptions\LogException;
-use Laika\Core\Migration\ActivityMigration;
 
 final class Activity
 {
-    /** @var array new */
-    protected array $new;
-
-    /** @var array old */
-    protected array $old;
-
     /** @var array Author */
     protected array $author;
 
@@ -40,6 +33,9 @@ final class Activity
 
     /** @var array Activities */
     protected array $activities;
+
+    /** @var array Change Log */
+    protected array $changelog;
 
     public function __construct(?string $connection = null)
     {
@@ -79,17 +75,16 @@ final class Activity
     /**
      * Create Custom Activity
      * @param string $event
-     * @param array{old?:array,new?:array} $changes
      * @return void
      */
-    public function event(string $event, array $changes = []): void
+    public function event(string $event): void
     {
         $this->activities[$event][] = [
             'author_type'   =>  $this->author['type'],
             'author_id'     =>  $this->author['id'],
             'event'         =>  strtolower(trim($event)),
             'log'           =>  $this->log,
-            'changes'       =>  serialize($this->changeLog($changes)),
+            'changes'       =>  serialize($this->changelog),
             'from_ip'       =>  Visitor::ip()
         ];
 
@@ -99,8 +94,7 @@ final class Activity
             'id'    =>  null,
         ];
         $this->log = '';
-        $this->new = [];
-        $this->old = [];
+        $this->changelog = [];
     }
 
     /**
@@ -121,18 +115,37 @@ final class Activity
     }
 
     /**
+     * Check Change Logs
+     * @param array $existing Existing Value
+     * @return array
+     */
+    public function changelog(array $existing): array
+    {
+        $changelog = [];
+        // Return if Empty
+        if (empty($existing)) return $changelog;
+
+        $inputs = Request::inputs();
+
+        // Check Changes
+        foreach ($existing as $k => $v) {
+            if (isset($inputs[$k]) && ($inputs[$k] != $v)) {
+                $changelog[$k] = [
+                    'old'   =>  $v,
+                    'new'   =>  $inputs[$k]
+                ];
+            }
+        }
+        return $changelog;
+    }
+
+    /**
      * Insert Activities
      * @param ?string $connection Connection Name
      * @return int
      */
     public function insert(?string $connection = null): int
     {
-        // Define ACTIVITY_LOG if Not Defined
-        if (!defined('ACTIVITY_LOG')) define('ACTIVITY_LOG', false);
-
-        // Return if ACTIVITY_LOG Is false
-        if (!ACTIVITY_LOG) return 0;
-
         // Start Count
         $effected = 0;
 
@@ -160,26 +173,6 @@ final class Activity
     ####################################################################################
     ################################### INTERNAL API ###################################
     ####################################################################################
-    /**
-     * Check Change Logs
-     * @param array $existing Existing Value
-     * @return array
-     */
-    private function changeLog(array $existing): array
-    {
-        $changes = [];
-        // Return if Empty
-        if (empty($existing)) return $changes;
-
-        // Check Changes
-        foreach (Request::inputs() as $key => $input) {
-            $old = $existing[$key] ?? '';
-            if ($old !== $input) {
-                $changes[$key] = ['old' => $old, 'new' => $input];
-            }
-        }
-        return $changes;
-    }
 
     /**
      * Reset
@@ -200,7 +193,6 @@ final class Activity
         $this->activities = [];
 
         // Change Log
-        $this->new = [];
-        $this->old = [];
+        $this->changelog = [];
     }
 }

@@ -13,6 +13,7 @@ declare(strict_types=1);
 namespace Laika\Core\Service;
 
 use Laika\Core\Relay\Relay;
+use Laika\Core\Helper\Date as DateHelper;
 
 /**
  * @method static DateHelper now()

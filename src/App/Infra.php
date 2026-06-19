@@ -15,6 +15,7 @@ namespace Laika\Core\App;
 use Laika\Core\Service\Directory;
 use Laika\Core\Service\File;
 use Laika\Core\Relay\Relay;
+use Loader;
 
 // Application Infrastructure Info
 class Infra
@@ -27,7 +28,10 @@ class Infra
     public function getModelClasses(): array
     {
         $files = Directory::files(APP_PATH . '/lf-app/Model', 'php');
-        return array_map(function ($file) { return 'App\\Model\\' . File::name($file); }, $files);
+        return array_merge(
+            Loader::models(),
+            array_map(function ($file) { return 'App\\Model\\' . File::name($file); }, $files)
+        );
     }
 
     /**
@@ -36,10 +40,11 @@ class Infra
      */
     public function getSchemaClasses(): array
     {
-        $defaults = Directory::files(__DIR__ . '/../Migration', 'php');
-        $classes = array_map(function ($file) { return 'Laika\\Core\\Migration\\' . File::name($file); }, $defaults);
         $files = Directory::files(APP_PATH . '/lf-app/Migration', 'php');
-        return array_merge($classes, array_map(function ($file) { return 'App\\Migration\\' . File::name($file); }, $files));
+        return array_merge(
+            Loader::migrations(),
+            array_map(function ($file) { return 'App\\Migration\\' . File::name($file); }, $files)
+        );
     }
 
     /*============================ Controllers Info ============================*/
@@ -61,7 +66,10 @@ class Infra
     public function getMiddlewareClasses(): array
     {
         $files = Directory::scan(APP_PATH . '/lf-app/Middleware', true, 'php');
-        return array_map(function ($file) { return 'App\\Middleware\\' . File::name($file); }, $files);
+        return array_merge(
+            Loader::middlewares(),
+            array_map(function ($file) { return 'App\\Middleware\\' . File::name($file); }, $files)
+        );
     }
 
     /*============================ Afterwares Info ============================*/
@@ -72,7 +80,10 @@ class Infra
     public function getAfterwareClasses(): array
     {
         $files = Directory::files(APP_PATH . '/lf-app/Afterware', 'php');
-        return array_map(function ($file) { return 'App\\Afterware\\' . File::name($file); }, $files);
+        return array_merge(
+            Loader::afterwares(),
+            array_map(function ($file) { return 'App\\Afterware\\' . File::name($file); }, $files)
+        );
     }
 
     /*============================ Template Info ============================*/
