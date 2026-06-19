@@ -32,8 +32,8 @@ $providers = new ProviderRegistry($registry);
 // Register Core Services
 $providers->register(CoreServiceProvider::class);
 
-if (class_exists(Provider::class)) {
-    foreach (Provider::instance()->services() as $service) {
+if (class_exists(Loader::class)) {
+    foreach (Loader::services() as $service) {
         $providers->register($service);
     }
 }
