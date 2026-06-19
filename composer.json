@@ -68,7 +68,11 @@
             ],
             "hooks": [
                 "helpers/hooks"
-            ]
+            ],
+            "migration": true,
+            "model": true,
+            "middleware": true,
+            "afterware": true
         }
     }
 }
