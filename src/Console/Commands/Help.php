@@ -30,6 +30,10 @@ class Help extends Command
                 (new \Laika\Core\Console\Commands\Help\ModelHelp())->run($params, $options);
                 break;
 
+            case 'migration':
+                (new \Laika\Core\Console\Commands\Help\MigrationHelp())->run($params, $options);
+                break;
+
             case 'controller':
                 (new \Laika\Core\Console\Commands\Help\ControllerHelp())->run($params, $options);
                 break;
