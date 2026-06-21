@@ -1,4 +1,4 @@
-# Laika Core
+# Laika Framework Core
 Laika PHP Framework Core for [Laika PHP Micro Framework](https://github.com/laikait/laika-framework).
 
 [![Tests](https://github.com/laikait/laika-core/actions/workflows/actions.yml/badge.svg)](https://github.com/laikait/laika-core/actions)
