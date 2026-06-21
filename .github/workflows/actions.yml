@@ -3,13 +3,9 @@ name: Laika PHP Compatibility Check
 on:
   push:
     branches:
-      - main
       - beta
     tags:
       - 'v*.*.*'
-  pull_request:
-    branches:
-      - main
 
   workflow_dispatch:
 
