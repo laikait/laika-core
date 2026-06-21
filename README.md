@@ -1,5 +1,5 @@
 # Laika Framework Core
-Laika PHP Framework Core for [Laika PHP Micro Framework](https://github.com/laikait/laika-framework).
+Laika PHP Framework Core for [Laika PHP MVC Framework](https://github.com/laikait/laika-framework).
 
 [![Tests](https://github.com/laikait/laika-core/actions/workflows/actions.yml/badge.svg)](https://github.com/laikait/laika-core/actions)
 [![PHP](https://img.shields.io/badge/PHP-8.1%2B-blue.svg)](https://php.net)
