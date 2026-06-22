@@ -12,8 +12,8 @@ declare(strict_types=1);
 
 namespace Laika\Core\Storage;
 
-use Laika\Core\Service\Directory;
 use Aws\Exception\AwsException;
+use Laika\Service\Directory;
 use RuntimeException;
 use Aws\S3\S3Client;
 use Exception;

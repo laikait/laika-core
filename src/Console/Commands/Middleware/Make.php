@@ -12,9 +12,8 @@ declare(strict_types=1);
 
 namespace Laika\Core\Console\Commands\Middleware;
 
-use Laika\Core\Service\File;
 use Laika\Core\Console\Command;
-use Laika\Core\Service\Directory;
+use Laika\Service\{Directory, File};
 
 // Make Middleware Class
 class Make extends Command
@@ -23,7 +22,7 @@ class Make extends Command
     protected string $path = APP_PATH . '/lf-app/Middleware';
 
     // Accepted Regular Expresion
-    private string $exp = '/^[a-zA-Z_\/][a-zA-Z0-9_\/]+$/';
+    private string $exp = '/^[\w][\w\d\/]+$/';
 
     /**
      * @param array $params
@@ -31,6 +30,9 @@ class Make extends Command
      */
     public function run(array $params, array $options = []): void
     {
+        // Make Directories if Does Not Exists
+        if (!Directory::exists($this->path)) Directory::make($this->path);
+
         // Check Parameters
         if (count($params) < 1) {
             $this->error("USAGE: php laika make:middleware <name>");

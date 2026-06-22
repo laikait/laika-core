@@ -15,8 +15,8 @@ namespace Laika\Core\Model;
 // Deny Direct Access
 defined('APP_PATH') || http_response_code(403).die('403 Direct Access Denied!');
 
+use Laika\Service\DB;
 use Laika\Model\Model;
-use Laika\Core\Service\DB;
 use Laika\Core\Exceptions\OptionException;
 
 class OptionModel

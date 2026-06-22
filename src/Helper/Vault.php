@@ -12,8 +12,9 @@ declare(strict_types=1);
 
 namespace Laika\Core\Helper;
 
-use Laika\Core\Service\Config;
+use Laika\Service\Config;
 use RuntimeException;
+use Laika\Core\Exceptions\{ExtensionException, ConfigException};
 
 class Vault
 {
@@ -39,7 +40,7 @@ class Vault
     public function __construct()
     {
         if (!extension_loaded('openssl')) {
-            throw new RuntimeException("Extension Not Found: 'openssl'");
+            throw new ExtensionException("Extension Not Found: 'openssl'", 500);
         }
 
         $this->cipher    = 'aes-256-gcm';
@@ -47,7 +48,7 @@ class Vault
 
         $secret = Config::get('secret', 'key');
         if (empty($secret)) {
-            throw new RuntimeException("Encryption key is not set in config.");
+            throw new ConfigException("Encryption key is not set in config.");
         }
         $this->key = hash('sha256', $secret, true);
 

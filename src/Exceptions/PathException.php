@@ -14,7 +14,7 @@ namespace Laika\Core\Exceptions;
 
 use Throwable;
 
-class ExtensionException extends \RuntimeException
+class PathException extends \RuntimeException
 {
     protected int $statusCode;
 

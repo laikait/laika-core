@@ -14,8 +14,7 @@ namespace Laika\Core\Exceptions;
 
 use Throwable;
 use RuntimeException;
-use Laika\Core\Service\Response;
-use Laika\Core\Service\Directory;
+use Laika\Service\{Response, Directory};
 
 class Handler
 {

@@ -12,9 +12,8 @@ declare(strict_types=1);
 
 namespace Laika\Core\Console\Commands\Template;
 
-use Laika\Core\Service\File;
 use Laika\Core\Console\Command;
-use Laika\Core\Service\Directory;
+use Laika\Service\{Directory, File};
 
 class Rename extends Command
 {
@@ -25,7 +24,7 @@ class Rename extends Command
     protected string $new_path = APP_PATH . '/lf-templates';
 
     // Accepted Regular Expresion
-    private string $exp = '/^[a-zA-Z0-9_\-\/]+$/';
+    private string $exp = '/^[\w\-\/]+$/';
 
     /**
      * Run The Command to Remove a Temaple.

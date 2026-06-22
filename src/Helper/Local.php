@@ -12,8 +12,8 @@ declare(strict_types=1);
 
 namespace Laika\Core\Helper;
 
-use Laika\Core\Service\{Directory, File};
-use RuntimeException;
+use Laika\Service\{Directory, File};
+use Laika\Core\Exceptions\LocalException;
 
 class Local
 {
@@ -46,7 +46,7 @@ class Local
      * Set Path
      * @param string $path Sub Directory or Absolute Path
      * @return void
-     * @throws RuntimeException
+     * @throws LocalException
      */
     public function setPath(string $path): void
     {
@@ -57,7 +57,7 @@ class Local
         }
 
         if (!is_dir($this->path)) {
-            throw new RuntimeException("Invalid Local Path [{$this->path}]");
+            throw new LocalException("Invalid Local Path [{$this->path}]", 500);
         }
     }
 
@@ -94,6 +94,7 @@ class Local
             class LANG
             {
                 // Declaer Static Language Variables.
+                public static string \$sample = 'Hello World!';
             }
             HTML;
 

@@ -12,7 +12,7 @@ declare(strict_types=1);
 
 namespace Laika\Core\Route;
 
-use Laika\Core\Service\Directory;
+use Laika\Service\Directory;
 
 class Url
 {

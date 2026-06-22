@@ -20,7 +20,7 @@ class Pop extends Command
     protected string $path = APP_PATH . '/lf-templates';
 
     // Accepted Regular Expresion
-    private string $exp = '/^[a-zA-Z0-9_\-\/]+$/';
+    private string $exp = '/^[\w\-\/]+$/';
 
     /**
      * Run the command to create a new controller.

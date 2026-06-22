@@ -12,7 +12,7 @@ declare(strict_types=1);
 
 namespace Laika\Core\Helper;
 
-use Laika\Core\Service\{Config, Cookie, Token};
+use Laika\Service\{Config, Cookie, Token};
 
 class CSRF
 {

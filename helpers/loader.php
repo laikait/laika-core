@@ -10,10 +10,10 @@
 
 declare(strict_types=1);
 
-use Laika\Core\Relay\Relay;
-use Laika\Core\Relay\RelayRegistry;
-use Laika\Core\Relay\ProviderRegistry;
-use Laika\Core\Relay\Providers\CoreServiceProvider;
+use Laika\Relay\Relay;
+use Laika\Relay\RelayRegistry;
+use Laika\Relay\CoreProviders;
+use Laika\Relay\ProviderRegistry;
 
 // Define APP_PATH
 if (!defined('APP_PATH')) define('APP_PATH', realpath(__DIR__ . '/../../../../'));
@@ -30,7 +30,7 @@ $registry = new RelayRegistry();
 $providers = new ProviderRegistry($registry);
 
 // Register Core Services
-$providers->register(CoreServiceProvider::class);
+$providers->register(CoreProviders::class);
 
 if (class_exists(Loader::class)) {
     foreach (Loader::services() as $service) {

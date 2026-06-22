@@ -12,7 +12,7 @@ declare(strict_types=1);
 
 namespace Laika\Core\Console\Commands\Model;
 
-use Laika\Core\Service\File;
+use Laika\Service\{Directory, File};
 use Laika\Core\Console\Command;
 
 class Pop extends Command
@@ -32,6 +32,10 @@ class Pop extends Command
      */
     public function run(array $params, array $options = []): void
     {
+        // Make Directories if Does Not Exists
+        if (!Directory::exists($this->path)) Directory::make($this->path);
+        if (!Directory::exists($this->migrationPath)) Directory::make($this->migrationPath);
+
         // Check Parameters
         if (count($params) < 1) {
             $this->error("USAGE: php laika pop:model <name>");

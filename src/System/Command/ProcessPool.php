@@ -14,14 +14,23 @@ namespace Laika\Core\System\Command;
 
 class ProcessPool
 {
+    /** @var array Jobs */
     private array $jobs = [];
 
-    public function add(string|array $command): self
+    /**
+     * Add Command to Process
+     * @return static
+     */
+    public function add(string|array $command): static
     {
         $this->jobs[] = $command;
         return $this;
     }
 
+    /**
+     * Run Processes
+     * @return array
+     */
     public function run(int $concurrency = 4): array
     {
         $running = [];

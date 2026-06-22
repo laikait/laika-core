@@ -12,7 +12,7 @@ declare(strict_types=1);
 
 namespace Laika\Core\Template;
 
-use Laika\Core\Service\{Response, Url};
+use Laika\Service\{Response, Url};
 
 class Asset
 {

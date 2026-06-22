@@ -16,8 +16,8 @@ namespace Laika\Core\Migration;
 // Deny Direct Access
 defined('APP_PATH') || http_response_code(403) . die('403 Direct Access Denied!');
 
+use Laika\Service\Option;
 use Laika\Model\Schema\Schema;
-use Laika\Core\Service\Option;
 use Laika\Model\Schema\Blueprint;
 use Laika\Core\Exceptions\OptionException;
 

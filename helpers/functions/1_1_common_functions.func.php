@@ -10,18 +10,18 @@
 
 declare(strict_types=1);
 
-use Laika\Core\Service\Url;
+use Laika\Service\Url;
+use Laika\Service\Hook;
+use Laika\Service\Csrf;
+use Laika\Service\Meta;
+use Laika\Service\Asset;
+use Laika\Service\Option;
+use Laika\Service\Config;
+use Laika\Service\Request;
 use Laika\Model\Connection;
 use Laika\Core\Route\Router;
-use Laika\Core\Service\Hook;
-use Laika\Core\Service\Csrf;
-use Laika\Core\Service\Option;
-use Laika\Core\Service\Config;
-use Laika\Core\Service\Request;
-use Laika\Session\Service\Session;
 use Laika\Core\Exceptions\Handler;
-use Laika\Core\Service\Template\Meta;
-use Laika\Core\Service\Template\Asset;
+use Laika\Session\Service\Session;
 
 /**
  * Dump Data & Die

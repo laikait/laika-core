@@ -12,9 +12,8 @@ declare(strict_types=1);
 
 namespace Laika\Core\App;
 
-use Laika\Core\Service\Directory;
-use Laika\Core\Service\File;
-use Laika\Core\Relay\Relay;
+use Laika\Service\{Directory, File};
+use Laika\Relay\Relay;
 use Loader;
 
 // Application Infrastructure Info

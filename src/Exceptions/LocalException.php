@@ -12,9 +12,9 @@ declare(strict_types=1);
 
 namespace Laika\Core\Exceptions;
 
-use Throwable;
+use Exception;
 
-class ExtensionException extends \RuntimeException
+class LocalException extends Exception
 {
     protected int $statusCode;
 

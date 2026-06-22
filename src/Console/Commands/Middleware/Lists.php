@@ -13,6 +13,7 @@ declare(strict_types=1);
 namespace Laika\Core\Console\Commands\Middleware;
 
 use Laika\Core\Console\Command;
+use Laika\Service\Directory;
 
 // Make Middleware Class
 class Lists extends Command
@@ -26,6 +27,9 @@ class Lists extends Command
      */
     public function run(array $params, array $options = []): void
     {
+        // Make Directories if Does Not Exists
+        if (!Directory::exists($this->path)) Directory::make($this->path);
+
         $middlewares = call_user_func([new \Laika\Core\App\Infra(), 'getMiddlewareClasses']);
 
         // Header

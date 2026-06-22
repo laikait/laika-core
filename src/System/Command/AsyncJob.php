@@ -14,7 +14,10 @@ namespace Laika\Core\System\Command;
 
 class AsyncJob
 {
+    /** @var int Process ID */
     private int $pid;
+
+    /** @var string Command to Run */
     private string $command;
 
     public function __construct(int $pid, string $command) {

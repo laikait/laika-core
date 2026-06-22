@@ -13,6 +13,7 @@ declare(strict_types=1);
 namespace Laika\Core\Console\Commands\Afterware;
 
 use Laika\Core\Console\Command;
+use Laika\Service\Directory;
 
 // Remove Afterware Class
 class Pop extends Command
@@ -29,6 +30,9 @@ class Pop extends Command
      */
     public function run(array $params, array $options = []): void
     {
+        // Make Directories if Does Not Exists
+        if (!Directory::exists($this->path)) Directory::make($this->path);
+
         // Check Parameters
         if (count($params) < 1) {
             $this->error("USAGE: php laika pop:afterware <name>");

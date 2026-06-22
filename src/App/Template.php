@@ -13,16 +13,10 @@ declare(strict_types=1);
 
 namespace Laika\Core\App;
 
-use Twig\Loader\FilesystemLoader as Engine;
-use Laika\Core\Service\Directory;
-use Laika\Core\Service\Visitor;
-use Laika\Core\Service\Request;
-use Laika\Core\Service\Local;
-use Laika\Core\Service\File;
-use Laika\Core\Service\Page;
-use Laika\Core\Service\Url;
-use Twig\Environment;
 use Twig\TwigFilter;
+use Twig\Environment;
+use Twig\Loader\FilesystemLoader as Engine;
+use Laika\Service\{Directory, Visitor, Request, Local, File, Page, Url};
 
 class Template
 {

@@ -14,9 +14,8 @@ declare(strict_types=1);
 namespace Laika\Core\Helper;
 
 use ZipArchive;
-use RuntimeException;
-use InvalidArgumentException;
-use Laika\Core\Service\Directory;
+use Laika\Service\Directory;
+use Laika\Core\Exceptions\{ExtensionException, PathException};
 
 class Zip
 {
@@ -33,18 +32,18 @@ class Zip
     {
         // Check ZIP Extension Loaded
         if (!extension_loaded('zip')) {
-            throw new RuntimeException('Extension Not Loaded: [php-zip]!');
+            throw new ExtensionException('Extension Not Loaded: [php-zip]!', 500);
         }
 
         $dir = dirname($path);
 
         // Check Valid File if File Exists
         if (file_exists($path) && !is_file($path)) {
-            throw new InvalidArgumentException("Path [{$path}] is not a valid file!");
+            throw new PathException("Path [{$path}] is not a valid file!");
         }
 
         if (!is_dir($dir) || !is_writable($dir)) {
-            throw new InvalidArgumentException("Directory [{$dir}] is not writable!");
+            throw new PathException("Directory [{$dir}] is not writable!");
         }
 
         $this->path = $path;
@@ -74,7 +73,7 @@ class Zip
         foreach ($files as $file) {
             // Throw Exception if File Doesn't Exists
             if (!file_exists($file)) {
-                throw new InvalidArgumentException("Invalid Path '{$file}' Detected!");
+                throw new PathException("Invalid Path '{$file}' Detected!");
             }
 
             $localName = $baseDir ? substr($file, strlen($baseDir) + 1) : basename($file);
@@ -97,7 +96,7 @@ class Zip
     public function extract(string $to): bool
     {
         if (!Directory::make($to)) {
-            throw new InvalidArgumentException("Unable to create extract directory [{$to}]!");
+            throw new PathException("Unable to create extract directory [{$to}]!");
         }
 
         $zip = new ZipArchive();

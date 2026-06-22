@@ -13,9 +13,9 @@ declare(strict_types=1);
 
 namespace Laika\Core\Storage;
 
+use Laika\Service\Config;
 use Memcached as PhPMemcached;
-use Laika\Core\Service\Config;
-use RuntimeException;
+use Laika\Core\Exceptions\ExtensionException;
 
 /**
  * Memcached Storage
@@ -51,7 +51,7 @@ class MemcachedStorage
     {
         // Check Extension Loaded
         if (!extension_loaded('memcached')) {
-            throw new RuntimeException("Extension Not Loaded: [php-memcached]!");
+            throw new ExtensionException("Extension Not Loaded: [php-memcached]!", 500);
         }
 
         // Get Config

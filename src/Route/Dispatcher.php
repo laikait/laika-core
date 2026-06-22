@@ -13,7 +13,7 @@ declare(strict_types=1);
 namespace Laika\Core\Route;
 
 use Laika\Core\System\MemoryManager;
-use Laika\Core\Service\{Directory, Config, Token, Csrf, Date, Activity, Response, Url as UrlHelper};
+use Laika\Service\{Directory, Config, Token, Csrf, Date, Activity, Response, Url as UrlHelper};
 
 class Dispatcher
 {

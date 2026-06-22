@@ -46,21 +46,21 @@ class DB
 
     /**
      * Get Connection
-     * @param string $name Connection Name. Default is 'default'
+     * @param ?string $name Connection Name. Default is 'default'
      * @return PDO
      */
-    public function connection(string $name = 'default'): PDO
+    public function getConnection(?string $name = null): PDO
     {
-        return Connection::get($name);
+        return Connection::get($name ?? 'default');
     }
 
     /**
      * Session in DB
-     * @param string $name Connection Name. Default is 'default'
+     * @param ?string $name Connection Name. Default is 'default'
      * @return void
      */
-    public function session(string $name = 'default'): void
+    public function session(?string $name = null): void
     {
-        Session::config($this->connection($name));
+        Session::config($this->getConnection($name));
     }
 }
