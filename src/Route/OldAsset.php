@@ -14,7 +14,7 @@ namespace Laika\Core\Route;
 
 use Laika\Core\App\Http;
 
-class Asset
+class OldAsset
 {
     /** @var string $path */
     private string $path = '/tpl-src';

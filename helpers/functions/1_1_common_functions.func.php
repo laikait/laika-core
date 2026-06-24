@@ -163,26 +163,6 @@ function config(string $name, ?string $key = null, mixed $default = null): mixed
 }
 
 /**
- * Add Connection
- * @param string $name Connection Name
- * @return void
- */
-function add_connection(string $name = 'default'): void
-{
-    if (!Connection::has($name)) Connection::add(config('database', $name, []));
-}
-
-/**
- * Gete Connection
- * @param string $name Connection Name
- * @return \PDO
- */
-function get_connection(string $name = 'default'): \PDO
-{
-    return Connection::get($name);
-}
-
-/**
  * Get Mime Type Name
  * @return string
  */
@@ -191,6 +171,9 @@ function guess_mime_from_name(string $name): string
     $ext = strtolower(pathinfo($name, PATHINFO_EXTENSION));
 
     $map = [
+        // Assetss
+        'css'  => 'text/css',
+        'js'   => 'text/javascript',
         // Documents
         'pdf'  => 'application/pdf',
         'doc'  => 'application/msword',
@@ -450,18 +433,7 @@ function asset(string $path): void
         echo $path;
     }
     $path = trim($path, '/.');
-    echo named('asset.src', ['path' => $path]);
-}
-
-/**
- * Load App Asset
- * @param string $path
- * @return void
- */
-function app_asset(string $path): void
-{
-    $path = trim($path, '/.');
-    echo named('app.src', ['path' => $path]);
+    echo Url::base() . $path;
 }
 
 /**

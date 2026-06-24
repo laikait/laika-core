@@ -12,11 +12,19 @@ declare(strict_types=1);
 
 namespace Laika\Core\Route;
 
+use DOMDocument;
 use Laika\Core\System\MemoryManager;
 use Laika\Service\{Directory, Config, Token, Csrf, Date, Activity, Response, Url as UrlHelper};
 
 class Dispatcher
 {
+    /** @var string CSRF Token */
+    private static ?string $csrf = null;
+
+    /**
+     * Dispatch
+     * @return void
+     */
     public static function dispatch(): void
     {
         // Pre Dispatch Tasks
@@ -25,34 +33,30 @@ class Dispatcher
         // Get Request Url
         $requestUrl = Url::normalize(UrlHelper::path());
 
+        // Set Default Response Headers
+        Response::setDefaultHeaders();
+
+        // Handle Asset Request
+        if (($requestUrl != '/') && pathinfo($requestUrl, PATHINFO_EXTENSION)) {
+            self::handleAsset(rtrim($requestUrl));
+            return;
+        }
+
         // Get If Request Uri Matched With Router List
         $res = Url::matchRequestRoute($requestUrl);
 
         // Get Parameters
         $params = $res['params'];
 
-        // Check URL is for Web
-        $asset = new Asset();
-        $isWebUrl = !str_starts_with((string) $res['route'], $asset->path);
-
-        // When route is null, $isWebUrl is always true ('' does not start with asset prefixes),
+        // Handle Fallback
         if ($res['route'] === null) {
             self::handleFallback($requestUrl, $params);
             return;
         }
 
-        // Register Headers & Hooks
-        if ($isWebUrl) self::registerHeaders();
-
         // Get Matched Route Info
         $routes = Router::getRoutes(Url::method());
         $route = $routes[$res['route']];
-
-        // echo the output for asset routes — return value was silently discarded before.
-        if (!$isWebUrl) {
-            [$output, $params] = Invoke::middleware([], $route['controller'], $params);
-            return;
-        }
 
         // Collect middlewares in order: global → group → route
         $middlewares = array_merge(
@@ -77,7 +81,7 @@ class Dispatcher
         try {
             $str = Invoke::afterware($afterwares, $output, $params);
             // Send Response
-            Response::body($str)->send();
+            self::handleResponse($str);
         } catch (\Throwable $e) {
             report_error($e);
         }
@@ -85,6 +89,43 @@ class Dispatcher
     }
 
     /*================================= PRIVATE API =================================*/
+    /**
+     * Handle Response
+     * @param ?string $str Outout
+     * @return void
+     */
+    private static function handleResponse(?string $str): void
+    {
+        if (empty($str)) return;
+
+        $ct = Response::getContentType();
+
+        match (true) {
+            str_starts_with($ct, 'application/json')        => Handler\Json::render($str),
+            str_starts_with($ct, 'text/plain')              => Handler\Text::render($str),
+            str_starts_with($ct, 'text/html')               => Handler\Html::render($str),
+            default                                         => Handler\Html::render($str),
+        };
+    }
+
+    /**
+     * Handle Response
+     * @param array $requestUrl Request Url
+     * @return void
+     */
+    private static function handleAsset(string $requestUrl): void
+    {
+        $path = APP_PATH . $requestUrl;
+        if (!is_file($path)) {
+            http_response_code(404);
+            return;
+        }
+        Response::setContentType(guess_mime_from_name($path));
+        Response::setHeaders(['Content-Length' => filesize($path), 'Cache-Control' => 'public, max-age=31536000']);
+        Response::body(null)->send();
+        readfile($path);
+        return;
+    }
 
     /**
      * Handle Fallback
@@ -94,7 +135,7 @@ class Dispatcher
     {
         // 404 Response
         // Header::code(404);
-        Response::status(404);
+        Response::setStatus(404);
 
         $fallbacks = Router::getFallbacks();
 
@@ -191,8 +232,8 @@ class Dispatcher
         // Load Routes
         Url::LoadRoutes();
 
-        // Load Template Asset Routes
-        (new Asset())->registerAssetRoute();
+        // // Load Template Asset Routes
+        // (new Asset())->registerAssetRoute();
         return;
     }
 }

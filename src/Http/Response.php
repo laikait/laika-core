@@ -44,11 +44,6 @@ class Response
 
     ];
 
-    public function __construct()
-    {
-        $this->setHeaders($this->defaultHeaders);
-    }
-
     ##############################################################################
     ################################ EXTERNAL API ################################
     ##############################################################################
@@ -57,7 +52,7 @@ class Response
      * @param int $code
      * @return static
      */
-    public function status(int $code): static
+    public function setStatus(int $code): static
     {
         $this->statusCode = $code;
         return $this;
@@ -77,7 +72,7 @@ class Response
      * @param string $type
      * @return static
      */
-    public function contentType(string $type): static
+    public function setContentType(string $type): static
     {
         $this->contentType = $type;
         return $this;
@@ -90,6 +85,15 @@ class Response
     public function getContentType(): string
     {
         return $this->contentType;
+    }
+
+    /**
+     * Set Default Headers
+     * @return void
+     */
+    public function setDefaultHeaders(): void
+    {
+        $this->setHeaders($this->defaultHeaders);
     }
 
     /**
@@ -219,8 +223,8 @@ class Response
      */
     public function json(mixed $data, int $status = 200): static
     {
-        $this->status($status)
-             ->contentType('application/json; charset=UTF-8')
+        $this->setStatus($status)
+             ->setContentType('application/json; charset=UTF-8')
              ->body(json_encode($data, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
         return $this;
     }
@@ -233,8 +237,8 @@ class Response
      */
     public function html(string $html, int $status = 200): static
     {
-        $this->status($status)
-             ->contentType('text/html; charset=UTF-8')
+        $this->setStatus($status)
+             ->setContentType('text/html; charset=UTF-8')
              ->body($html);
         return $this;
     }
@@ -247,8 +251,8 @@ class Response
      */
     public function text(string $text, int $status = 200): static
     {
-        $this->status($status)
-             ->contentType('text/plain; charset=UTF-8')
+        $this->setStatus($status)
+             ->setContentType('text/plain; charset=UTF-8')
              ->body($text);
         return $this;
     }
@@ -259,7 +263,7 @@ class Response
      */
     public function noContent(): static
     {
-        $this->status(204)->body(null);
+        $this->setStatus(204)->body(null);
         return $this;
     }
 

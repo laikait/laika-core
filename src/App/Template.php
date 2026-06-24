@@ -151,7 +151,7 @@ class Template
     protected function ensureTemplatePath(?string $subdir = null): void
     {
         $subdir = $subdir ? trim($subdir, '/') : '';
-        $this->templateDirectory = is_dir($subdir) ? $subdir : APP_PATH . "/lf-templates/{$subdir}";
+        $this->templateDirectory = is_dir($subdir) ? $subdir : APP_PATH . "/template/{$subdir}";
         $this->templateDirectory = rtrim($this->templateDirectory, '/');
         Directory::make($this->templateDirectory);
     }
