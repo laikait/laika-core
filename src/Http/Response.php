@@ -225,7 +225,7 @@ class Response
     {
         $this->setStatus($status)
              ->setContentType('application/json; charset=UTF-8')
-             ->body(json_encode($data, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
+             ->body(json_encode($data, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT));
         return $this;
     }
 

@@ -49,12 +49,13 @@ class TemplateHelp extends Command
             Rename  :   <old_name> <new_name>
         
         {$this->txt_yellow("Options:")}
-            No Oprions Required
+            -e  :   Template Extension. Default is 'twig'
+            -d  :   Template Sub Directory
 
         {$this->txt_yellow("Example:")}
-            ->  php laika list:template
-            ->  php laika make:template <name>
-            ->  php laika pop:template <name>
+            ->  php laika list:template <...options>
+            ->  php laika make:template <name> <...options>
+            ->  php laika pop:template <name> <...options>
             ->  php laika rename:template <old_name> <new_name>
 
         TEMPLATEHELP;

@@ -18,7 +18,7 @@ use Laika\Service\{Directory, File};
 class Make extends Command
 {
     // App View Path
-    protected string $path = APP_PATH . '/lf-templates';
+    protected string $path = APP_PATH . '/template';
 
     // Accepted Regular Expresion
     private string $exp = '/^[\w\-\/]+$/';
@@ -32,17 +32,27 @@ class Make extends Command
     public function run(array $params, array $options = []): void
     {
         // Check Parameters
-        if (count($params) < 1) {
-            $this->error("USAGE: php laika make:template <name>");
+        if (count($params) != 1) {
+            $this->error("USAGE: php laika make:template <name> <options>");
             return;
         }
 
         // Get Extension
-        $ext = strtolower($params[1] ?? 'twig');
+        $ext = strtolower($options['short']['e'] ?? 'twig');
 
         if (!in_array($ext, ['twig', 'html'])) {
-            $this->error("Invalid Template Engine: '{$ext}'. Allowed: twig, html");
+            $this->error("Invalid Template File Extension: '{$ext}'. Allowed Extensions Are: ['twig','html']");
             return;
+        }
+
+        // Set Path
+        if (!empty($options['short']['d'])) {
+            // Check Valid Chars
+            if (!preg_match('/^[\w\d\/\.\-]+$/', $options['short']['d'])) {
+                $this->error("Invalid Subdirectory: [{$options['short']['d']}]");
+                return;
+            }
+            $this->path .= '/' . trim($options['short']['d'], '/');
         }
 
         if (!preg_match($this->exp, $params[0])) {

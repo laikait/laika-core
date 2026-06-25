@@ -18,10 +18,10 @@ use Laika\Service\{Directory, File};
 class Rename extends Command
 {
     // App Temaple Old Path
-    protected string $old_path = APP_PATH . '/lf-templates';
+    protected string $old_path = APP_PATH . '/template';
 
     // App Temaple New Path
-    protected string $new_path = APP_PATH . '/lf-templates';
+    protected string $new_path = APP_PATH . '/template';
 
     // Accepted Regular Expresion
     private string $exp = '/^[\w\-\/]+$/';
