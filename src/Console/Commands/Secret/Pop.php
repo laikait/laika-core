@@ -24,6 +24,11 @@ class Pop extends Command
      */
     public function run(array $params, array $options = []): void
     {
+        if (count($params) > 0) {
+            $this->error("USAGE: php laika pop:secret");
+            return;
+        }
+
         // Create Secret Config File if Not Exist
         if (!Config::has('secret')) {
             Config::create('secret', []);

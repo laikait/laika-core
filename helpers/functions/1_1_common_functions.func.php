@@ -163,53 +163,6 @@ function config(string $name, ?string $key = null, mixed $default = null): mixed
 }
 
 /**
- * Get Mime Type Name
- * @return string
- */
-function guess_mime_from_name(string $name): string
-{
-    $ext = strtolower(pathinfo($name, PATHINFO_EXTENSION));
-
-    $map = [
-        // Assetss
-        'css'  => 'text/css',
-        'js'   => 'text/javascript',
-        // Documents
-        'pdf'  => 'application/pdf',
-        'doc'  => 'application/msword',
-        'docx' => 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-        'xls'  => 'application/vnd.ms-excel',
-        'xlsx' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-        'ppt'  => 'application/vnd.ms-powerpoint',
-        'pptx' => 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
-        'txt'  => 'text/plain',
-        'csv'  => 'text/csv',
-        'rtf'  => 'application/rtf',
-        // Images
-        'jpg'  => 'image/jpeg',
-        'jpeg' => 'image/jpeg',
-        'png'  => 'image/png',
-        'gif'  => 'image/gif',
-        'webp' => 'image/webp',
-        'svg'  => 'image/svg+xml',
-        // Archives
-        'zip'  => 'application/zip',
-        'gz'   => 'application/gzip',
-        'tar'  => 'application/x-tar',
-        'rar'  => 'application/vnd.rar',
-        '7z'   => 'application/x-7z-compressed',
-        // Data
-        'json' => 'application/json',
-        'xml'  => 'application/xml',
-        // Audio / Video
-        'mp3'  => 'audio/mpeg',
-        'mp4'  => 'video/mp4',
-    ];
-
-    return $map[$ext] ?? 'application/octet-stream';
-}
-
-/**
  * Make Slug From Name
  * @return string
  */

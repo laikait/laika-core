@@ -14,7 +14,7 @@ namespace Laika\Core\Route;
 
 use DOMDocument;
 use Laika\Core\System\MemoryManager;
-use Laika\Service\{Directory, Config, Token, Csrf, Date, Activity, Response, Url as UrlHelper};
+use Laika\Service\{Directory, Config, Token, Csrf, Date, Activity, Response, Url as UrlHelper, MimeType};
 
 class Dispatcher
 {
@@ -37,7 +37,7 @@ class Dispatcher
         Response::setDefaultHeaders();
 
         // Handle Asset Request
-        if (($requestUrl != '/') && pathinfo($requestUrl, PATHINFO_EXTENSION)) {
+        if (pathinfo($requestUrl, PATHINFO_EXTENSION)) {
             self::handleAsset(rtrim($requestUrl));
             return;
         }
@@ -120,7 +120,7 @@ class Dispatcher
             http_response_code(404);
             return;
         }
-        Response::setContentType(guess_mime_from_name($path));
+        Response::setContentType(MimeType::fromFile($path));
         Response::setHeaders(['Content-Length' => filesize($path), 'Cache-Control' => 'public, max-age=31536000']);
         Response::body(null)->send();
         readfile($path);

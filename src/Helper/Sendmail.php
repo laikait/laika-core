@@ -12,7 +12,7 @@ declare(strict_types=1);
 
 namespace Laika\Core\Helper;
 
-use Laika\Service\{Config, File, Url};
+use Laika\Service\{Config, File, Url, MimeType};
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
 use PHPMailer\PHPMailer\SMTP;
@@ -233,11 +233,11 @@ class Sendmail
     public function attachFromString(string $content, string $name, ?string $mime = null): static
     {
         if (empty($name)) {
-            throw new Exception("Attachment filename cannot be empty.", 422);
+            throw new Exception("Content attachment cannot be empty.", 422);
         }
 
         // Try to detect MIME if not provided
-        $mime = $mime ?: guess_mime_from_name($name);
+        $mime = $mime ?: MimeType::fromContent($name);
 
         if (strlen($content) > $this->maxAttachmentSize) {
             throw new Exception("Attachment exceeds max size limit!", 413);

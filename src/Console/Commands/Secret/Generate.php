@@ -26,14 +26,26 @@ class Generate extends Command
     public function run(array $params, array $options = []): void
     {
         $byte = $params[0] ?? 32;
-        if (!is_numeric($byte) || ((int) $byte < 1)) {
-            $this->error("USAGE: php laika generate:secret <byte_number::optional>");
+        if (count($params) > 0) {
+            $this->error("USAGE: php laika generate:secret <...options>");
             return;
         }
 
+        $byte = $options['short']['b'] ?? 32;
+        // Check Byte is Numeric
+        if (!is_numeric($byte)) {
+            $this->error("Option [b] Should Be Numeric");
+            return;
+        }
         $byte = (int) $byte;
+
+        // Check Byte is Greater Than 1
+        if ($byte < 1) {
+            $this->error("Option [b] Minumum Vakue is 1");
+            return;
+        }
+
         // Create Secret Config File if Not Exist
-        $config = new Config();
         if (!Config::has('secret')) {
             Config::create('secret', ['key' => bin2hex(random_bytes($byte))]);
         }
