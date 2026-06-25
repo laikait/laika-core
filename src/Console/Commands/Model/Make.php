@@ -12,9 +12,8 @@ declare(strict_types=1);
 
 namespace Laika\Core\Console\Commands\Model;
 
-use Laika\Core\Service\File;
 use Laika\Core\Console\Command;
-use Laika\Core\Service\Directory;
+use Laika\Service\{Directory, File};
 
 class Make extends Command
 {
@@ -25,7 +24,7 @@ class Make extends Command
     protected string $migrationPath = APP_PATH . '/lf-app/Migration';
 
     // Accepted Regular Expresion
-    private string $exp = '/^[a-zA-Z_]+$/';
+    private string $exp = '/^[\w][\w\d\/]+$/';
 
     /**
      * @param array $params
@@ -33,6 +32,10 @@ class Make extends Command
      */
     public function run(array $params, array $options = []): void
     {
+        // Make Directories if Does Not Exists
+        if (!Directory::exists($this->path)) Directory::make($this->path);
+        if (!Directory::exists($this->migrationPath)) Directory::make($this->migrationPath);
+
         // Check Parameters
         if (count($params) < 1) {
             $this->error("USAGE: php laika make:model <name> <table::optional>");

@@ -12,7 +12,7 @@ declare(strict_types=1);
 
 namespace Laika\Core\Console\Commands\Migration;
 
-use Laika\Core\Service\Infra;
+use Laika\Service\{Directory, Infra};
 use Laika\Core\Console\Command;
 
 /**
@@ -29,6 +29,9 @@ class Lists extends Command
      */
     public function run(array $params, array $options = []): void
     {
+        // Make Directories if Does Not Exists
+        if (!Directory::exists($this->path)) Directory::make($this->path);
+
         $schemas = Infra::getSchemaClasses();
 
         // Header

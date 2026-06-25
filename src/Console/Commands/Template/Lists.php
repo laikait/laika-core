@@ -12,18 +12,17 @@ declare(strict_types=1);
 
 namespace Laika\Core\Console\Commands\Template;
 
-use Laika\Core\Service\File;
 use Laika\Core\Console\Command;
-use Laika\Core\Service\Directory;
+use Laika\Service\{Directory, File};
 
 // Make View Class
 class Lists extends Command
 {
     // App View Path
-    protected string $path = APP_PATH . '/lf-templates';
+    protected string $path = APP_PATH . '/template';
 
     // Accepted Regular Expresion
-    private string $exp = '/^[a-zA-Z0-9_\-\/]+$/';
+    private string $exp = '/^[\w\-\/]+$/';
 
     /**
      * Run The Command to Create a New View.
@@ -33,19 +32,30 @@ class Lists extends Command
      */
     public function run(array $params, array $options = []): void
     {
-        // Path
-        $path = trim($params[0] ?? '', '/');
-
-        // Check View Name is Valid
-        if ($path && !preg_match($this->exp, $path)) {
-            // Invalid View Name
-            $this->error("Invalid View Path: '{$path}'");
+        // Check Parameters
+        if (count($params) > 0) {
+            $this->error("USAGE: php laika list:template <...options>");
             return;
         }
 
-        // Get Path if Given
-        if ($path) {
-            $this->path .= "/{$path}";
+        // Get Extension
+        $ext = strtolower($options['short']['e'] ?? '*');
+        if (!in_array($ext, ['twig', 'html', '*'])) {
+            $this->error("Invalid Template File Extension: '{$ext}'. Allowed Extensions Are: ['twig','html', '*']");
+            return;
+        }
+        if ($ext == '*') {
+            $ext = ['twig', 'html'];
+        }
+
+        // Set Path
+        if (!empty($options['short']['d'])) {
+            // Check Valid Chars
+            if (!preg_match('/^[\w\d\/\.\-]+$/', $options['short']['d'])) {
+                $this->error("Invalid Subdirectory: [{$options['short']['d']}]");
+                return;
+            }
+            $this->path .= '/' . trim($options['short']['d'], '/');
         }
 
         // Check Path Exist
@@ -54,20 +64,21 @@ class Lists extends Command
             return;
         }
 
-        $paths = array_merge(Directory::files($this->path, 'html'), Directory::files($this->path, 'twig'));
+        // $paths = Directory::files($this->path, $ext);
+        $paths = Directory::scan($this->path, false, $ext);
         $items = [];
         $count = 0;
         foreach ($paths as $file) {
             if (File::exists($file)) {
-                $file = str_replace("{$this->path}/", '', $file);
+                $file = str_replace(APP_PATH . DS . 'template', '', $file);
                 $name = pathinfo($file, PATHINFO_FILENAME);
+                $dir = trim(pathinfo($file, PATHINFO_DIRNAME), DS);
                 if ($name != 'functions') {
-                    $items[] = $name;
+                    $items[] = $dir ? "{$dir}/{$name}" : "{$name}";
                     $count++;
                 }
             }
         }
-
         // Check Has Items
         if (empty($items)) {
             echo "\n{$this->bg_red(' 0 Template Found! ')}\n\n";

@@ -12,10 +12,9 @@ namespace Laika\Core\Auth;
 
 use RuntimeException;
 use Laika\Model\Model;
-use Laika\Core\Service\DB;
 use InvalidArgumentException;
 use Laika\Model\Schema\Schema;
-use Laika\Core\Service\Visitor;
+use Laika\Service\{DB, Visitor};
 use Laika\Model\Schema\Blueprint;
 use Laika\Session\Service\Session;
 

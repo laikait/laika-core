@@ -12,7 +12,7 @@ declare(strict_types=1);
 
 namespace Laika\Core\Helper;
 
-use Laika\Core\Service\{Directory, File};
+use Laika\Service\{Directory, File};
 use RuntimeException;
 
 class Config

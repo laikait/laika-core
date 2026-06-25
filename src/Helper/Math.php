@@ -24,7 +24,7 @@ class Math
     {
         // Check bcmath Extension Loaded
         if (!extension_loaded('bcmath')) {
-            throw new ExtensionException('Extension Not Loaded [bcmath]!');
+            throw new ExtensionException('Extension Not Loaded [bcmath]!', 500);
         }
     }
 

@@ -10,20 +10,19 @@
 
 declare(strict_types=1);
 
-namespace Laika\Core\Service;
+namespace Laika\Core\Route\Handler;
 
-use Laika\Core\Relay\Relay;
+use Laika\Service\Response;
 
-/**
- * @method static void set(string $lang = 'en')
- * @method static string get()
- * @method static void setPath(string $path)
- * @method static void load()
- */
-class Local extends Relay
+final class Text
 {
-    protected static function getRelayAccessor(): string
+    /**
+     * Render Html
+     * @param string $str
+     * @return void
+     */
+    public static function render(string $str): void
     {
-        return 'local';
+        Response::text($str)->send();
     }
 }

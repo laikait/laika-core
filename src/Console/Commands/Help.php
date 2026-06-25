@@ -49,6 +49,10 @@ class Help extends Command
             case 'template':
                 (new \Laika\Core\Console\Commands\Help\TemplateHelp())->run($params, $options);
                 break;
+
+            case 'secret':
+                (new \Laika\Core\Console\Commands\Help\SecretHelp())->run($params, $options);
+                break;
             
             default:
                 $this->allHelpCommands();

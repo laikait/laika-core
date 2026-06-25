@@ -12,9 +12,7 @@ declare(strict_types=1);
 
 namespace Laika\Core\Api;
 
-use Laika\Core\Service\Response;
-use Laika\Core\Service\Request;
-use Laika\Core\Service\Token;
+use Laika\Service\{Response as Res, Request, Token};
 
 class Api
 {
@@ -151,7 +149,7 @@ class Api
                 "status"    =>  $status,
                 "data"      =>  $payload,
                 "message"   =>  $this->message ?: "Success",
-                "context"   =>  Response::statusCodes()[$status]['message'] ?? 'Unassigned',
+                "context"   =>  Res::statusCodes()[$status]['message'] ?? 'Unassigned',
                 "timestamp" =>  date('c')
             ], $additional);
         }
@@ -162,8 +160,8 @@ class Api
         $charset  = $this->detectCharset();
 
         // Set Headers
-        Response::status($status);
-        Response::setHeaders([
+        Res::status($status);
+        Res::setHeaders([
             "Content-Type"  =>  "application/json; charset={$charset}",
             "Vary"          =>  "Accept, Accept-Charset"
         ]);
@@ -187,7 +185,7 @@ class Api
     {
         $this->applyCors();
         header('Access-Control-Max-Age: 86400');
-        Response::status(204);
+        Res::status(204);
         exit;
     }
 
@@ -207,7 +205,7 @@ class Api
             "Access-Control-Allow-Headers"  =>  "Content-Type, Authorization, X-Requested-With, Accept, Accept-Encoding, Accept-Charset",
             "Access-Control-Expose-Headers" =>  "Content-Encoding, Content-Type, Content-Length"
         ];
-        Response::setHeaders($headers);
+        Res::setHeaders($headers);
     }
 
     /**

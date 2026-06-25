@@ -14,11 +14,22 @@ namespace Laika\Core\System\Command;
 
 class Result
 {
+    /** @var string Executed Command */
     public readonly string $command;
+
+    /** @var string Command Output */
     public readonly string $output;
+
+    /** @var string Error Message */
     public readonly string $error;
+
+    /** @var int Error Code */
     public readonly int $exitCode;
+
+    /** @var bool Timeout */
     public readonly bool $timedOut;
+
+    /** @var string Process ID */
     public readonly ?int $pid;
 
     /**
@@ -48,6 +59,7 @@ class Result
 
     /**
      * Determine if the command executed successfully.
+     * @return bool
      */
     public function success(): bool
     {

@@ -12,9 +12,8 @@ declare(strict_types=1);
 
 namespace Laika\Core\Console\Commands\Middleware;
 
-use Laika\Core\Service\File;
 use Laika\Core\Console\Command;
-use Laika\Core\Service\Directory;
+use Laika\Service\{Directory, File};
 
 // Rename Middleware Class
 class Rename extends Command
@@ -26,7 +25,7 @@ class Rename extends Command
     protected string $new_path = APP_PATH . '/lf-app/Middleware';
 
     // Accepted Regular Expresion
-    private string $exp = '/^[a-zA-Z_\/][a-zA-Z0-9_\/]+$/';
+    private string $exp = '/^[\w][\w\d\/]+$/';
 
     /**
      * @param array $params
@@ -34,6 +33,10 @@ class Rename extends Command
      */
     public function run(array $params, array $options = []): void
     {
+        // Make Directories if Does Not Exists
+        if (!Directory::exists($this->old_path)) Directory::make($this->old_path);
+        if (!Directory::exists($this->new_path)) Directory::make($this->new_path);
+
         // Check Parameters
         if (count($params) < 2) {
             $this->error("Usage: php laika rename:middleware <old_name> <new_name>");

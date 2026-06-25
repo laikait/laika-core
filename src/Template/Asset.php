@@ -12,7 +12,7 @@ declare(strict_types=1);
 
 namespace Laika\Core\Template;
 
-use Laika\Core\Service\{Response, Url};
+use Laika\Service\{Response, Url};
 
 class Asset
 {
@@ -33,7 +33,7 @@ class Asset
     public static function addStyle(string $handle, string $src, string $version = '1.0.0', string $media = 'all'): void
     {
         if (isset(static::$styles[$handle])) return;
-        $src = parse_url($src, PHP_URL_HOST) ? $src : named('asset.src', ['path' => $src], true);
+        $src = parse_url($src, PHP_URL_HOST) ? $src : Url::base() . trim($src, '/');
         static::$styles[$handle] = compact('src', 'version', 'media');
     }
 
@@ -48,7 +48,7 @@ class Asset
     public static function addScript(string $handle, string $src, string $version = '1.0.0', bool $defer = false): void
     {
         if (isset(static::$scripts[$handle])) return;
-        $src = parse_url($src, PHP_URL_HOST) ? $src : named('asset.src', ['path' => $src], true);
+        $src = parse_url($src, PHP_URL_HOST) ? $src : Url::base() . trim($src, '/');
         static::$scripts[$handle] = compact('src', 'version', 'defer');
     }
 

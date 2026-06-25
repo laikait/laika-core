@@ -15,7 +15,7 @@ namespace Laika\Core\Console\Commands\Help;
 
 use Laika\Core\Console\Command;
 
-class TemplateHelp extends Command
+class SecretHelp extends Command
 {
     /**
      * @param array $params
@@ -24,40 +24,39 @@ class TemplateHelp extends Command
      */
     public function run(array $params = [], array $options = []): void
     {
-        echo "---------------------------";
-        echo $this->txt_cyan("\nLAIKA TEMPLATE CL DETAILS\n");
-        echo "---------------------------\n";
+        echo "-------------------------------";
+        echo $this->txt_cyan("\nLAIKA SECRET KEY COMMAND HELPER\n");
+        echo "-------------------------------\n";
 
-        echo <<<TEMPLATEHELP
+        echo <<<SECRETKEYHELP
         {$this->txt_yellow("Description:")}
-            List Template Commands
+            List SECRET KEY Commands
 
         {$this->txt_yellow("Usage:")}
-            laika <action>:template <...arguments> <...options>
+            laika <action>:secret <...options>
 
         {$this->txt_yellow("Actions:")}
             -----------------------------------
                 ACTIONS     |       TASK
             -----------------------------------
-            -> make         :   Make Template
-            -> rename       :   Rename Template
-            -> pop          :   Delete Template
-            -> list         :   List of Templates
+            -> fix          :   Fix Secret Key
+            -> generate     :   Generate Ne Secret Key
+            -> pop          :   Delete Secret Key
 
         {$this->txt_yellow("Arguments:")}
-            Make    :   <name>
-            Rename  :   <old_name> <new_name>
+            No Arguments Required
         
         {$this->txt_yellow("Options:")}
-            -e  :   Template Extension. Default is 'twig'
-            -d  :   Template Sub Directory
+            -------------------------------------------------------------
+                OPTIONS         |           TASK
+            -------------------------------------------------------------
+            -b  :   Optional Secret Key Byte Number. Default is 32.
 
         {$this->txt_yellow("Example:")}
-            ->  php laika list:template <...options>
-            ->  php laika make:template <name> <...options>
-            ->  php laika pop:template <name> <...options>
-            ->  php laika rename:template <old_name> <new_name>
+            ->  php laika fix:secret <...options>
+            ->  php laika generate:secret <...options>
+            ->  php laika pop:secret
 
-        TEMPLATEHELP;
+        SECRETKEYHELP;
     }
 }

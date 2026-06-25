@@ -12,4 +12,18 @@ declare(strict_types=1);
 
 namespace Laika\Core\Exceptions;
 
-class LogException extends \RuntimeException {}
+class LogException extends \Exception
+{
+    protected int $statusCode;
+
+    public function __construct(string $message, $code = 0, ?Throwable $previous = null)
+    {
+        parent::__construct($message, $code, $previous);
+        $this->statusCode = $code;
+    }
+
+    public function getStatusCode(): int
+    {
+        return $this->statusCode;
+    }
+}

@@ -10,19 +10,19 @@
 
 declare(strict_types=1);
 
-namespace Laika\Core\Service;
+namespace Laika\Core\Route\Handler;
 
-use Laika\Core\Relay\Relay;
+use Laika\Service\Response;
 
-/**
- * @method static string next(?string $key = null)
- * @method static string previous(?string $key = null)
- * @method static int number(?string $key = null)
- */
-class Page extends Relay
+final class Json
 {
-    protected static function getRelayAccessor(): string
+    /**
+     * Render Html
+     * @param string $str
+     * @return void
+     */
+    public static function render(string $str): void
     {
-        return 'page';
+        Response::json(json_decode($str))->send();
     }
 }

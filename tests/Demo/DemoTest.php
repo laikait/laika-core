@@ -4,8 +4,8 @@ declare(strict_types=1);
 namespace Laika\Tests\Unit;
 
 use PHPUnit\Framework\TestCase;
-use Laika\Core\Service\Date;
 use Laika\Core\App\Http;
+use Laika\Service\Date;
 
 final class DemoTest extends TestCase
 {

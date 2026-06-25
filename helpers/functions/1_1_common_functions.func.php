@@ -10,18 +10,18 @@
 
 declare(strict_types=1);
 
-use Laika\Core\Service\Url;
+use Laika\Service\Url;
+use Laika\Service\Hook;
+use Laika\Service\Csrf;
+use Laika\Service\Meta;
+use Laika\Service\Asset;
+use Laika\Service\Option;
+use Laika\Service\Config;
+use Laika\Service\Request;
 use Laika\Model\Connection;
 use Laika\Core\Route\Router;
-use Laika\Core\Service\Hook;
-use Laika\Core\Service\Csrf;
-use Laika\Core\Service\Option;
-use Laika\Core\Service\Config;
-use Laika\Core\Service\Request;
-use Laika\Session\Service\Session;
 use Laika\Core\Exceptions\Handler;
-use Laika\Core\Service\Template\Meta;
-use Laika\Core\Service\Template\Asset;
+use Laika\Session\Service\Session;
 
 /**
  * Dump Data & Die
@@ -160,70 +160,6 @@ function named(string $name, array $params = []): string
 function config(string $name, ?string $key = null, mixed $default = null): mixed
 {
     return Config::get($name, $key, $default);
-}
-
-/**
- * Add Connection
- * @param string $name Connection Name
- * @return void
- */
-function add_connection(string $name = 'default'): void
-{
-    if (!Connection::has($name)) Connection::add(config('database', $name, []));
-}
-
-/**
- * Gete Connection
- * @param string $name Connection Name
- * @return \PDO
- */
-function get_connection(string $name = 'default'): \PDO
-{
-    return Connection::get($name);
-}
-
-/**
- * Get Mime Type Name
- * @return string
- */
-function guess_mime_from_name(string $name): string
-{
-    $ext = strtolower(pathinfo($name, PATHINFO_EXTENSION));
-
-    $map = [
-        // Documents
-        'pdf'  => 'application/pdf',
-        'doc'  => 'application/msword',
-        'docx' => 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-        'xls'  => 'application/vnd.ms-excel',
-        'xlsx' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-        'ppt'  => 'application/vnd.ms-powerpoint',
-        'pptx' => 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
-        'txt'  => 'text/plain',
-        'csv'  => 'text/csv',
-        'rtf'  => 'application/rtf',
-        // Images
-        'jpg'  => 'image/jpeg',
-        'jpeg' => 'image/jpeg',
-        'png'  => 'image/png',
-        'gif'  => 'image/gif',
-        'webp' => 'image/webp',
-        'svg'  => 'image/svg+xml',
-        // Archives
-        'zip'  => 'application/zip',
-        'gz'   => 'application/gzip',
-        'tar'  => 'application/x-tar',
-        'rar'  => 'application/vnd.rar',
-        '7z'   => 'application/x-7z-compressed',
-        // Data
-        'json' => 'application/json',
-        'xml'  => 'application/xml',
-        // Audio / Video
-        'mp3'  => 'audio/mpeg',
-        'mp4'  => 'video/mp4',
-    ];
-
-    return $map[$ext] ?? 'application/octet-stream';
 }
 
 /**
@@ -450,18 +386,7 @@ function asset(string $path): void
         echo $path;
     }
     $path = trim($path, '/.');
-    echo named('asset.src', ['path' => $path]);
-}
-
-/**
- * Load App Asset
- * @param string $path
- * @return void
- */
-function app_asset(string $path): void
-{
-    $path = trim($path, '/.');
-    echo named('app.src', ['path' => $path]);
+    echo Url::base() . $path;
 }
 
 /**

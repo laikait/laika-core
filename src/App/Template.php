@@ -13,16 +13,10 @@ declare(strict_types=1);
 
 namespace Laika\Core\App;
 
-use Twig\Loader\FilesystemLoader as Engine;
-use Laika\Core\Service\Directory;
-use Laika\Core\Service\Visitor;
-use Laika\Core\Service\Request;
-use Laika\Core\Service\Local;
-use Laika\Core\Service\File;
-use Laika\Core\Service\Page;
-use Laika\Core\Service\Url;
-use Twig\Environment;
 use Twig\TwigFilter;
+use Twig\Environment;
+use Twig\Loader\FilesystemLoader as Engine;
+use Laika\Service\{Directory, Visitor, Request, Local, File, Page, Url};
 
 class Template
 {
@@ -157,7 +151,7 @@ class Template
     protected function ensureTemplatePath(?string $subdir = null): void
     {
         $subdir = $subdir ? trim($subdir, '/') : '';
-        $this->templateDirectory = is_dir($subdir) ? $subdir : APP_PATH . "/lf-templates/{$subdir}";
+        $this->templateDirectory = is_dir($subdir) ? $subdir : APP_PATH . "/template/{$subdir}";
         $this->templateDirectory = rtrim($this->templateDirectory, '/');
         Directory::make($this->templateDirectory);
     }

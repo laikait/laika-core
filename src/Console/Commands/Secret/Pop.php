@@ -12,7 +12,7 @@ declare(strict_types=1);
 
 namespace Laika\Core\Console\Commands\Secret;
 
-use Laika\Core\Service\Config;
+use Laika\Service\Config;
 use Laika\Core\Console\Command;
 
 class Pop extends Command
@@ -24,6 +24,11 @@ class Pop extends Command
      */
     public function run(array $params, array $options = []): void
     {
+        if (count($params) > 0) {
+            $this->error("USAGE: php laika pop:secret");
+            return;
+        }
+
         // Create Secret Config File if Not Exist
         if (!Config::has('secret')) {
             Config::create('secret', []);

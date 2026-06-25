@@ -17,10 +17,7 @@ namespace Laika\Core\Log;
 defined('APP_PATH') || http_response_code(403) . die('403 Direct Access Denied!');
 
 use Laika\Model\Model;
-use Laika\Core\Service\DB;
-use InvalidArgumentException;
-use Laika\Core\Service\Request;
-use Laika\Core\Service\Visitor;
+use Laika\Service\{Request, Visitor, DB};
 use Laika\Core\Exceptions\LogException;
 
 final class Activity
@@ -101,7 +98,7 @@ final class Activity
      * Get All Activities
      * @param ?string $event Default is null
      * @return array
-     * @throws InvalidArgumentException
+     * @throws LogException
      */
     public function events(?string $event = null): array
     {
@@ -111,7 +108,7 @@ final class Activity
         } elseif (isset($this->activities[$event])) {
             return $this->activities[$event];
         }
-        throw new InvalidArgumentException("Invalid Activity Event Key: [{$event}]");
+        throw new LogException("Invalid Activity Event Key: [{$event}]");
     }
 
     /**

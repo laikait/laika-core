@@ -13,16 +13,23 @@ declare(strict_types=1);
 namespace Laika\Core\Console\Commands\Model;
 
 use Laika\Core\Console\Command;
+use Laika\Service\Directory;
 
 // Make Model Class
 class Lists extends Command
 {
+    // App Middleware Path
+    protected string $path = APP_PATH . '/lf-app/Model';
+
     /**
      * @param array $params
      * @return void
      */
     public function run(array $params, array $options = []): void
     {
+        // Make Directories if Does Not Exists
+        if (!Directory::exists($this->path)) Directory::make($this->path);
+
         $models = call_user_func([new \Laika\Core\App\Infra(), 'getModelCLasses']);
 
         // Header

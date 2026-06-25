@@ -12,7 +12,7 @@ declare(strict_types=1);
 
 namespace Laika\Core\Helper;
 
-use Laika\Core\Service\{Config, Cookie, Token};
+use Laika\Service\{Cookie, Token, Request};
 
 class CSRF
 {
@@ -42,9 +42,9 @@ class CSRF
      */
     public function reset(): void
     {
-        $this->key = 'token';
+        $this->key = '_csrf';
         $this->ttl = 1800; // Default Lifetime is 1800 Seconds
-        $this->time = (int) Config::get('env', 'start.time', time()); // Realtime
+        $this->time = time(); // Realtime
         $this->token = Cookie::get('_xct', '');
     }
 
@@ -87,9 +87,20 @@ class CSRF
      * Get CSRF Token
      * @return string
      */
-    public function get(): string
+    public function token(): string
     {
+        // Generate
+        $this->generate();
         return $this->token;
+    }
+
+    /**
+     * Get CSRF Key Name
+     * @return string
+     */
+    public function key(): string
+    {
+        return $this->key;
     }
 
     /**
@@ -110,7 +121,7 @@ class CSRF
      */
     public function field(): string
     {
-        return "<input type=\"hidden\" name=\"{$this->key}\" value=\"{$this->get()}\">\n";
+        return "<input type=\"hidden\" name=\"{$this->key}\" value=\"{$this->token()}\">\n";
     }
 
     /**
@@ -120,12 +131,12 @@ class CSRF
     public function is_valid(): bool
     {
         // If CSRF Request Key Missing or Blank, Return false
-        $request_token = $_REQUEST[$this->key] ?? '';
+        $request_token = Request::input($this->key) ?? '';
         if ($request_token === '') {
             return false;
         }
 
-        $existing_token = $this->get();
+        $existing_token = $this->token();
         $this->refresh();
         return hash_equals($request_token, $existing_token);
     }

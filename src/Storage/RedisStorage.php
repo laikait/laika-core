@@ -12,10 +12,10 @@ declare(strict_types=1);
 
 namespace Laika\Core\Storage;
 
-use Laika\Core\Service\Config;
+use Laika\Core\Exceptions\ExtensionException;
+use Laika\Service\Config;
 use Redis as PhPRedis;
 use RuntimeException;
-use Exception;
 
 /**
  * Redis Storage
@@ -51,7 +51,7 @@ class RedisStorage
     {
         // Check Extension Loaded
         if (!\extension_loaded('redis')) {
-            throw new RuntimeException("Extension Not Loaded: [php-redis]!");
+            throw new ExtensionException("Extension Not Loaded: [php-redis]!", 500);
         }
 
         // Get Config
@@ -64,11 +64,11 @@ class RedisStorage
         $this->client   =   new PhPRedis();
 
         if (!$this->client->connect($this->host, $this->port)) {
-            throw new Exception("Unable to connect to Redis at {$this->host}:{$this->port}");
+            throw new RuntimeException("Unable to connect to Redis at {$this->host}:{$this->port}");
         }
 
         if (isset($config['password']) && !$this->client->auth($config['password'])) {
-            throw new Exception("Redis authentication failed!");
+            throw new RuntimeException("Redis authentication failed!");
         }
     }
 
