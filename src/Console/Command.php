@@ -210,37 +210,38 @@ abstract class Command
     {
         // Green Text
         echo "\e[32m[{$this->txt_green('SUCCESS')}] => \e[0m{$message}\n";
-        // exit(0);
     }
 
         /**
      * @param string $message
      * This method is used to print informational messages to the console.
-     * @return never
+     * @return void
      */
-    protected function error(string $message): never
+    protected function error(string $message): void
     {
         // Red Text
         echo "{$this->txt_red('[ERROR]')} => {$message}\n";
-        exit(0);
     }
 
     /**
      * @param string $message
      * This method is used to print informational messages to the console.
-     * @return never
+     * @return void
      */
-    protected function info(string $message): never
+    protected function info(string $message): void
     {
         // Blue Text
         echo "{$this->txt_blue('[INFO]')} => {$message}\n";
-        exit(0);
     }
 
-    protected function warning(string $message): never
+    /**
+     * @param string $message
+     * This method is used to print informational messages to the console.
+     * @return void
+     */
+    protected function warning(string $message): void
     {
         // Green Text
         echo "{$this->txt_yellow('[WARNING]')} => {$message}\n";
-        exit(0);
     }
 }

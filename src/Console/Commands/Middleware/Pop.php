@@ -12,7 +12,7 @@ declare(strict_types=1);
 
 namespace Laika\Core\Console\Commands\Middleware;
 
-use Laika\Service\File;
+use Laika\Service\{Directory, File};
 use Laika\Core\Console\Command;
 
 // Remove Middleware Class
