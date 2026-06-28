@@ -204,13 +204,13 @@ abstract class Command
     /**
      * @param string $message
      * This method is used to print informational messages to the console.
-     * @return never
+     * @return void
      */
-    protected function success(string $message): never
+    protected function success(string $message): void
     {
         // Green Text
         echo "\e[32m[{$this->txt_green('SUCCESS')}] => \e[0m{$message}\n";
-        exit(0);
+        // exit(0);
     }
 
         /**

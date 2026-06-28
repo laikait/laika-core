@@ -79,6 +79,8 @@ class Console extends Command
                 'migrate'               =>  \Laika\Core\Console\Commands\Migrate::class,
                 /* Route */
                 'list:route'            =>  \Laika\Core\Console\Commands\Route\Lists::class,
+                /* Start */
+                'start'                 =>  \Laika\Core\Console\Commands\Start::class,
                 /* Secret Key */
                 'fix:secret'            =>  \Laika\Core\Console\Commands\Secret\Fixer::class,
                 'generate:secret'       =>  \Laika\Core\Console\Commands\Secret\Generate::class,

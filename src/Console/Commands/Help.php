@@ -23,7 +23,7 @@ class Help extends Command
      */
     public function run(array $params, array $options = []): void
     {
-        $match = strtolower($params[0] ?? 'n/a');
+        $match = strtolower($params[0] ?? '');
 
         switch ($match) {
             case 'model':
@@ -52,6 +52,10 @@ class Help extends Command
 
             case 'secret':
                 (new \Laika\Core\Console\Commands\Help\SecretHelp())->run($params, $options);
+                break;
+
+            case 'start':
+                (new \Laika\Core\Console\Commands\Help\StartHelp())->run($params, $options);
                 break;
             
             default:
