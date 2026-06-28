@@ -33,17 +33,11 @@ class Migrate extends Command
             $schema = preg_replace('/model/i', '', $schema) . 'Schema';
         }
 
-        // Check DB Config Available
-        $config = Config::get('database', 'default');
-        if (empty($config) || !is_array($config)) {
-            $this->error("Database [default] Config Not Found or Missing Parameters!");
-            return;
-        }
         // Connect DB
         try {
             DB::run();
         } catch (\Throwable $th) {
-            $this->error("Database Connection Error");
+            $this->error("Database Connection Error!");
             return;
         }
 

@@ -14,37 +14,56 @@ namespace Laika\Core\Helper;
 
 class Url
 {
-    /** @var string $scheme */
+    /** @var string Scheme */
     protected string $scheme;
 
-    /** @var string $host */
+    /** @var string Host */
     protected string $host;
 
-    /** @var string $path */
+    /** @var string Path */
     protected string $path;
 
-    /** @var string $queryString */
+    /** @var int Port */
+    protected int $port;
+
+
+    /** @var string Query String */
     protected string $queryString;
 
-    /** @var string $baseUrl */
+    /** @var string Base Url */
     protected string $baseUrl;
 
-    /** @var string $scriptName */
+    /** @var string Script Name */
     protected string $scriptName;
 
-    /** @var string $directory */
+    /** @var string Directory */
     protected string $directory;
 
     public function __construct()
     {
+        // Get Schema & Host
         $this->scheme = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off' ? 'https' : 'http';
         $host = $_SERVER['HTTP_HOST'] ?? $_SERVER['SERVER_NAME'] ?? 'localhost';
-        $this->host = strtolower(explode(':', $host)[0]);
+
+        // Get Host Name & Port
+        $hostParts = explode(':', $host);
+        $this->host = strtolower($hostParts[0]);
+        $this->port = isset($hostParts[1]) ? (int) $hostParts[1] : ($this->scheme === 'https' ? 443 : 80);
+
+        // Get Url Path
         $this->path = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?? '/';
+
+        // Get Query String
         $this->queryString = $_SERVER['QUERY_STRING'] ?? '';
+
+        // Make Script Path
         $this->scriptName = $_SERVER['SCRIPT_NAME'] ?? ($_SERVER['PHP_SELF'] ?? '/index.php');
+
+        // Get Additional Directory if Exists
         $this->directory = rtrim(str_replace('\\', '/', dirname($this->scriptName)), '/');
-        $this->baseUrl = $this->scheme . '://' . $this->host . $this->directory . '/';
+
+        // Make Base Url
+        $this->baseUrl = "{$this->scheme}://{$this->host}{$this->portSuffix()}{$this->directory}/";
     }
 
     ##############################################################################
@@ -57,7 +76,7 @@ class Url
      */
     public function current(): string
     {
-        return rtrim($this->scheme . '://' . $this->host . ($_SERVER['REQUEST_URI'] ?? '/'), '/');
+        return rtrim($this->scheme . '://' . $this->host . $this->portSuffix() . ($_SERVER['REQUEST_URI'] ?? '/'), '/');
     }
 
     /**
@@ -85,6 +104,15 @@ class Url
     public function path(): string
     {
         return trim(str_replace($this->directory, '', $this->path), '/');
+    }
+
+    /**
+     * Get Port
+     * @return int
+     */
+    public function port(): int
+    {
+        return $this->port;
     }
 
     /**
@@ -142,7 +170,7 @@ class Url
     public function segments(): array
     {
         $segments = explode('/', trim($this->path(), '/'));
-        return $segments[0] ? $segments : [];
+        return $segments[0] !== '' ? $segments : [];
     }
 
     /**
@@ -223,5 +251,18 @@ class Url
     public function scheme(): string
     {
         return $this->scheme;
+    }
+
+    ##################################################################################
+    /*================================ INTERNAL API ================================*/
+    ##################################################################################
+    /**
+     * Port Suffix
+     * @return string
+     */
+    protected function portSuffix(): string
+    {
+        $isStandard = ($this->scheme === 'https' && $this->port === 443) || ($this->scheme === 'http' && $this->port === 80);
+        return $isStandard ? '' : ":{$this->port}";
     }
 }
