@@ -41,7 +41,7 @@ final class Html
         $forms = $dom->getElementsByTagName('form');
 
         // Check Empty Form, Send Response
-        if (empty($forms)) {
+        if ($forms->length == 0) {
             Response::html($str)->send();
             return;
         }
@@ -86,9 +86,13 @@ final class Html
                 $csrf->setAttribute('name', CSRF::key());
                 $csrf->setAttribute('value', self::$csrf);
 
-                $form->prepend($dom->createTextNode("\n"));
-                $form->prepend($csrf);
-                $form->prepend($dom->createTextNode("\n"));
+                $firstChild = $form->firstChild;
+                $comment = $dom->createComment(' CSRF Field Added By App ');
+                $form->insertBefore($dom->createTextNode("\n"), $firstChild);
+                $form->insertBefore($comment, $firstChild);
+                $form->insertBefore($dom->createTextNode("\n"), $firstChild);
+                $form->insertBefore($csrf, $firstChild);
+                $form->insertBefore($dom->createTextNode("\n"), $firstChild);
             }
         }
         Response::html($dom->saveHTML())->send();
