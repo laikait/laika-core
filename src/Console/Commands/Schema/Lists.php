@@ -10,18 +10,18 @@
 
 declare(strict_types=1);
 
-namespace Laika\Core\Console\Commands\Migration;
+namespace Laika\Core\Console\Commands\Schema;
 
 use Laika\Service\{Directory, Infra};
 use Laika\Core\Console\Command;
 
 /**
- * Migrations List Class
+ * Schema List Class
  */
 class Lists extends Command
 {
-    // App Migration Path
-    protected string $path = APP_PATH . '/lf-app/Migration';
+    // App Schema Path
+    protected string $path = APP_PATH . '/lf-app/Schema';
 
     /**
      * @param array $params
@@ -35,7 +35,7 @@ class Lists extends Command
         $schemas = Infra::getSchemaClasses();
 
         // Header
-        $headers = ['#', 'Migrations'];
+        $headers = ['#', 'Database Schemas'];
 
         // Find max width for "File Path" column
         $maxLength = max(array_map('strlen', $schemas) ?: [30]);

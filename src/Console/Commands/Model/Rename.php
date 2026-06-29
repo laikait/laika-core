@@ -21,8 +21,8 @@ class Rename extends Command
     // App Model Old Path
     protected string $old_path = APP_PATH . '/lf-app/Model';
 
-    // App Migration Path
-    protected string $migrationPath = APP_PATH . '/lf-app/Migration';
+    // App Schema Path
+    protected string $schemaPath = APP_PATH . '/lf-app/Schema';
 
     // App Model New Path
     protected string $new_path = APP_PATH . '/lf-app/Model';
@@ -38,7 +38,7 @@ class Rename extends Command
     {
         // Make Directories if Does Not Exists
         if (!Directory::exists($this->old_path)) Directory::make($this->path);
-        if (!Directory::exists($this->migrationPath)) Directory::make($this->path);
+        if (!Directory::exists($this->schemaPath)) Directory::make($this->path);
 
         // Check Parameters
         if (count($params) < 2) {
