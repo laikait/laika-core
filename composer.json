@@ -70,7 +70,7 @@
             "hooks": [
                 "helpers/hooks"
             ],
-            "migration": true,
+            "schema": true,
             "model": true,
             "middleware": true,
             "afterware": true

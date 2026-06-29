@@ -39,10 +39,10 @@ class Infra
      */
     public function getSchemaClasses(): array
     {
-        $files = Directory::files(APP_PATH . '/lf-app/Migration', 'php');
+        $files = Directory::files(APP_PATH . '/lf-app/Schema', 'php');
         return array_merge(
-            Loader::migrations(),
-            array_map(function ($file) { return 'App\\Migration\\' . File::name($file); }, $files)
+            Loader::schemas(),
+            array_map(function ($file) { return 'App\\Schema\\' . File::name($file); }, $files)
         );
     }
 

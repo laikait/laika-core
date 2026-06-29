@@ -20,8 +20,8 @@ class Pop extends Command
     // App Model Path
     protected string $path = APP_PATH . '/lf-app/Model';
 
-    // App Migration Path
-    protected string $migrationPath = APP_PATH . '/lf-app/Migration';
+    // App Schema Path
+    protected string $schemaPath = APP_PATH . '/lf-app/Schema';
 
     // Accepted Regular Expresion
     private string $exp = '/^[a-zA-Z_]+$/';
@@ -53,9 +53,9 @@ class Pop extends Command
 
         $file = "{$this->path}/{$model}.php";
 
-        // Migration File
+        // Schema File
         $schemaName = preg_replace('/model/i', '', $model) . 'Schema';
-        $migrationFile = "{$this->migrationPath}/{$schemaName}.php";
+        $schemaFile = "{$this->schemaPath}/{$schemaName}.php";
 
         if (!File::exists($file)) {
             $this->error("Model [{$params[0]}] Doesn't Exist!");
@@ -67,13 +67,13 @@ class Pop extends Command
             return;
         }
 
-        if (!File::exists($migrationFile)) {
-            $this->error("Model Deleted, But Migration [{$migrationFile}] Doesn't Exist!");
+        if (!File::exists($schemaFile)) {
+            $this->error("Model Deleted, But Schema [{$schemaFile}] Doesn't Exist!");
             return;
         }
 
-        if (!File::pop($migrationFile)) {
-            $this->error("Failed to Remove Migration File: [{$migrationFile}]!");
+        if (!File::pop($schemaFile)) {
+            $this->error("Failed to Remove Schema File: [{$schemaFile}]!");
             return;
         }
 

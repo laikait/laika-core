@@ -14,4 +14,4 @@ namespace Laika\Core\Exceptions;
 
 use Exception;
 
-class MigrationException extends Exception {}
+class SchemaException extends Exception {}

@@ -21,7 +21,7 @@ class Make extends Command
     protected string $path = APP_PATH . '/lf-app/Model';
 
     // App Migration Path
-    protected string $migrationPath = APP_PATH . '/lf-app/Migration';
+    protected string $schemaPath = APP_PATH . '/lf-app/Schema';
 
     // Accepted Regular Expresion
     private string $exp = '/^[\w][\w\d\/]+$/';
@@ -98,19 +98,19 @@ class Make extends Command
             return;
         }
 
-        // Migration File
+        // Schema File
         $schemaName = preg_replace('/model/i', '', $model) . 'Schema';
-        $migrationFile = "{$this->migrationPath}/{$schemaName}.php";
+        $schemaFile = "{$this->schemaPath}/{$schemaName}.php";
 
         // Get Sample Migration Content
-        $migrationContent = File::read(__DIR__ . '/../../Samples/Migration.sample');
+        $schemaContent = File::read(__DIR__ . '/../../Samples/Schema.sample');
 
         // Replace Placeholders in Migration File
-        $migrationContent = str_replace(['{{NAME}}','{{TABLE}}', '{{ID}}', '{{MODEL}}', '{{DELETED_AT}}'], [$schemaName, $table, $id, $model, $deletedAt], $migrationContent);
+        $schemaContent = str_replace(['{{NAME}}','{{TABLE}}', '{{ID}}', '{{MODEL}}', '{{DELETED_AT}}'], [$schemaName, $table, $id, $model, $deletedAt], $schemaContent);
 
-        // Create Migration File
-        if (File::write($migrationContent, $migrationFile) === false) {
-            $this->error("Failed to Create Migration File: {$migrationFile}!");
+        // Create Schema File
+        if (File::write($schemaContent, $schemaFile) === false) {
+            $this->error("Failed to Create Schema File: {$schemaFile}!");
             return;
         }
 

@@ -15,7 +15,7 @@ namespace Laika\Core\Console\Commands\Help;
 
 use Laika\Core\Console\Command;
 
-class MigrationHelp extends Command
+class SchemaHelp extends Command
 {
     /**
      * @param array $params
