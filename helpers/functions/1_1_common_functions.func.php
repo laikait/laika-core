@@ -384,6 +384,7 @@ function asset(string $path): void
 {
     if(parse_url($path, PHP_URL_HOST)){
         echo $path;
+        return;
     }
     $path = trim($path, '/.');
     echo Url::base() . $path;
