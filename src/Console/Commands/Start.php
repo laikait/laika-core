@@ -30,18 +30,6 @@ final class Start extends Command
             return;
         }
 
-        // // Get Host & Port
-        // if (isset($options['short']['h'])) {
-        //     $parts = explode(',', $options['short']['h']);
-        //     $hosts = array_map('trim', $parts);
-        // } else {
-        //     $hosts = [];
-        //     foreach (net_get_interfaces() as $iface) {
-        //         foreach ($iface['unicast'] ?? [] as $addr) {
-        //             $hosts[] = $addr['address'];
-        //         }
-        //     }
-        // }
         $port = 8000;
         // Set Port if Available in Command
         if (isset($options['short']['p'])) {
@@ -56,6 +44,13 @@ final class Start extends Command
                 $this->error("Port Range Should Be Between 10 to 10000!");
                 return;
             }
+
+            // Validate Port is Not Using
+            if (PHP_OS_FAMILY === 'Windows') {
+                $output = shell_exec("netstat -ano | findstr :{$port} 2>NUL");
+            } else {
+                $output = shell_exec("ss -tln 2>/dev/null | grep :{$port}");
+            }
         }
 
         // Verify Port or Get Next Port
@@ -66,7 +61,9 @@ final class Start extends Command
                 $output = shell_exec("ss -tln 2>/dev/null | grep :{$port}");
             }
             if (!$output) break;
+            $p = $port;
             $port++;
+            $this->warning("Port [{$p}] is Busy! Going for Next Port: [{$port}]");
         }
 
         $root = getcwd(); // Always returns project root where command is run from

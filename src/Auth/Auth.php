@@ -13,7 +13,6 @@ namespace Laika\Core\Auth;
 use RuntimeException;
 use Laika\Model\Model;
 use InvalidArgumentException;
-use Laika\Model\Schema\Schema;
 use Laika\Service\{DB, Visitor};
 use Laika\Model\Schema\Blueprint;
 use Laika\Session\Service\Session;
@@ -49,17 +48,14 @@ class Auth
     public CONST INVALID_DEVICE = 5;
     public CONST INVALID_OS = 6;
 
-    public function __construct(string $guard = 'user')
+    public function __construct()
     {
-        // Validate Guard
-        if (!preg_match('/^[\w]+$/', $guard)) throw new InvalidArgumentException("Guard Has Unsupported Character: [{$guard}]");
-
         DB::run(); // Ensure DB is initialized
         DB::session(); // Ensure Session in DB
 
         $this->model        =   new Model();
-        $this->guard        =   strtolower($guard);
-        $this->token_key    =   strtoupper($guard) . '_AUTH_TOKEN';
+        $this->guard        =   'user';
+        $this->token_key    =   'USER_AUTH_TOKEN';
         $this->table        =   'authorizations';
         $this->lifetime     =   3600;
         $this->realtime     =   time();
@@ -67,8 +63,24 @@ class Auth
     }
 
     ##################################################################################
-    ################################### PUBLIC API ###################################
+    /*================================ EXTERNAL API ================================*/
     ##################################################################################
+    /**
+     * Set Auth Guard
+     * @param string $guard
+     * @return static
+     */
+    public function guard(string $guard = 'user'): static
+    {
+        // Validate Guard
+        if (!preg_match('/^[\w]+$/', $guard)) throw new InvalidArgumentException("Guard Has Unsupported Character: [{$guard}]");
+
+        $this->guard        =   strtolower($guard);
+        $this->token_key    =   strtoupper($guard) . '_AUTH_TOKEN';
+        $this->session      =   null; // Reset Session
+        return $this;
+    }
+
     /**
      * Set Lifetime
      * @param int $ttl In Seconds
@@ -93,33 +105,33 @@ class Auth
 
         // Session::regenerate();
         $token = $this->buildToken();
+        $userJson = json_encode($userData, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR);
+
+        $data = [
+            'token'        =>  $token,
+            'session_id'   =>  Session::id(),
+            'user_type'    =>  $this->guard,
+            'user_id'      =>  $userId,
+            'user_data'    =>  $userJson,
+            'user_agent'   =>  Visitor::userAgent(),
+            'device'       =>  Visitor::deviceType(),
+            'os'           =>  Visitor::os(),
+            'expires_at'   =>  $this->realtime + $this->lifetime,
+            'created_at'   =>  $this->realtime,
+        ];
 
         try {
-            $sql = "INSERT INTO `{$this->table}`
-                    (token, session_id, user_type, user_id, user_agent, device, os, user_data, expires_at, created_at)
-                VALUES
-                    (:token, :session_id, :user_type, :user_id, :user_agent, :device, :os, :user_data, :expires_at, :created_at)
-                ON DUPLICATE KEY UPDATE
-                    expires_at = VALUES(expires_at),
-                    user_data  = VALUES(user_data)";
+            $this->model->transaction(function (Model $m) use ($userId, $data) {
+                // Remove Existing Session For This Guard
+                $m->table($this->table)
+                ->where(['user_id' => $userId, 'user_type' => $this->guard])
+                ->delete();
 
-            $params = [
-                ':token'        =>  $token,
-                ':session_id'   =>  Session::id(),
-                ':user_type'    =>  $this->guard,
-                ':user_id'      =>  $userId,
-                ':user_data'    =>  json_encode($userData, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR),
-                ':user_agent'   =>  Visitor::userAgent(),
-                ':device'       =>  Visitor::deviceType(),
-                ':os'           =>  Visitor::os(),
-                ':expires_at'   =>  $this->realtime + $this->lifetime,
-                ':created_at'   =>  $this->realtime,
-            ];
-            $this->model->transaction(function (Model $m) use ($sql, $params) {
-                $m->execute($sql, $params);
+                // Insert New Session
+                $m->table($this->table)->insert($data);
             });
         } catch (\Throwable $th) {
-            throw new RuntimeException("Failed to create auth session: " . $th->getMessage());
+            throw new RuntimeException("Failed to create auth session: " . $th->getMessage(), (int) $th->getCode(), $th);
         }
 
         Session::set('token', $token, $this->token_key);
@@ -186,7 +198,7 @@ class Auth
      * Get User Type
      * @return string
      */
-    public function guard(): string
+    public function type(): string
     {
         return $this->guard;
     }
@@ -204,8 +216,20 @@ class Auth
         $this->model->table($this->table)->where(['token' => $token])->delete();
     }
 
+    /**
+     * Delete Expired
+     * @return void
+     */
+    public function deleteExpired(): void
+    {
+        $this->model
+            ->table($this->table)
+            ->where(['expires_at' => $this->realtime], '<')
+            ->delete();
+    }
+
     ##################################################################################
-    ################################## INTERNAL API ##################################
+    /*================================ INTERNAL API ================================*/
     ##################################################################################
     /**
      * Refresh Expire Time
@@ -276,18 +300,6 @@ class Auth
         }
 
         return response(true, Auth::AUTHORIZED, $this->session);
-    }
-
-    /**
-     * Delete Expired
-     * @return void
-     */
-    public function deleteExpired(): void
-    {
-        $this->model
-            ->table($this->table)
-            ->where(['expires_at' => $this->realtime], '<')
-            ->delete();
     }
 
     /**
