@@ -12,7 +12,8 @@ declare(strict_types=1);
 
 namespace Laika\Core\Helper;
 
-use Laika\Service\{Cookie, Token, Request};
+use Laika\Service\{Cookie, Token, Request, Response};
+use InvalidArgumentException;
 
 class CSRF
 {
@@ -52,10 +53,15 @@ class CSRF
      * Change Request Key
      * @param string $key
      * @return static
+     * @throws InvalidArgumentException
      */
     public function setKey(string $key): static
     {
-        $this->key = trim($key);
+        // Validate Key
+        if (!preg_match('/^[\w]+$/', $key)) {
+            throw new InvalidArgumentException("Invalid CSRF Key: {$key}");
+        }
+        $this->key = $key;
         return $this;
     }
 
@@ -131,13 +137,18 @@ class CSRF
     public function is_valid(): bool
     {
         // If CSRF Request Key Missing or Blank, Return false
-        $request_token = Request::input($this->key) ?? '';
-        if ($request_token === '') {
+        $request_token = Request::input($this->key, $_SERVER['HTTP_X_CSRF_TOKEN'] ?? '');
+        if (!is_string($request_token) || $request_token === '') {
             return false;
         }
 
         $existing_token = $this->token();
-        $this->refresh();
-        return hash_equals($request_token, $existing_token);
+        $valid = hash_equals($existing_token, $request_token);
+
+        if (!$valid) {
+            $this->refresh();
+        }
+
+        return $valid;
     }
 }

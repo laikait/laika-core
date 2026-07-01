@@ -31,9 +31,6 @@ final class Activity
     /** @var array Activities */
     protected array $activities;
 
-    /** @var array Change Log */
-    protected array $changelog;
-
     public function __construct(?string $connection = null)
     {
         DB::run($connection);
@@ -72,16 +69,17 @@ final class Activity
     /**
      * Create Custom Activity
      * @param string $event
+     * @param array $changelog Change Log Example: ['field' => ['old' => 'old_value', 'new' => 'new_value']]
      * @return void
      */
-    public function event(string $event): void
+    public function event(string $event, array $changelog = []): void
     {
         $this->activities[$event][] = [
             'author_type'   =>  $this->author['type'],
             'author_id'     =>  $this->author['id'],
             'event'         =>  strtolower(trim($event)),
             'log'           =>  $this->log,
-            'changes'       =>  serialize($this->changelog),
+            'changes'       =>  serialize($changelog),
             'from_ip'       =>  Visitor::ip()
         ];
 
@@ -91,7 +89,6 @@ final class Activity
             'id'    =>  null,
         ];
         $this->log = '';
-        $this->changelog = [];
     }
 
     /**
@@ -188,8 +185,5 @@ final class Activity
 
         // Set Activity Keys
         $this->activities = [];
-
-        // Change Log
-        $this->changelog = [];
     }
 }
