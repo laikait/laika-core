@@ -152,50 +152,6 @@ class Response
     }
 
     /**
-     * Get Request Header
-     * @param string $name
-     * @return ?string
-     */
-    public static function requestHeader(string $name): ?string
-    {
-        $key = 'HTTP_' . strtoupper(str_replace('-', '_', $name));
-
-        if (isset($_SERVER[$key])) return $_SERVER[$key];
-
-        if (isset($_SERVER[$name])) return $_SERVER[$name];
-
-        $normalized = static::normalizeHeaderName($name);
-        foreach (static::requestHeaders() as $k => $v) {
-            if (static::normalizeHeaderName($k) === $normalized) {
-                return $v;
-            }
-        }
-
-        return null;
-    }
-
-    /**
-     * Get Request Headers
-     * @return array
-     */
-    public static function requestHeaders(): array
-    {
-        if (function_exists('getallheaders')) return getallheaders();
-
-        $headers = [];
-        foreach ($_SERVER as $key => $value) {
-            if (str_starts_with($key, 'HTTP_')) {
-                $name = ucwords(strtolower(str_replace('_', '-', substr($key, 5))), '-');
-                $headers[$name] = $value;
-            } elseif (in_array($key, ['CONTENT_TYPE', 'CONTENT_LENGTH', 'CONTENT_MD5'])) {
-                $name = ucwords(strtolower(str_replace('_', '-', $key)), '-');
-                $headers[$name] = $value;
-            }
-        }
-        return $headers;
-    }
-
-    /**
      * Set Body
      * @param mixed $body
      * @return static

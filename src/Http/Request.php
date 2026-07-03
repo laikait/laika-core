@@ -60,16 +60,37 @@ class Request
         return $this->method;
     }
 
+    // /**
+    //  * Get Header Key Values
+    //  * @return array
+    //  */
+    // public function headers(): array
+    // {
+    //     $headers = [];
+    //     foreach ($_SERVER as $key => $value) {
+    //         if (str_starts_with($key, 'HTTP_')) {
+    //             $headers[strtolower(str_replace('_', '-', substr($key, 5)))] = $value;
+    //         }
+    //     }
+    //     return $headers;
+    // }
+
     /**
-     * Get Header Key Values
+     * Get Request Headers
      * @return array
      */
     public function headers(): array
     {
+        if (function_exists('getallheaders')) return getallheaders();
+
         $headers = [];
         foreach ($_SERVER as $key => $value) {
             if (str_starts_with($key, 'HTTP_')) {
-                $headers[strtolower(str_replace('_', '-', substr($key, 5)))] = $value;
+                $name = ucwords(strtolower(str_replace('_', '-', substr($key, 5))), '-');
+                $headers[$name] = $value;
+            } elseif (in_array($key, ['CONTENT_TYPE', 'CONTENT_LENGTH', 'CONTENT_MD5'])) {
+                $name = ucwords(strtolower(str_replace('_', '-', $key)), '-');
+                $headers[$name] = $value;
             }
         }
         return $headers;
@@ -77,12 +98,26 @@ class Request
 
     /**
      * Get Header Key Value
-     * @param string $key Key name of headers. Example: 'content-type'
+     * @param string $name Key name of headers. Example: 'content-type'
      * @return ?string
      */
-    public function header(string $key): ?string
+    public function header(string $name): ?string
     {
-        return $this->headers()[strtolower($key)] ?? null;
+        // return $this->headers()[strtolower($key)] ?? null;
+        $key = 'HTTP_' . strtoupper(str_replace('-', '_', trim($name)));
+
+        if (isset($_SERVER[$key])) return $_SERVER[$key];
+
+        if (isset($_SERVER[$name])) return $_SERVER[$name];
+
+        $normalized = $this->normalizeHeaderName($name);
+        foreach ($this->headers() as $k => $v) {
+            if ($this->normalizeHeaderName($k) === $normalized) {
+                return $v;
+            }
+        }
+
+        return null;
     }
 
     /**
@@ -267,5 +302,15 @@ class Request
             return is_array($decoded) ? $decoded : [];
         }
         return [];
+    }
+
+    /**
+     * Normalize Header Name
+     * @param string $name
+     * @return string
+     */
+    protected function normalizeHeaderName(string $name): string
+    {
+        return ucwords(strtolower(trim($name)), '-');
     }
 }

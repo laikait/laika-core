@@ -12,7 +12,7 @@ declare(strict_types=1);
 
 namespace Laika\Core\Template;
 
-use Laika\Service\{Response, Url};
+use Laika\Service\{Response, Url, CSRF};
 
 class Asset
 {
@@ -90,12 +90,12 @@ class Asset
     {
         $str = "<!-- System Default Scripts -->\n<script>\n";
         $vars = [
-            'token' => Response::getHeader('Authorization'),
-            'appuri' => rtrim(Url::base(), '/'),
+            'TOKEN' => htmlspecialchars(CSRF::generate()),
+            'APP_URI' => rtrim(Url::base(), '/'),
         ];
 
         foreach ($vars as $k => $v) {
-            $str .= "const " . strtoupper($k) . " = '{$v}';\n";
+            $str .= "const {$k} = \"{$v}\";\n";
         }
 
         $str .= "</script>\n";

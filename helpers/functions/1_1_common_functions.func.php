@@ -12,7 +12,7 @@ declare(strict_types=1);
 
 use Laika\Service\Url;
 use Laika\Service\Hook;
-use Laika\Service\Csrf;
+use Laika\Service\CSRF;
 use Laika\Service\Meta;
 use Laika\Service\Asset;
 use Laika\Service\Option;
@@ -487,7 +487,7 @@ function lf_footer(): void
  */
 function csrf_field(): void
 {
-    echo Csrf::field();
+    echo CSRF::field();
 };
 
 /**
