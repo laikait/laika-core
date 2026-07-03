@@ -18,8 +18,8 @@ use Laika\Service\{Directory, Config, Token, Csrf, Date, Activity, Response, Url
 
 class Dispatcher
 {
-    /** @var string CSRF Token */
-    private static ?string $csrf = null;
+    // /** @var string CSRF Token */
+    // private static ?string $csrf = null;
 
     /**
      * Dispatch
@@ -41,6 +41,9 @@ class Dispatcher
             self::handleAsset(rtrim($requestUrl));
             return;
         }
+
+        // Register Non-Asset Content Headers
+        self::registerHeaders();
 
         // Get If Request Uri Matched With Router List
         $res = Url::matchRequestRoute($requestUrl);
@@ -184,15 +187,11 @@ class Dispatcher
     private static function registerHeaders(): void
     {
         $headers = [
-            "Request-Time"  =>  (int) Config::get('env', 'start_time', time()),
-            "App-Name"      =>  Config::get('app', 'name', 'Laika Framework'),
-            "Authorization" =>  Token::generate([
-                    'uid' =>  mt_rand(100001, 999999),
-                    'requestor' =>  UrlHelper::base()
-                ])
+            "Request-Time"  =>  time(),
+            "App-Name"      =>  Config::get('app', 'name', 'Laika Framework')
         ];
         Response::setHeaders($headers);
-        Csrf::generate();
+        // Csrf::generate();
         return;
     }
 

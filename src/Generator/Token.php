@@ -45,7 +45,7 @@ class Token
     public function __construct()
     {
         $this->secret = Config::get('secret', 'key');
-        $this->time = (int) Config::get('env', 'start_time', time());
+        $this->time = time();
         $this->issuer = Url::host();
         $this->algorithm = 'HS256';
         $this->audience = Url::host();

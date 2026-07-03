@@ -16,7 +16,7 @@ use Laika\Model\Connection;
 use Laika\Model\Schema\Schema;
 use Laika\Core\Console\Command;
 use Laika\Service\{Infra, Config, DB};
-use Laika\Core\Exceptions\MigrationException;
+use Laika\Core\Exceptions\SchemaException;
 
 class Migrate extends Command
 {
@@ -44,7 +44,14 @@ class Migrate extends Command
         // Create Table
         try {
             // Migrate Migration Tables
-            $schemaClasses = $schema ? ["\\App\\Migration\\{$schema}"] : Infra::getSchemaClasses();
+            $schemaClasses = Infra::getSchemaClasses();
+
+            $tables = $schema
+            ? array_values(array_filter(
+                $schemaClasses,
+                fn (string $class) => str_ends_with($class, $schema)
+            ))
+            : $schemaClasses;
 
             // Show Error if No Migration Exists
             if (empty($schemaClasses)) {
@@ -60,10 +67,10 @@ class Migrate extends Command
             array_map(function ($table) {
                 $tblModel = new $table();
                 if (!method_exists($tblModel, 'migrate')) {
-                    throw new MigrationException("{$table}::migrate() Method Doesn't Exists!");
+                    $this->error("{$table}::migrate() Method Doesn't Exists!");
                 }
                 $tblModel->migrate();
-            }, $schemaClasses);
+            }, $tables);
 
             // Migrate Default Column Values
             array_map(function ($table) {
@@ -71,7 +78,7 @@ class Migrate extends Command
                 if (method_exists($tblModel, 'default')) {
                     $tblModel->default();
                 }
-            }, $schemaClasses);
+            }, $tables);
 
             // Create Secret Config File if Not Exist
             if (!Config::has('secret')) {

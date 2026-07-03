@@ -13,7 +13,9 @@ declare(strict_types=1);
 namespace Laika\Core\Route\Handler;
 
 use DOMDocument;
-use Laika\Service\{CSRF, Response};
+// use Laika\Service\{CSRF, Response};
+use Laika\Service\Response;
+use Laika\Service\CSRF;
 
 final class Html
 {
@@ -41,13 +43,10 @@ final class Html
         $forms = $dom->getElementsByTagName('form');
 
         // Check Empty Form, Send Response
-        if (empty($forms)) {
+        if ($forms->length == 0) {
             Response::html($str)->send();
             return;
         }
-
-        // Set Token
-        self::$csrf = self::$csrf ?? CSRF::token();
 
         foreach ($forms as $form) {
             $hasCsrf = false;
@@ -56,14 +55,14 @@ final class Html
                 // Check CSRF Input Field Exists
                 if (
                     strtolower($input->getAttribute('type')) == 'hidden' &&
-                    $input->getAttribute('name') == CSRF::key()
+                    $input->getAttribute('name') == '_csrf'
                 ) {
                     $hasCsrf = true;
                     break;
                 }
                 // Check CSRF Input Type is Hidden
                 if (
-                    $input->getAttribute('name') == CSRF::key() &&
+                    $input->getAttribute('name') == '_csrf' &&
                     strtolower($input->getAttribute('type'))!= 'hidden'
                 ) {
                     Response::json(
@@ -83,12 +82,16 @@ final class Html
                 $csrf = $dom->createElement('input');
 
                 $csrf->setAttribute('type', 'hidden');
-                $csrf->setAttribute('name', CSRF::key());
-                $csrf->setAttribute('value', self::$csrf);
+                $csrf->setAttribute('name', '_csrf');
+                $csrf->setAttribute('value', htmlspecialchars(CSRF::generate()));
 
-                $form->prepend($dom->createTextNode("\n"));
-                $form->prepend($csrf);
-                $form->prepend($dom->createTextNode("\n"));
+                $firstChild = $form->firstChild;
+                $comment = $dom->createComment(' CSRF Field Added By App ');
+                $form->insertBefore($dom->createTextNode("\n"), $firstChild);
+                $form->insertBefore($comment, $firstChild);
+                $form->insertBefore($dom->createTextNode("\n"), $firstChild);
+                $form->insertBefore($csrf, $firstChild);
+                $form->insertBefore($dom->createTextNode("\n"), $firstChild);
             }
         }
         Response::html($dom->saveHTML())->send();
