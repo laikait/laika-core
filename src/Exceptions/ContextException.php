@@ -12,15 +12,16 @@ declare(strict_types=1);
 
 namespace Laika\Core\Exceptions;
 
+use Exception;
 use Throwable;
 
-class CSRFException extends \Exception
+class ContextException extends Exception
 {
     protected int $statusCode;
 
-    public function __construct(string $message, $code = 0, ?Throwable $previous = null)
+    public function __construct(string $message = '', $code = 0, ?Throwable $previous = null)
     {
-        $this->statusCode = $code;
+        $this->statusCode = $statusCode;
         parent::__construct($message, $code, $previous);
     }
 

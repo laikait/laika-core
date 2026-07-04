@@ -18,6 +18,7 @@ use Laika\Service\Asset;
 use Laika\Service\Option;
 use Laika\Service\Config;
 use Laika\Service\Request;
+use Laika\Service\Context;
 use Laika\Model\Connection;
 use Laika\Core\Route\Router;
 use Laika\Core\Exceptions\Handler;
@@ -388,6 +389,28 @@ function asset(string $path): void
     }
     $path = trim($path, '/.');
     echo Url::base() . $path;
+}
+
+/**
+ * Add Context Data
+ * @param string $key
+ * @param mixed $value
+ * @return void
+ */
+function context_add(string $key, mixed $value): void
+{
+    Context::set($key, $value);
+}
+
+/**
+ * Get Context Data
+ * @param ?string $key
+ * @param mixed $default
+ * @return mixed
+ */
+function context_get(?string $key = null, mixed $default = null): mixed
+{
+    return Context::get($key, $default);
 }
 
 /**

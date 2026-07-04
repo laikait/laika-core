@@ -16,7 +16,7 @@ namespace Laika\Core\App;
 use Twig\TwigFilter;
 use Twig\Environment;
 use Twig\Loader\FilesystemLoader as Engine;
-use Laika\Service\{Directory, Visitor, Request, Local, File, Page, Url};
+use Laika\Service\{Directory, Visitor, Request, Local, File, Page, Url, Context};
 
 class Template
 {
@@ -183,8 +183,10 @@ class Template
         $this->assign('input', new InputHandler());
         // Assign Form Errors
         $this->assign('errors', Request::errors());
-        // Visitor Info
+        // Assign Visitor Info
         $this->assign('visitor', Visitor::info());
+        // Assign Context
+        $this->assign('context', Context::get());
     }
 
     /**
@@ -207,6 +209,8 @@ class Template
         });
         // Register Asset
         $this->addFilter('asset', 'asset');
+        // Register Context
+        $this->addFilter('context', 'context_get');
     }
 }
 
