@@ -103,7 +103,11 @@ class Url
      */
     public function path(): string
     {
-        return trim(str_replace($this->directory, '', $this->path), '/');
+        $path = $this->path;
+        if ($this->directory !== '' && strpos($path, $this->directory) === 0) {
+            $path = substr($path, strlen($this->directory));
+        }
+        return trim($path, '/');
     }
 
     /**
