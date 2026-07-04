@@ -53,6 +53,10 @@ add_hook('request_inputs', 'request_inputs', 1000);
 add_hook('request_is', 'request_is', 1000);
 
 /*================================== TEMPLATE HOOKS ==================================*/
+// Context Add
+add_hook('context_add', 'context_add', 1000);
+// Context Get
+add_hook('context', 'context_get', 1000);
 // Enqueue Meta
 add_hook('enqueue_meta', 'enqueue_meta', 1000);
 
