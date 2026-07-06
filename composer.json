@@ -57,10 +57,7 @@
         "test": [
             "@php vendor/bin/phpunit --configuration phpunit.xml.dist --colors=always --testdox"
         ],
-        "lint": "php-cs-fixer fix --dry-run --diff",
-        "post-update-cmd": [
-            "php laika fix:secret -b 32"
-        ]
+        "lint": "php-cs-fixer fix --dry-run --diff"
     },
     "config": {
         "allow-plugins": {
