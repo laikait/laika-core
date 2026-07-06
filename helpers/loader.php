@@ -32,12 +32,16 @@ $providers = new ProviderRegistry($registry);
 // Register Core Services
 $providers->register(CoreProviders::class);
 
-$installed = json_decode(file_get_contents(APP_PATH.DS.'vendor'.DS.'composer'.DS.'installed.json'), true);
+$json_file = APP_PATH.DS.'vendor'.DS.'composer'.DS.'installed.json';
 
-foreach ($installed['packages'] ?? $installed as $package) {
-    // Load Relay Classes
-    $services = (array) ($package['extra']['laika']['relays'] ?? []);
-    foreach ($services as $service) $providers->register($service);
+if (is_file($json_file)) {
+    $installed = json_decode(file_get_contents(APP_PATH.DS.'vendor'.DS.'composer'.DS.'installed.json'), true);
+
+    foreach ($installed['packages'] ?? $installed as $package) {
+        // Load Relay Classes
+        $services = (array) ($package['extra']['laika']['relays'] ?? []);
+        foreach ($services as $service) $providers->register($service);
+    }
 }
 
 // Auto Discover App Providers
