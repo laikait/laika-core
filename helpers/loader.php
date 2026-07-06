@@ -11,6 +11,7 @@
 declare(strict_types=1);
 
 use Laika\Relay\Relay;
+use Laika\Core\App\Resource;
 use Laika\Relay\RelayRegistry;
 use Laika\Relay\CoreProviders;
 use Laika\Relay\ProviderRegistry;
@@ -55,3 +56,19 @@ Relay::setRegistry($registry);
 
 // Boot Providers
 $providers->boot();
+
+#####################################################################################
+/*------------------------------- RESOURCE REGISTER -------------------------------*/
+#####################################################################################
+
+// Register Functions Resources
+Resource::register('functions', __DIR__ . '/functions');
+
+// Register Hooks Resources
+Resource::register('hooks', __DIR__ . '/hooks');
+
+// Register Model Class
+Resource::register('models', __DIR__ . '/../src/Model', '\\Laika\\Core\\Model');
+
+// Register Schema Class
+Resource::register('schemas', __DIR__ . '/../src/Schema', '\\Laika\\Core\\Schema');
