@@ -37,6 +37,8 @@
         "laikait/laika-model": "^3",
         "laikait/laika-session": "^2",
         "laikait/laika-shield": "^1",
+        "laikait/laika-route": "^1",
+        "laikait/laika-cli": "^1",
         "twig/twig": "^3",
         "firebase/php-jwt": "^7",
         "aws/aws-sdk-php": "^3.275",
@@ -55,7 +57,10 @@
         "test": [
             "@php vendor/bin/phpunit --configuration phpunit.xml.dist --colors=always --testdox"
         ],
-        "lint": "php-cs-fixer fix --dry-run --diff"
+        "lint": "php-cs-fixer fix --dry-run --diff",
+        "post-update-cmd": [
+            "php laika fix:secret -b 32"
+        ]
     },
     "config": {
         "allow-plugins": {
