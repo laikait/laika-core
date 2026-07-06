@@ -66,19 +66,5 @@
         "allow-plugins": {
             "dealerdirect/phpcodesniffer-composer-installer": true
         }
-    },
-    "extra": {
-        "laika": {
-            "functions": [
-                "helpers/functions"
-            ],
-            "hooks": [
-                "helpers/hooks"
-            ],
-            "schema": true,
-            "model": true,
-            "middleware": true,
-            "afterware": true
-        }
     }
 }

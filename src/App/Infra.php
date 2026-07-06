@@ -132,7 +132,7 @@ class Infra
     }
 
     /**
-     * Get Relay Classes
+     * Get Service Classes
      * @return array
      */
     public function getRelayClasses(): array

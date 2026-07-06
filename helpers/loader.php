@@ -16,11 +16,10 @@ use Laika\Relay\RelayRegistry;
 use Laika\Relay\CoreProviders;
 use Laika\Relay\ProviderRegistry;
 
-// Define APP_PATH
-if (!defined('APP_PATH')) define('APP_PATH', realpath(__DIR__ . '/../../../../'));
-
-// Define DEBUG
-if (!defined('DEBUG')) define('DEBUG', true);
+// Define Constants
+defined('APP_PATH') || define('APP_PATH', realpath(__DIR__ . '/../../../../'));
+defined('DEBUG') || define('DEBUG', true);
+defined('DS') || define('DS', DIRECTORY_SEPARATOR);
 
 ####################################################################################
 /*--------------------------------- RELAY LOADER ---------------------------------*/
@@ -33,10 +32,12 @@ $providers = new ProviderRegistry($registry);
 // Register Core Services
 $providers->register(CoreProviders::class);
 
-if (class_exists(Loader::class)) {
-    foreach (Loader::services() as $service) {
-        $providers->register($service);
-    }
+$installed = json_decode(file_get_contents(APP_PATH.DS.'vendor'.DS.'composer'.DS.'installed.json'), true);
+
+foreach ($installed['packages'] ?? $installed as $package) {
+    // Load Relay Classes
+    $services = (array) ($package['extra']['laika']['relays'] ?? []);
+    foreach ($services as $service) $providers->register($service);
 }
 
 // Auto Discover App Providers
