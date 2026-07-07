@@ -48,6 +48,17 @@ class Config
     }
 
     /**
+     * Get All Configs
+     * @return mixed
+     */
+    public static function all(): mixed
+    {
+        // Initiate
+        self::init();
+        return self::$config;
+    }
+
+    /**
      * Modify a Config Value
      * @param string $name Config file name (without extension)
      * @param string $key Config key (optional)
@@ -230,10 +241,10 @@ class Config
         $content = "[\n";
         foreach ($array as $key => $value) {
             if (is_array($value)) {
-                $content .= str_repeat(' ', $spaces) . str_repeat(' ', $spaces) . "'{$key}' => " . trim(self::allign($value, $spaces + 4), ';') . ",\n\n";
+                $content .= str_repeat(' ', $spaces * 2) . str_repeat(' ', $spaces) . "'{$key}' => " . trim(self::allign($value, $spaces + 4), ';') . ",\n\n";
             } else {
                 $value = self::exportValue($value);
-                $content .= str_repeat(' ', $spaces) . str_repeat(' ', $spaces) . "'{$key}' => {$value},\n\n";
+                $content .= str_repeat(' ', $spaces * 2) . "'{$key}' => {$value},\n";
             }
         }
         return "{$content}" . str_repeat(' ', $spaces) . "];";
