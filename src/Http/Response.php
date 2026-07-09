@@ -26,24 +26,6 @@ class Response
     /** @var mixed Body */
     protected mixed $body = null;
 
-    /** @var array Default Headers */
-    protected array $defaultHeaders = [
-        "X-Content-Type-Options"            =>  "nosniff",
-        "X-XSS-Protection"                  =>  "1; mode=block",
-        "Referrer-Policy"                   =>  "strict-origin-when-cross-origin",
-        "Access-Control-Allow-Origin"       =>  "*",
-        "Access-Control-Allow-Methods"      =>  "GET, POST, PUT, PATCH, DELETE, OPTIONS",
-        "Access-Control-Allow-Headers"      =>  "Authorization, Origin, X-Requested-With, Content-Type, Accept, X-Laika-Token",
-        "X-Powered-By"                      =>  "Laika Framework",
-        "X-Frame-Options"                   =>  "sameorigin",
-        "Content-Security-Policy"           =>  "frame-ancestors 'self'",
-        "Cache-Control"                     =>  "no-store, no-cache, must-revalidate",
-        "Pragma"                            =>  "no-cache",
-        "Expires"                           =>  "0",
-        "Accept"                            =>  "*/*",
-
-    ];
-
     ##############################################################################
     ################################ EXTERNAL API ################################
     ##############################################################################
@@ -85,15 +67,6 @@ class Response
     public function getContentType(): string
     {
         return $this->contentType;
-    }
-
-    /**
-     * Set Default Headers
-     * @return void
-     */
-    public function setDefaultHeaders(): void
-    {
-        $this->setHeaders($this->defaultHeaders);
     }
 
     /**

@@ -62,13 +62,13 @@ class Infra
     }
 
     /**
-     * Get Controller Classes
+     * Get Response Classes
      * @return array
      */
-    public function getControllerClasses(): array
+    public function getResponseClasses(): array
     {
-        Resource::register('controllers', APP_PATH . '/lf-app/Controller', 'App\\Controller');
-        $classes = Resource::getResources('controllers');
+        Resource::register('responses', APP_PATH . '/lf-app/Response', 'App\\Response');
+        $classes = Resource::getResources('responses');
         $list = [];
         foreach ($classes as $class) $list[] = $class;
         ksort($list);
@@ -76,13 +76,13 @@ class Infra
     }
 
     /**
-     * Get Middlewar Classes
+     * Get Pipeline Classes
      * @return array
      */
-    public function getMiddlewareClasses(): array
+    public function getPipelineClasses(): array
     {
-        Resource::register('middlewares', APP_PATH . '/lf-app/Middleware', 'App\\Middleware');
-        $classes = Resource::getResources('middlewares');
+        Resource::register('pipelines', APP_PATH . '/lf-app/Pipeline', 'App\\Pipeline');
+        $classes = Resource::getResources('pipelines');
         $list = [];
         foreach ($classes as $class) $list[] = $class;
         ksort($list);
@@ -90,13 +90,13 @@ class Infra
     }
 
     /**
-     * Get Afterware Classes
+     * Get Filre Classes
      * @return array
      */
-    public function getAfterwareClasses(): array
+    public function getFilterClasses(): array
     {
-        Resource::register('afterwares', APP_PATH . '/lf-app/Afterware', 'App\\Afterware');
-        $classes = Resource::getResources('afterwares');
+        Resource::register('filters', APP_PATH . '/lf-app/Filter', 'App\\Filter');
+        $classes = Resource::getResources('filters');
         $list = [];
         foreach ($classes as $class) $list[] = $class;
         ksort($list);
