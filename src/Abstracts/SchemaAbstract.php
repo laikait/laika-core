@@ -11,21 +11,18 @@
 declare(strict_types=1);
 
 namespace Laika\Core\Abstracts;
+
 use Laika\Model\Schema\Schema;
 
 abstract class SchemaAbstract
 {
-    /** @var string Table Name */
     protected string $table;
 
     abstract public function up(): void;
-
+    
     public function seed(): void {}
     
-    public function down(): void
-    {
-        Schema::on()->dropIfExists($this->table);
-    }
+    public function down(): void { Schema::on()->dropIfExists($this->table); }
 
     /**
      * Check if Property is Set

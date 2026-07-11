@@ -51,7 +51,7 @@ class Infra
 
         foreach ($classes as $t => $c) {
             if (!is_subclass_of($c, SchemaAbstract::class)) {
-                throw new SchemaException("{$c} is not a child class of " . SchemaAbstract::class . " class");
+                throw new SchemaException("{$c} is not a child class of " . SchemaAbstract::class);
             }
             $reflection = new \ReflectionClass($c);
             $obj = $reflection->newInstanceWithoutConstructor();

@@ -6,5 +6,5 @@ namespace Laika\Core\Interfaces;
 
 interface FilterInterface
 {
-    public function terminate(array &$params, $response): void;
+    public function terminate(callable $next, ?string $response, array &$params): void;
 }
