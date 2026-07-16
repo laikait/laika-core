@@ -77,11 +77,11 @@ final class MimeType
     /*============================ EXTERNAL API ============================*/
     ##########################################################################
     /**
-     * Get Mime Type
+     * Get Mime Type From Extension
      * @param string $extension Example: css, html, jpg
      * @return string
      */
-    public static function get(string $extension): string
+    public static function fromExtension(string $extension): string
     {
         return static::$types[strtolower($extension)] ?? 'application/octet-stream';
     }

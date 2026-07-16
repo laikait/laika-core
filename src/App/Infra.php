@@ -62,13 +62,13 @@ class Infra
     }
 
     /**
-     * Get Response Classes
+     * Get Controller Classes
      * @return array
      */
-    public function getResponseClasses(): array
+    public function getControllerClasses(): array
     {
-        Resource::register('responses', APP_PATH . '/lf-app/Response', 'App\\Response');
-        $classes = Resource::getResources('responses');
+        Resource::register('controller', APP_PATH . '/lf-app/Controller', 'App\\Controller');
+        $classes = Resource::getResources('controller');
         $list = [];
         foreach ($classes as $class) $list[] = $class;
         ksort($list);
