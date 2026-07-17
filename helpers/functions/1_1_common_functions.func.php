@@ -14,14 +14,13 @@ use Laika\Service\Url;
 use Laika\Service\Hook;
 use Laika\Service\CSRF;
 use Laika\Service\Meta;
+use Laika\Route\Handler;
 use Laika\Service\Asset;
 use Laika\Service\Option;
 use Laika\Service\Config;
 use Laika\Service\Request;
 use Laika\Service\Context;
 use Laika\Model\Connection;
-use Laika\Core\Route\Router;
-use Laika\Core\Exceptions\Handler;
 use Laika\Session\Service\Session;
 
 /**
@@ -133,6 +132,23 @@ function apply_hook(string $filter, mixed $value = null, mixed ...$args): mixed
 }
 
 /**
+ * Get Encrypt Key
+ * @return string
+ */
+function enckey(): string
+{
+    static $key = null;
+    if ($key === null) {
+        $parts = explode('-', base64_decode((string) file_get_contents(APP_PATH . '/lf-storage/.key')));
+        if (count($parts) != 2) {
+            throw new \Exception("Invalid encrypt key detected!");
+        }
+        $key = $parts[1];
+    }
+    return $key;
+}
+
+/**
  * Get Named Route
  * @param string $name Named Route Name. Example: 'client' or 'client?status=active'
  * @param array $params Named Route Parameters. Example: ['id'=>1234]
@@ -145,7 +161,7 @@ function named(string $name, array $params = []): string
     // Get Query String
     $qstring = parse_url($name, PHP_URL_QUERY);
     // Make Named Path
-    $path = trim(Router::namedUrl($named, $params), '/');
+    $path = trim(Handler::namedUrl($named, $params), '/');
     $path = $qstring ? "{$path}?{$qstring}" : $path;
     // Return Named Path/URL
     return Url::base() . $path;
@@ -263,19 +279,6 @@ function option_insert(string $key, mixed $value): bool
 function option_update(string $key, mixed $value): bool
 {
     return Option::update($key, $value);
-}
-
-######################################################################################
-/*================================== ERROR HANDLE ==================================*/
-######################################################################################
-/**
- * Report Error
- * @param Throwable
- * @return void
- */
-function report_error(Throwable $throwable): void
-{
-    call_user_func([new Handler(), 'handle'], $throwable);
 }
 
 #######################################################################################

@@ -12,7 +12,6 @@ declare(strict_types=1);
 
 namespace Laika\Core\Helper;
 
-use Laika\Service\Config;
 use RuntimeException;
 use Laika\Core\Exceptions\{ExtensionException, ConfigException};
 
@@ -46,11 +45,7 @@ class Vault
         $this->cipher    = 'aes-256-gcm';
         $this->tagLength = 16;
 
-        $secret = Config::get('secret', 'key');
-        if (empty($secret)) {
-            throw new ConfigException("Encryption key is not set in config.");
-        }
-        $this->key = hash('sha256', $secret, true);
+        $this->key = hash('sha256', enckey(), true);
 
         $ivLength = openssl_cipher_iv_length($this->cipher);
         if ($ivLength === false) {

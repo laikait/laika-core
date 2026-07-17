@@ -3,18 +3,19 @@ declare(strict_types=1);
 
 namespace Laika\Tests\Unit;
 
-use PHPUnit\Framework\TestCase;
-use Laika\Core\App\Http;
+use Laika\Route\Url;
+use Laika\Route\Handler;
 use Laika\Service\Date;
+use PHPUnit\Framework\TestCase;
 
 final class DemoTest extends TestCase
 {
     public function testRouter()
     {
-        Http::get('/', function() {
+        Url::get('/', function() {
             return 'Hello, World!';
         })->name('home');
-        $path = Http::url('home');
+        $path = Handler::namedUrl('home');
         $this->assertNotNull($path ?: null, "Failed to Initialize Router or Generate URL");
     }
 
