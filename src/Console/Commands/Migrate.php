@@ -15,7 +15,9 @@ namespace Laika\Core\Console\Commands;
 use Laika\Model\Connection;
 use Laika\Model\Schema\Schema;
 use Laika\Core\Console\Command;
-use Laika\Service\{Infra, Config, DB};
+use Laika\Service\Init;
+use Laika\Service\Infra;
+use Laika\Service\Config;
 use Laika\Core\Exceptions\SchemaException;
 
 class Migrate extends Command

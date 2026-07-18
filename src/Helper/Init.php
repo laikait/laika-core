@@ -15,21 +15,22 @@ namespace Laika\Core\Helper;
 use PDO;
 use PDOException;
 use Laika\Model\Connection;
-use Laika\Session\Service\Session;
+use Laika\Session\SessionManager;
 
-class DB
+class Init
 {
-    protected bool $booted = false;
+    /** @var bool Init status */
+    protected static bool $booted = false;
 
     /**
-     * Run Connection
+     * Connect DB
      * @param ?string $name Connection Name. Default is 'default'
      * @return void
      */
-    public function run(?string $name = null): void
+    public function db(?string $name = null): void
     {
         // Skip If Already Booted
-        if ($this->booted) return;
+        if (self::$booted) return;
 
         $name = $name ?? 'default';
 
@@ -38,20 +39,10 @@ class DB
                 Connection::add(config('database', $name));
             } catch (PDOException $e) {
                 throw new RuntimeException("Framework Failed To Connect [{$name}] Database: " . $e->getMessage());
-            } finally {
-                $this->booted = true;
             }
-        }
-    }
 
-    /**
-     * Get Connection
-     * @param ?string $name Connection Name. Default is 'default'
-     * @return PDO
-     */
-    public function getConnection(?string $name = null): PDO
-    {
-        return Connection::get($name ?? 'default');
+            self::$booted = true;
+        }
     }
 
     /**
@@ -59,8 +50,30 @@ class DB
      * @param ?string $name Connection Name. Default is 'default'
      * @return void
      */
-    public function session(?string $name = null): void
+    public function dbSession(?string $name = null): void
     {
-        Session::config($this->getConnection($name));
+        SessionManager::dbSessionConfig($name);
+    }
+
+    /**
+     * Session in DB
+     * @param array $params Connection Name. Default is 'default'
+     * @return void
+     */
+    public function fileSession(array $params = []): void
+    {
+        SessionManager::fileSessionConfig($params);
+    }
+
+    /**
+     * Init App Default
+     * Start Database & DB Session
+     * @param ?string $connection Connection Name. Default is null
+     * @return void
+     */
+    public function default(?string $connection = null): void
+    {
+        $this->db($connection);
+        $this->dbSession($connection);
     }
 }
