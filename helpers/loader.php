@@ -11,15 +11,15 @@
 declare(strict_types=1);
 
 use Laika\Relay\Relay;
+use Laika\Core\App\Resource;
 use Laika\Relay\RelayRegistry;
 use Laika\Relay\CoreProviders;
 use Laika\Relay\ProviderRegistry;
 
-// Define APP_PATH
-if (!defined('APP_PATH')) define('APP_PATH', realpath(__DIR__ . '/../../../../'));
-
-// Define DEBUG
-if (!defined('DEBUG')) define('DEBUG', true);
+// Define Constants
+defined('APP_PATH') || define('APP_PATH', realpath(__DIR__ . '/../../../../'));
+defined('DEBUG') || define('DEBUG', true);
+defined('DS') || define('DS', DIRECTORY_SEPARATOR);
 
 ####################################################################################
 /*--------------------------------- RELAY LOADER ---------------------------------*/
@@ -32,9 +32,15 @@ $providers = new ProviderRegistry($registry);
 // Register Core Services
 $providers->register(CoreProviders::class);
 
-if (class_exists(Loader::class)) {
-    foreach (Loader::services() as $service) {
-        $providers->register($service);
+$json_file = APP_PATH.DS.'vendor'.DS.'composer'.DS.'installed.json';
+
+if (is_file($json_file)) {
+    $installed = json_decode(file_get_contents(APP_PATH.DS.'vendor'.DS.'composer'.DS.'installed.json'), true);
+
+    foreach ($installed['packages'] ?? $installed as $package) {
+        // Load Relay Classes
+        $services = (array) ($package['extra']['laika']['relays'] ?? []);
+        foreach ($services as $service) $providers->register($service);
     }
 }
 
@@ -55,3 +61,19 @@ Relay::setRegistry($registry);
 
 // Boot Providers
 $providers->boot();
+
+#####################################################################################
+/*------------------------------- RESOURCE REGISTER -------------------------------*/
+#####################################################################################
+
+// Register Functions Resources
+Resource::register('functions', __DIR__ . '/functions');
+
+// Register Hooks Resources
+Resource::register('hooks', __DIR__ . '/hooks');
+
+// Register Model Class
+Resource::register('models', __DIR__ . '/../src/Model', '\\Laika\\Core\\Model');
+
+// Register Schema Class
+Resource::register('schemas', __DIR__ . '/../src/Schema', '\\Laika\\Core\\Schema');

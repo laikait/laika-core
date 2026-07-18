@@ -20,15 +20,15 @@ use Laika\Service\Option;
 use Laika\Model\Schema\Schema;
 use Laika\Model\Schema\Blueprint;
 use Laika\Core\Exceptions\OptionException;
+use Laika\Core\Abstracts\SchemaAbstract;
 
-class OptionSchema
+class OptionSchema extends SchemaAbstract
 {
-    /**
-     * Migrate Table
-     */
-    public function migrate()
+    protected string $table = 'options';
+
+    public function up(): void
     {
-        Schema::on()->createIfNotExists('options', function (Blueprint $table) {
+        Schema::on()->createIfNotExists($this->table, function (Blueprint $table) {
             $table->string('op_key');
             $table->text('op_value');
             $table->enum('is_default', ['yes', 'no'])->default('no');
@@ -38,11 +38,7 @@ class OptionSchema
         });
     }
 
-    /**
-     * Insert Defaults
-     * @return void
-     */
-    public function default(): void
+    public function seed(): void
     {
         try {
             $opts = [

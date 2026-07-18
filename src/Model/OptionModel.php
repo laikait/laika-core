@@ -116,4 +116,24 @@ class OptionModel
         }
         return false;
     }
+
+    /**
+     * Check if Property is Set
+     * @param string $prop Property Name
+     * @return bool
+     */
+    public function __isset($prop): bool
+    {
+        return isset($this->$prop);
+    }
+
+    /**
+     * Get Property Value
+     * @param string $prop Property Name
+     * @return mixed
+     */
+    public function __get($prop): mixed
+    {
+        return $this->$prop;
+    }
 }

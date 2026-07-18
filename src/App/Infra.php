@@ -12,25 +12,31 @@ declare(strict_types=1);
 
 namespace Laika\Core\App;
 
-use Laika\Service\{Directory, File};
 use Laika\Relay\Relay;
+use Laika\Service\Directory;
+use Laika\Core\Exceptions\SchemaException;
+use Laika\Core\Abstracts\SchemaAbstract;
 use Loader;
 
 // Application Infrastructure Info
 class Infra
 {
-    /*============================ Model Info ============================*/
     /**
      * Get All Model Classes
      * @return array
      */
     public function getModelClasses(): array
     {
-        $files = Directory::files(APP_PATH . '/lf-app/Model', 'php');
-        return array_merge(
-            Loader::models(),
-            array_map(function ($file) { return 'App\\Model\\' . File::name($file); }, $files)
-        );
+        Resource::register('models', APP_PATH . '/lf-app/Model', 'App\\Model');
+        $classes = Resource::getResources('models');
+        $list = [];
+        foreach ($classes as $class) {
+            $reflection = new \ReflectionClass($class);
+            $obj = $reflection->newInstanceWithoutConstructor();
+            $list[$obj->table] = $class;
+        }
+        ksort($list);
+        return $list;
     }
 
     /**
@@ -39,78 +45,117 @@ class Infra
      */
     public function getSchemaClasses(): array
     {
-        $files = Directory::files(APP_PATH . '/lf-app/Schema', 'php');
-        return array_merge(
-            Loader::schemas(),
-            array_map(function ($file) { return 'App\\Schema\\' . File::name($file); }, $files)
-        );
+        Resource::register('schemas', APP_PATH . '/lf-app/Schema', 'App\\Schema');
+        $classes = Resource::getResources('schemas');
+        $list = [];
+
+        foreach ($classes as $t => $c) {
+            if (!is_subclass_of($c, SchemaAbstract::class)) {
+                throw new SchemaException("{$c} is not a child class of " . SchemaAbstract::class);
+            }
+            $reflection = new \ReflectionClass($c);
+            $obj = $reflection->newInstanceWithoutConstructor();
+            $list[$obj->table] = $c;
+        }
+        ksort($list);
+        return $list;
     }
 
-    /*============================ Controllers Info ============================*/
     /**
      * Get Controller Classes
      * @return array
      */
     public function getControllerClasses(): array
     {
-        $files = Directory::files(APP_PATH . '/lf-app/Controller', 'php');
-        return array_map(function ($file) { return 'App\\Controller\\' . File::name($file); }, $files);
+        Resource::register('controller', APP_PATH . '/lf-app/Controller', 'App\\Controller');
+        $classes = Resource::getResources('controller');
+        $list = [];
+        foreach ($classes as $class) $list[] = $class;
+        ksort($list);
+        return $list;
     }
 
-    /*============================ Middlewares Info ============================*/
     /**
-     * Get Middlewar Classes
+     * Get Pipeline Classes
      * @return array
      */
-    public function getMiddlewareClasses(): array
+    public function getPipelineClasses(): array
     {
-        $files = Directory::scan(APP_PATH . '/lf-app/Middleware', true, 'php');
-        return array_merge(
-            Loader::middlewares(),
-            array_map(function ($file) { return 'App\\Middleware\\' . File::name($file); }, $files)
-        );
+        Resource::register('pipelines', APP_PATH . '/lf-app/Pipeline', 'App\\Pipeline');
+        $classes = Resource::getResources('pipelines');
+        $list = [];
+        foreach ($classes as $class) $list[] = $class;
+        ksort($list);
+        return $list;
     }
 
-    /*============================ Afterwares Info ============================*/
     /**
-     * Get Afterware Classes
+     * Get Filre Classes
      * @return array
      */
-    public function getAfterwareClasses(): array
+    public function getFilterClasses(): array
     {
-        $files = Directory::files(APP_PATH . '/lf-app/Afterware', 'php');
-        return array_merge(
-            Loader::afterwares(),
-            array_map(function ($file) { return 'App\\Afterware\\' . File::name($file); }, $files)
-        );
+        Resource::register('filters', APP_PATH . '/lf-app/Filter', 'App\\Filter');
+        $classes = Resource::getResources('filters');
+        $list = [];
+        foreach ($classes as $class) $list[] = $class;
+        ksort($list);
+        return $list;
     }
 
-    /*============================ Template Info ============================*/
     /**
      * Get Template Names
      * @return array
      */
     public function getTemplateNames(): array
     {
-        $base = str_replace('\\', '/', APP_PATH . '/lf-templates');
-        $paths = Directory::scan($base, true, ['html','twig']);
-        $templates = [];
+        $base = realpath(APP_PATH . '/template');
+        $paths = Directory::scan($base, false, ['html','twig']);
+        $list = [];
         foreach ($paths as $path) {
-            if (is_file($path)) {
-                $path = str_replace('\\', '/', $path);
-                $templates[] = str_replace($base, '', $path);
+            $name = trim(str_replace($base, '', $path), DS);
+            $parts = explode(DS, $name);
+
+            $template = $parts[0];
+            $key = DS;
+
+            if (count($parts) > 1) {
+                $template = array_pop($parts);
+                $key = implode(DS, $parts);
             }
+            $ext = pathinfo($template, PATHINFO_EXTENSION);
+            $file_name = pathinfo($template, PATHINFO_FILENAME);
+            $list[$key][][strtolower($ext)] = $file_name;
         }
-        return $templates;
+        ksort($list);
+        return $list;
     }
 
-    /*============================ Relay Info ============================*/
     /**
-     * Get Relay Classes
+     * Get Service Classes
      * @return array
      */
     public function getRelayClasses(): array
     {
         return Relay::classes();
+    }
+
+    /**
+     * Get Function Files
+     * @return string[]
+     */
+    public function getFunctionFiles(): array
+    {
+        return Resource::getResources('functions');
+    }
+
+    /**
+     * Get Hook Files
+     * @return string[]
+     */
+    public function getHookFiles(): array
+    {
+        Resource::register('hooks', APP_PATH . '/lf-hooks');
+        return Resource::getResources('hooks');
     }
 }

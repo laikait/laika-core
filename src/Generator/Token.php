@@ -14,7 +14,8 @@ namespace Laika\Core\Generator;
 
 use Firebase\JWT\JWT;
 use Firebase\JWT\Key;
-use Laika\Service\{Vault, Url, Config};
+use Laika\Service\Url;
+use Laika\Service\Vault;
 
 /*======================================================================================*/
 /*================================= MOVED TO GENERATOR =================================*/
@@ -44,7 +45,7 @@ class Token
 
     public function __construct()
     {
-        $this->secret = Config::get('secret', 'key');
+        $this->secret = enckey();
         $this->time = time();
         $this->issuer = Url::host();
         $this->algorithm = 'HS256';

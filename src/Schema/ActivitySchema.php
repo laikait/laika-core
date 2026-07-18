@@ -16,17 +16,17 @@ namespace Laika\Core\Schema;
 // Deny Direct Access
 defined('APP_PATH') || http_response_code(403) . die('403 Direct Access Denied!');
 
-use Laika\Model\Schema\Blueprint;
 use Laika\Model\Schema\Schema;
+use Laika\Model\Schema\Blueprint;
+use Laika\Core\Abstracts\SchemaAbstract;
 
-class ActivitySchema
+class ActivitySchema extends SchemaAbstract
 {
-    /**
-     * Migrate Table
-     */
-    public function migrate()
+    protected string $table = 'activities';
+
+    public function up(): void
     {
-        Schema::on()->createIfNotExists('activities', function (Blueprint $t) {
+        Schema::on()->createIfNotExists($this->table, function (Blueprint $t) {
             $t->bigId('log_id');
             $t->string('author_type', 30);
             $t->unsignedBigInteger('author_id')->nullable();
