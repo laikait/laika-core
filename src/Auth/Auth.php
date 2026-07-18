@@ -12,8 +12,9 @@ namespace Laika\Core\Auth;
 
 use RuntimeException;
 use Laika\Model\Model;
+use Laika\Service\Init;
+use Laika\Service\Visitor;
 use InvalidArgumentException;
-use Laika\Service\{DB, Visitor};
 use Laika\Model\Schema\Blueprint;
 use Laika\Session\Service\Session;
 
@@ -50,8 +51,7 @@ class Auth
 
     public function __construct()
     {
-        DB::run(); // Ensure DB is initialized
-        DB::session(); // Ensure Session in DB
+        Init::session(); // Initiate Session
 
         $this->model        =   new Model();
         $this->guard        =   'user';

@@ -17,7 +17,9 @@ namespace Laika\Core\Log;
 defined('APP_PATH') || http_response_code(403) . die('403 Direct Access Denied!');
 
 use Laika\Model\Model;
-use Laika\Service\{Request, Visitor, DB};
+use Laika\Service\Init;
+use Laika\Service\Request;
+use Laika\Service\Visitor;
 use Laika\Core\Exceptions\LogException;
 
 final class Activity
@@ -33,7 +35,7 @@ final class Activity
 
     public function __construct(?string $connection = null)
     {
-        DB::run($connection);
+        Init::db($connection);
         $this->reset();
     }
 

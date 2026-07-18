@@ -35,7 +35,7 @@
         "ext-openssl": "*",
         "laikait/laika-relay": "^1",
         "laikait/laika-model": "^3",
-        "laikait/laika-session": "^2",
+        "laikait/laika-session": "^3",
         "laikait/laika-shield": "^1",
         "laikait/laika-route": "^1",
         "laikait/laika-cli": "^1",

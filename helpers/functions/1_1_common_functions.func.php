@@ -20,8 +20,8 @@ use Laika\Service\Option;
 use Laika\Service\Config;
 use Laika\Service\Request;
 use Laika\Service\Context;
+use Laika\Session\Session;
 use Laika\Model\Connection;
-use Laika\Session\Service\Session;
 
 /**
  * Dump Data & Die
