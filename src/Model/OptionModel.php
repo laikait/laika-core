@@ -16,7 +16,6 @@ namespace Laika\Core\Model;
 defined('APP_PATH') || http_response_code(403).die('403 Direct Access Denied!');
 
 use Laika\Model\Model;
-use Laika\Service\Init;
 use Laika\Core\Exceptions\OptionException;
 
 class OptionModel
@@ -36,10 +35,9 @@ class OptionModel
     /** @var array cached */
     private array $cached = [];
 
-    public function __construct(?string $connection = null)
+    public function __construct()
     {
-        Init::db($connection); // Run Database
-        $this->model = new Model($connection);
+        $this->model = new Model();
     }
 
     /**

@@ -26,7 +26,7 @@ class ActivitySchema extends SchemaAbstract
 
     public function up(): void
     {
-        Schema::on()->createIfNotExists($this->table, function (Blueprint $t) {
+        Schema::on($this->connection)->createIfNotExists($this->table, function (Blueprint $t) {
             $t->bigId('log_id');
             $t->string('author_type', 30);
             $t->unsignedBigInteger('author_id')->nullable();

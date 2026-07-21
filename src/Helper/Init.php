@@ -14,13 +14,14 @@ namespace Laika\Core\Helper;
 
 use PDO;
 use PDOException;
+use Laika\Service\Config;
 use Laika\Model\Connection;
 use Laika\Session\SessionManager;
 
 class Init
 {
-    /** @var bool Init status */
-    protected static bool $booted = false;
+    /** @var bool Init connections status */
+    protected static array $connections = [];
 
     /**
      * Connect DB
@@ -29,19 +30,19 @@ class Init
      */
     public function db(?string $name = null): void
     {
-        // Skip If Already Booted
-        if (self::$booted) return;
-
         $name = $name ?? 'default';
+
+        // Skip If Already Booted
+        if (array_key_exists(strtolower($name), self::$connections) && self::$connections[strtolower($name)]) return;
 
         if (!Connection::has($name)) {
             try {
-                Connection::add(config('database', $name));
+                Connection::add(Config::get('database', $name));
             } catch (PDOException $e) {
                 throw new RuntimeException("Framework Failed To Connect [{$name}] Database: " . $e->getMessage());
             }
 
-            self::$booted = true;
+            self::$connections[strtolower($name)] = true;
         }
     }
 
@@ -63,17 +64,5 @@ class Init
     public function fileSession(array $params = []): void
     {
         SessionManager::fileSessionConfig($params);
-    }
-
-    /**
-     * Init App Default
-     * Start Database & DB Session
-     * @param ?string $connection Connection Name. Default is null
-     * @return void
-     */
-    public function default(?string $connection = null): void
-    {
-        $this->db($connection);
-        $this->dbSession($connection);
     }
 }

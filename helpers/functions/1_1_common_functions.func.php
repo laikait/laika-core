@@ -204,6 +204,16 @@ function time_zones(): array
     return \DateTimeZone::listIdentifiers(DateTimeZone::ALL);
 }
 
+/**
+ * Get Repo Directory
+ * @param string $name Repository name
+ * @return string
+ */
+function repo_dir(string $name): string
+{
+    return realpath(APP_PATH . '/vendor/' . trim($name, '/'));
+}
+
 #######################################################################################
 /*================================== OPTION HANDLE ==================================*/
 #######################################################################################
