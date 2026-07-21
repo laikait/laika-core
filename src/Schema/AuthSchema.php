@@ -16,8 +16,8 @@ namespace Laika\Core\Schema;
 // Deny Direct Access
 defined('APP_PATH') || http_response_code(403) . die('403 Direct Access Denied!');
 
-use Laika\Model\Schema\Blueprint;
 use Laika\Model\Schema\Schema;
+use Laika\Model\Schema\Blueprint;
 use Laika\Core\Abstracts\SchemaAbstract;
 
 class AuthSchema extends SchemaAbstract
@@ -26,7 +26,7 @@ class AuthSchema extends SchemaAbstract
 
     public function up(): void
     {
-        Schema::on()->createIfNotExists($this->table, function (Blueprint $table) {
+        Schema::on($this->connection)->createIfNotExists($this->table, function (Blueprint $table) {
             $table->id('id');
             $table->string('token', 128);
             $table->string('session_id', 128);

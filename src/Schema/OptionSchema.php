@@ -28,7 +28,7 @@ class OptionSchema extends SchemaAbstract
 
     public function up(): void
     {
-        Schema::on()->createIfNotExists($this->table, function (Blueprint $table) {
+        Schema::on($this->connection)->createIfNotExists($this->table, function (Blueprint $table) {
             $table->string('op_key');
             $table->text('op_value');
             $table->enum('is_default', ['yes', 'no'])->default('no');

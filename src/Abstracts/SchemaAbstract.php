@@ -18,11 +18,13 @@ abstract class SchemaAbstract
 {
     protected string $table;
 
+    protected string $connection = 'default';
+
     abstract public function up(): void;
     
     public function seed(): void {}
     
-    public function down(): void { Schema::on()->dropIfExists($this->table); }
+    public function down(): void { Schema::on($this->connection)->dropIfExists($this->table); }
 
     /**
      * Check if Property is Set
