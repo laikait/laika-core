@@ -132,14 +132,14 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
 
       - name: Get Composer cache directory
         id: composer-cache
         run: echo "dir=$(composer config cache-files-dir || echo ~/.composer/cache)" >> $GITHUB_OUTPUT
 
       - name: Cache Composer dependencies
-        uses: actions/cache@v5
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9
         with:
           path: |
             vendor
@@ -167,7 +167,7 @@ jobs:
       - name: Prepare release artifact
         run: |
           mkdir build
-          cp -r src helpers .github tests .phpunit.result.cache composer.json LICENSE README.md build/
+          cp -r src helpers .github tests .phpunit.result.cache .gitignore composer.json LICENSE README.md build/
           echo "${{ github.run_number }}" > build/VERSION
           cd build && zip -r ../${{ env.ARTIFACT }}.zip .
 
@@ -177,7 +177,7 @@ jobs:
 
       # Upload Artifact
       - name: Upload build artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         with:
           name: ${{ env.ARTIFACT }}
           path: |
@@ -187,7 +187,7 @@ jobs:
 
       # Create GitHub Release
       - name: Create GitHub Release
-        uses: softprops/action-gh-release@a06a81a03ee405af7f2048a818ed3f03bbf83c7b # v2.5.0
+        uses: softprops/action-gh-release@3d0d9888cb7fd7b750713d6e236d1fcb99157228
         with:
           draft: false
           overwrite_files: true
