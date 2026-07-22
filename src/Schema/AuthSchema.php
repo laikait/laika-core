@@ -22,7 +22,11 @@ use Laika\Core\Abstracts\SchemaAbstract;
 
 class AuthSchema extends SchemaAbstract
 {
+    /** @var string Database Table Name */
     protected string $table = 'authorizations';
+
+    /** @var string Database Connection Name */
+    protected string $connection = 'default';
 
     public function up(): void
     {
