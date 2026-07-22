@@ -24,7 +24,11 @@ use Laika\Core\Abstracts\SchemaAbstract;
 
 class OptionSchema extends SchemaAbstract
 {
+    /** @var string Database Table Name */
     protected string $table = 'options';
+
+    /** @var string Database Connection Name */
+    protected string $connection = 'default';
 
     public function up(): void
     {

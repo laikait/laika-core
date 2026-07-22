@@ -22,7 +22,11 @@ use Laika\Core\Abstracts\SchemaAbstract;
 
 class ActivitySchema extends SchemaAbstract
 {
+    /** @var string Database Table Name */
     protected string $table = 'activities';
+
+    /** @var string Database Connection Name */
+    protected string $connection = 'default';
 
     public function up(): void
     {

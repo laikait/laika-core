@@ -32,6 +32,9 @@ class OptionModel
     /** @var string Option Value Column */
     private string $value = 'op_value';
 
+    /** @var string Database Connection Name */
+    protected string $connection = 'default';
+
     /** @var array cached */
     private array $cached = [];
 
