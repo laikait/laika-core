@@ -39,6 +39,7 @@
         "laikait/laika-shield": "^1",
         "laikait/laika-route": "^1",
         "laikait/laika-cli": "^1",
+        "laikait/laika-auth": "^1",
         "twig/twig": "^3",
         "firebase/php-jwt": "^7",
         "aws/aws-sdk-php": "^3.275",
