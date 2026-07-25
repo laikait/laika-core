@@ -113,15 +113,16 @@ final class Activity
     /**
      * Check Change Logs
      * @param array $existing Existing Value
+     * @param ?array $inputs New Data
      * @return array
      */
-    public function changelog(array $existing): array
+    public function changelog(array $existing, ?array $inputs = null): array
     {
         $changelog = [];
         // Return if Empty
         if (empty($existing)) return $changelog;
 
-        $inputs = Request::inputs();
+        $inputs = $inputs ?: Request::inputs();
 
         // Check Changes
         foreach ($existing as $k => $v) {
@@ -139,6 +140,7 @@ final class Activity
      * Insert Activities
      * @param ?string $connection Connection Name
      * @return int
+     * @throws LogException
      */
     public function insert(?string $connection = null): int
     {
@@ -157,7 +159,7 @@ final class Activity
                 $effected += count($logs);
             }
         } catch (\Throwable $th) {
-            if (DEBUG) throw new LogException("Log Failed: {$th->getMessage()}");
+            throw new LogException("Log Failed: {$th->getMessage()}");
         }
 
         // Reset
