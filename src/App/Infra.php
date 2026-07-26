@@ -158,4 +158,14 @@ class Infra
         Resource::register('hooks', APP_PATH . '/lf-hooks');
         return Resource::getResources('hooks');
     }
+
+    /**
+     * Get Route Files
+     * @return string[]
+     */
+    public function getRouteFiles(): array
+    {
+        Resource::register('routes', APP_PATH . '/lf-routes');
+        return Resource::getResources('routes');
+    }
 }
