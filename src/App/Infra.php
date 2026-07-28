@@ -12,6 +12,7 @@ declare(strict_types=1);
 
 namespace Laika\Core\App;
 
+use RuntimeException;
 use Laika\Relay\Relay;
 use Laika\Service\Directory;
 use Laika\Core\Abstracts\SchemaAbstract;
@@ -79,6 +80,7 @@ class Infra
     /**
      * Get Pipeline Classes
      * @return array
+     * @throws RuntimeException
      */
     public function getPipelineClasses(): array
     {
@@ -87,7 +89,7 @@ class Infra
         $list = [];
         foreach ($classes as $class) {
             if (!is_subclass_of($class, PipelineInterface::class)) {
-                throw new \RuntimeException("{$class} is not a child class of " . PipelineInterface::class);
+                throw new RuntimeException("{$class} is not a child class of " . PipelineInterface::class);
             }
             $list[] = $class;
         }
@@ -98,6 +100,7 @@ class Infra
     /**
      * Get Filre Classes
      * @return array
+     * @throws RuntimeException
      */
     public function getFilterClasses(): array
     {
@@ -106,7 +109,7 @@ class Infra
         $list = [];
         foreach ($classes as $class) {
             if (!is_subclass_of($class, FilterInterface::class)) {
-                throw new \RuntimeException("{$class} is not a child class of " . FilterInterface::class);
+                throw new RuntimeException("{$class} is not a child class of " . FilterInterface::class);
             }
             $list[] = $class;
         }
