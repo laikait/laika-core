@@ -43,12 +43,21 @@ final class Resource
             throw new ResourceException("Invalid Resource Class Base Namespace [{$base_namespace}]");
         }
 
-        if ($base_namespace) $base_namespace = trim($base_namespace, '\\');
         $path = realpath($path);
         $name = strtolower($name);
 
-        foreach (glob(realpath($path) . '/*.php') as $f) {
-            self::$resources[$name][] = $base_namespace ? "{$base_namespace}\\" . pathinfo($f, PATHINFO_FILENAME) : $f;
+        foreach (self::scan($path) as $f) {
+            $f = realpath($f);
+            if ($base_namespace) {
+                $f = str_replace($path, '', $f);
+                $info = pathinfo($f);
+                $base_namespace = trim($base_namespace, '\\');
+                $sub_namespace = trim($info['dirname'], './\\');
+                $namespace = $sub_namespace ? "{$base_namespace}\\{$sub_namespace}" : $base_namespace;
+                self::$resources[$name][] = "{$namespace}\\{$info['filename']}";
+            } else {
+                self::$resources[$name][] = $f;
+            }
         }
     }
 
@@ -60,5 +69,29 @@ final class Resource
     public static function getResources(?string $name = null): array
     {
         return $name ? (self::$resources[strtolower($name)] ?? []) : self::$resources;
+    }
+
+    ####################################################################################
+    /*================================= INTERNAL API =================================*/
+    ####################################################################################
+    /**
+     * Scan Directory for All php Files
+     * @param string $dir
+     * @return array
+     */
+    public static function scan(string $dir): array
+    {
+        // Scan for PHP files in the current folder
+        $files = glob($dir . '/*.php') ?: [];
+        
+        // Find all subdirectories
+        $subDirs = glob($dir . '/*', GLOB_ONLYDIR | GLOB_NOSORT) ?: [];
+        
+        // Recurse through subdirectories and merge arrays
+        foreach ($subDirs as $subDir) {
+            $files = array_merge($files, self::scan($subDir));
+        }
+        
+        return $files;
     }
 }

@@ -52,6 +52,9 @@ class Infra
         $list = [];
 
         foreach ($classes as $t => $c) {
+            if (!class_exists($c)) {
+                throw new RuntimeException("Invalid schema class [{$c}]");
+            }
             if (!is_subclass_of($c, SchemaAbstract::class)) {
                 throw new SchemaException("{$c} is not a child class of " . SchemaAbstract::class);
             }
@@ -88,6 +91,9 @@ class Infra
         $classes = Resource::getResources('pipelines');
         $list = [];
         foreach ($classes as $class) {
+            if (!class_exists($class)) {
+                throw new RuntimeException("Invalid pipeline class [{$class}]");
+            }
             if (!is_subclass_of($class, PipelineInterface::class)) {
                 throw new RuntimeException("{$class} is not a child class of " . PipelineInterface::class);
             }
@@ -108,6 +114,9 @@ class Infra
         $classes = Resource::getResources('filters');
         $list = [];
         foreach ($classes as $class) {
+            if (!class_exists($class)) {
+                throw new RuntimeException("Invalid filter class [{$class}]");
+            }
             if (!is_subclass_of($class, FilterInterface::class)) {
                 throw new RuntimeException("{$class} is not a child class of " . FilterInterface::class);
             }
