@@ -220,10 +220,10 @@ function repo_dir(string $name): string
 /**
  * Get Option Value
  * @param string $key
- * @param ?string $default
+ * @param null|string|int $default
  * @return ?string
  */
-function option(string $key, ?string $default = null): string
+function option(string $key, null|string|int $default = null): string
 {
     static $options = [];
     if (!isset($options[$key])) $options[$key] = Option::single($key, $default);
