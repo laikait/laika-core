@@ -564,15 +564,15 @@ function match_url(string $named): bool
 
 /**
  * Make API Data
- * @param bool $success
+ * @param bool $status
  * @param int|string $message
  * @param array $data
  * @return array
  */
-function response(bool $success, int|string $message, array $data = []): array
+function response(bool $status, int|string $message, array $data = []): array
 {
     return [
-        'success' => $success,
+        'status' => $status,
         'message' => $message,
         'data' => $data
     ];
