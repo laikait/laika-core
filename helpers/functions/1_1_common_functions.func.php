@@ -226,7 +226,7 @@ function repo_dir(string $name): string
 function option(string $key, null|string|int $default = null): string
 {
     static $options = [];
-    if (!isset($options[$key])) $options[$key] = Option::single($key, $default);
+    if (!isset($options[$key])) $options[$key] = Option::single($key, $default ? (string) $default : null);
     return $options[$key];
 }
 
