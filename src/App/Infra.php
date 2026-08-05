@@ -12,11 +12,13 @@ declare(strict_types=1);
 
 namespace Laika\Core\App;
 
+use RuntimeException;
 use Laika\Relay\Relay;
 use Laika\Service\Directory;
-use Laika\Core\Exceptions\SchemaException;
 use Laika\Core\Abstracts\SchemaAbstract;
-use Loader;
+use Laika\Core\Exceptions\SchemaException;
+use Laika\Route\Interfaces\FilterInterface;
+use Laika\Route\Interfaces\PipelineInterface;
 
 // Application Infrastructure Info
 class Infra
@@ -50,6 +52,9 @@ class Infra
         $list = [];
 
         foreach ($classes as $t => $c) {
+            if (!class_exists($c)) {
+                throw new RuntimeException("Invalid schema class [{$c}]");
+            }
             if (!is_subclass_of($c, SchemaAbstract::class)) {
                 throw new SchemaException("{$c} is not a child class of " . SchemaAbstract::class);
             }
@@ -78,13 +83,22 @@ class Infra
     /**
      * Get Pipeline Classes
      * @return array
+     * @throws RuntimeException
      */
     public function getPipelineClasses(): array
     {
         Resource::register('pipelines', APP_PATH . '/lf-app/Pipeline', 'App\\Pipeline');
         $classes = Resource::getResources('pipelines');
         $list = [];
-        foreach ($classes as $class) $list[] = $class;
+        foreach ($classes as $class) {
+            if (!class_exists($class)) {
+                throw new RuntimeException("Invalid pipeline class [{$class}]");
+            }
+            if (!is_subclass_of($class, PipelineInterface::class)) {
+                throw new RuntimeException("{$class} is not a child class of " . PipelineInterface::class);
+            }
+            $list[] = $class;
+        }
         ksort($list);
         return $list;
     }
@@ -92,13 +106,22 @@ class Infra
     /**
      * Get Filre Classes
      * @return array
+     * @throws RuntimeException
      */
     public function getFilterClasses(): array
     {
         Resource::register('filters', APP_PATH . '/lf-app/Filter', 'App\\Filter');
         $classes = Resource::getResources('filters');
         $list = [];
-        foreach ($classes as $class) $list[] = $class;
+        foreach ($classes as $class) {
+            if (!class_exists($class)) {
+                throw new RuntimeException("Invalid filter class [{$class}]");
+            }
+            if (!is_subclass_of($class, FilterInterface::class)) {
+                throw new RuntimeException("{$class} is not a child class of " . FilterInterface::class);
+            }
+            $list[] = $class;
+        }
         ksort($list);
         return $list;
     }

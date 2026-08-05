@@ -214,19 +214,66 @@ function repo_dir(string $name): string
     return realpath(APP_PATH . '/vendor/' . trim($name, '/'));
 }
 
+/**
+ * Set File/Directory Permission
+ * @param string $path File/Directory Path
+ * @param int $mode Permission Mode. Default is 0755
+ * @return bool
+ */
+function setPermission(string $path, int $mode = 0755): bool
+{
+    if (!file_exists($path)) {
+        return false;
+    }
+
+    if (stripos(PHP_OS, 'WIN') === 0) {
+        $readonly = !($mode & 0200);
+        exec('attrib ' . ($readonly ? '+R' : '-R') . ' ' . escapeshellarg($path));
+        return true;
+    }
+
+    return chmod($path, $mode);
+}
+
+/**
+ * Set File/Directory Permission Recursively
+ * @param string $path File/Directory Path
+ * @param int $dirMode Directory Permission Mode. Default is 0755
+ * @param int $fileMode File Permission Mode. Default is 0644
+ * @return bool
+ */
+function setPermissionRecursive(string $path, int $dirMode = 0755, int $fileMode = 0644): bool
+{
+    if (!file_exists($path)) {
+        return false;
+    }
+
+    if (is_dir($path)) {
+        setPermission($path, $dirMode);
+        foreach (scandir($path) as $item) {
+            if ($item === '.' || $item === '..') continue;
+            setPermissionRecursive($path . DIRECTORY_SEPARATOR . $item, $dirMode, $fileMode);
+        }
+    } else {
+        setPermission($path, $fileMode);
+    }
+
+    return true;
+}
+
 #######################################################################################
 /*================================== OPTION HANDLE ==================================*/
 #######################################################################################
 /**
  * Get Option Value
  * @param string $key
- * @param ?string $default
+ * @param null|string|int $default
  * @return ?string
  */
-function option(string $key, ?string $default = null): string
+function option(string $key, null|string|int $default = null): string
 {
     static $options = [];
-    if (!isset($options[$key])) $options[$key] = Option::single($key, $default);
+    if (!isset($options[$key])) $options[$key] = Option::single($key, $default ? (string) $default : null);
     return $options[$key];
 }
 
@@ -564,15 +611,15 @@ function match_url(string $named): bool
 
 /**
  * Make API Data
- * @param bool $success
+ * @param bool $status
  * @param int|string $message
  * @param array $data
  * @return array
  */
-function response(bool $success, int|string $message, array $data = []): array
+function response(bool $status, int|string $message, array $data = []): array
 {
     return [
-        'success' => $success,
+        'status' => $status,
         'message' => $message,
         'data' => $data
     ];

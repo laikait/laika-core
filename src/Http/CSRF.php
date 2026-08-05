@@ -1,6 +1,6 @@
 <?php
 /**
- * Laika PHP MVC Framework
+ * Laika PHP Framework
  * Author: Showket Ahmed
  * Email: riyadhtayf@gmail.com
  * License: MIT
@@ -19,8 +19,13 @@ defined('APP_PATH') || http_response_code(403) . die('Direct access not allowed.
 
 class CSRF
 {
+    /** @var int TTL */
     protected int $ttl = 3600;
+
+    /** @var bool Bind Fingerprint */
     protected bool $bindFingerprint = true;
+
+    /** @var string Cookie Name */
     protected string $usedCookieName = '_xct';
 
     /**
@@ -73,19 +78,29 @@ class CSRF
 
         [$payload, $signature] = explode('.', $token);
 
+
+        // Validate Payload
         $data = json_decode($this->b64urlDecode($payload), true);
         if (!is_array($data) || !isset($data['exp'])) {
             throw new CSRFException('Invalid CSRF Payload');
         }
 
+        // Validate Signature
+        if (hash_equals($this->b64url(hash_hmac('sha256', "{$payload}", enckey(), true)), $signature) === false) {
+            throw new CSRFException('Invalid CSRF Signature');
+        }
+
+        // Validate Expiration
         if (time() > $data['exp']) {
             throw new CSRFException('Expired CSRF token');
         }
 
+        // Validate Fingerprint
         if ($this->bindFingerprint && ($data['fgp'] ?? '') !== $this->fingerprint()) {
             throw new CSRFException('CSRF Fingerprint Mismatch');
         }
 
+        // Check and Burn Token to prevent replay attacks
         if (!$this->checkAndBurnToken($data['token'] ?? '', $data['exp'])) {
             throw new CSRFException('CSRF Token Already Used');
         }
@@ -106,7 +121,7 @@ class CSRF
             return $_SERVER[$key];
         }
 
-        return $_POST['_csrf'] ?? null;
+        return $_SERVER[$key] ?? $_POST['_csrf'] ?? null;
     }
 
     /**
