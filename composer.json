@@ -38,7 +38,7 @@
         "laikait/laika-session": "^3",
         "laikait/laika-shield": "^1",
         "laikait/laika-route": "^1",
-        "laikait/laika-cli": "^1",
+        "laikait/laika-cli": "^2",
         "laikait/laika-auth": "^1",
         "laikait/laika-queue": "^0",
         "twig/twig": "^3",
