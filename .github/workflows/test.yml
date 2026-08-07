@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - beta
+
   pull_request:
     branches:
       - main
@@ -15,7 +16,7 @@ jobs:
   # 1/ TEST SUITE
   ########################################################
   php-compatibility:
-    name: Run Tests (PHP ${{ matrix.php-version }})
+    name: Validate PHP ${{ matrix.php-version }}
     runs-on: ubuntu-latest
     permissions:
       contents: read
