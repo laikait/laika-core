@@ -1,4 +1,4 @@
-name: Laika Release
+name: Laika Core Version Release
 
 on:
   push:
