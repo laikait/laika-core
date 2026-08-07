@@ -40,7 +40,7 @@
         "laikait/laika-route": "^1",
         "laikait/laika-cli": "^2",
         "laikait/laika-auth": "^1",
-        "laikait/laika-queue": "^0",
+        "laikait/laika-queue": "^1",
         "twig/twig": "^3",
         "firebase/php-jwt": "^7",
         "aws/aws-sdk-php": "^3.275",
@@ -63,7 +63,9 @@
     },
     "config": {
         "allow-plugins": {
-            "dealerdirect/phpcodesniffer-composer-installer": true
+            "dealerdirect/phpcodesniffer-composer-installer": true,
+            "laikait/laika-cli": true,
+            "laikait/laika-queue": true
         }
     }
 }
