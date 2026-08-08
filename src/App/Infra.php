@@ -15,6 +15,7 @@ namespace Laika\Core\App;
 use RuntimeException;
 use Laika\Relay\Relay;
 use Laika\Service\Directory;
+use Laika\Queue\Abstracts\Job;
 use Laika\Core\Abstracts\SchemaAbstract;
 use Laika\Core\Exceptions\SchemaException;
 use Laika\Route\Interfaces\FilterInterface;
@@ -61,6 +62,31 @@ class Infra
             $reflection = new \ReflectionClass($c);
             $obj = $reflection->newInstanceWithoutConstructor();
             $list[$obj->table] = $c;
+        }
+        ksort($list);
+        return $list;
+    }
+
+    /**
+     * Get All Queue Jobs Classes
+     * @return array
+     */
+    public function getQueueJobsClasses(): array
+    {
+        Resource::register('jobs', APP_PATH . '/lf-app/Job', 'App\\Job');
+        $classes = Resource::getResources('jobs');
+        $list = [];
+
+        foreach ($classes as $class) {
+            if (!class_exists($class)) {
+                throw new RuntimeException("Invalid job class [{$class}]");
+            }
+            if (!is_subclass_of($class, Job::class)) {
+                throw new RuntimeException("{$class} is not a child class of " . Job::class);
+            }
+            $reflection = new \ReflectionClass($class);
+            $obj = $reflection->newInstanceWithoutConstructor();
+            $list[] = $class;
         }
         ksort($list);
         return $list;

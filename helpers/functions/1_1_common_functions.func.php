@@ -139,7 +139,7 @@ function enckey(): string
 {
     static $key = null;
     if ($key === null) {
-        $parts = explode('-', base64_decode((string) file_get_contents(APP_PATH . '/lf-storage/.key')));
+        $parts = explode('-', base64_decode((string) file_get_contents(APP_PATH . '/lf-storage/keys/app.key')));
         if (count($parts) != 2) {
             throw new \Exception("Invalid encrypt key detected!");
         }
