@@ -13,7 +13,6 @@ declare(strict_types=1);
 namespace Laika\Core\Storage;
 
 use Laika\Core\Exceptions\ExtensionException;
-use Laika\Service\Config;
 use Redis as PhPRedis;
 use RuntimeException;
 
@@ -55,10 +54,10 @@ class RedisStorage
         }
 
         // Get Config
-        $config         =   Config::get('redis');
-        $this->host     =   $config['host'] ?? '127.0.0.1';
-        $this->port     =   $config['port'] ?? 6379;
-        $this->prefix   =   $config['prefix'] ?? 'laika';
+        $password       =   env('REDIS_PASSWORD', '');
+        $this->host     =   env('REDIS_HOST', '127.0.0.1');
+        $this->port     =   (int) env('REDIS_PORT', 6379);
+        $this->prefix   =   env('REDIS_PREFIX', 'laika');
         $this->expire   =   86400; // 1 Day
 
         $this->client   =   new PhPRedis();
@@ -67,7 +66,7 @@ class RedisStorage
             throw new RuntimeException("Unable to connect to Redis at {$this->host}:{$this->port}");
         }
 
-        if (isset($config['password']) && !$this->client->auth($config['password'])) {
+        if ($password && !$this->client->auth($password)) {
             throw new RuntimeException("Redis authentication failed!");
         }
     }

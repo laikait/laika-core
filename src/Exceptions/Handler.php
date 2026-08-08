@@ -61,7 +61,7 @@ class Handler
      */
     protected function log(Throwable $e): void
     {
-        if (!DEBUG) return;
+        if (!env('DEBUG', true)) return;
 
         $logDir = APP_PATH . '/lf-logs';
         // Create Directory If Not Exists
@@ -142,13 +142,13 @@ class Handler
 
         echo json_encode([
             'message' => 'Application Error!',
-            'exception' => DEBUG ? $e->getMessage() : null,
+            'exception' => env('DEBUG', true) ? $e->getMessage() : null,
         ]);
     }
 
     private function renderHtml(Throwable $e)
     {
-        if (DEBUG) {
+        if (env('DEBUG', true)) {
             $this->renderDebug($e);
             return;
         }

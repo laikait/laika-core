@@ -17,11 +17,14 @@ use Laika\Service\Meta;
 use Laika\Route\Handler;
 use Laika\Service\Asset;
 use Laika\Service\Option;
-use Laika\Service\Config;
 use Laika\Service\Request;
 use Laika\Service\Context;
 use Laika\Session\Session;
 use Laika\Model\Connection;
+
+// env() is defined in helpers/env.php — loaded much earlier (from
+// loader.php, during composer's autoload) since boot-time constants
+// like DEBUG need it before this file is ever reached.
 
 /**
  * Dump Data & Die
@@ -92,7 +95,7 @@ function convert_to_string(mixed $value): string
  */
 function app_name(): string
 {
-    return config('app', 'name', 'Laika Framework');
+    return env('APP_NAME', 'Laika Framework');
 }
 
 
@@ -165,18 +168,6 @@ function named(string $name, array $params = []): string
     $path = $qstring ? "{$path}?{$qstring}" : $path;
     // Return Named Path/URL
     return Url::base() . $path;
-}
-
-/**
- * Config Obejct
- * @param string $name Config Name. Rrequired Argument. Example: app, database etc.
- * @param ?string $key Config Key. Optional Argument. Example: name, version etc.
- * @param mixed $default Default Value if no value found. Optional Argument.
- * @return mixed
- */
-function config(string $name, ?string $key = null, mixed $default = null): mixed
-{
-    return Config::get($name, $key, $default);
 }
 
 /**
@@ -421,7 +412,7 @@ function alert_get(): array
  */
 function page_title(string $title): string
 {
-    return "{$title} | " . config('app', 'name', 'Laika Framework');
+    return "{$title} | " . env('APP_NAME', 'Laika Framework');
 }
 
 /**

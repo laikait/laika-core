@@ -56,7 +56,7 @@ class Template
         // Run Template Engine
         $engine = new Engine($this->templateDirectory);
         $this->twig = new Environment($engine, [
-            'debug' =>  DEBUG,
+            'debug' =>  env('DEBUG', true),
             'cache' =>  $this->cacheDirectory
         ]);
 
