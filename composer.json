@@ -63,9 +63,7 @@
     },
     "config": {
         "allow-plugins": {
-            "dealerdirect/phpcodesniffer-composer-installer": true,
-            "laikait/laika-cli": true,
-            "laikait/laika-queue": true
+            "dealerdirect/phpcodesniffer-composer-installer": true
         }
     }
 }
