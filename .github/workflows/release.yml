@@ -32,11 +32,15 @@ jobs:
       - name: Cache Composer dependencies
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9
         with:
-          path: |
-            vendor
-            ${{ steps.composer-cache.outputs.dir }}
-          key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
-          restore-keys: ${{ runner.os }}-composer-
+          # Only Composer's download cache. Caching "vendor" too would pin the
+          # resolved dependency versions across runs, and this repo ships no
+          # composer.lock, so a restored vendor/ silently overrides resolution.
+          path: ${{ steps.composer-cache.outputs.dir }}
+          # Keyed on composer.json: with no composer.lock in this repo,
+          # hashFiles('**/composer.lock') is an empty string and the key never
+          # changes.
+          key: ${{ runner.os }}-composer-v2-${{ hashFiles('**/composer.json') }}
+          restore-keys: ${{ runner.os }}-composer-v2-
 
       - name: Setup PHP
         uses: shivammathur/setup-php@accd6127cb78bee3e8082180cb391013d204ef9f
