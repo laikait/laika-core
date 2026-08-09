@@ -16,17 +16,10 @@ use Laika\Relay\RelayRegistry;
 use Laika\Relay\CoreProviders;
 use Laika\Relay\ProviderRegistry;
 
-// Define Constants — just the structural ones (a path, a separator); not
-// configuration, so not env()-backed. DEBUG/MEMORY_LIMIT/CLI_MEMORY_LIMIT
-// aren't constants at all anymore — every call site reads env() directly
-// (Laika\Core\Exceptions\Handler, OptionModel, OptionSchema, Template,
-// Laika\Core\System\MemoryManager).
+// Define Constants
 defined('APP_PATH') || define('APP_PATH', realpath(__DIR__ . '/../../../../'));
+defined('DEBUG') || define('DEBUG', true);
 defined('DS') || define('DS', DIRECTORY_SEPARATOR);
-
-// Load .env and define env() — before anything below reads it, and before
-// any consumer package (auth, cli, model, ...) boots.
-require_once __DIR__ . '/env.php';
 
 ####################################################################################
 /*--------------------------------- RELAY LOADER ---------------------------------*/

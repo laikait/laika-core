@@ -61,7 +61,7 @@ class OptionSchema extends SchemaAbstract
                 Option::insert($k, $v);
             }
         } catch (\Throwable $e) {
-            if (env('DEBUG', true)) throw new OptionException("Option Insert Failed. {$e->getMessage()}", (int) $e->getCode(), $e);
+            if (DEBUG) throw new OptionException("Option Insert Failed. {$e->getMessage()}", (int) $e->getCode(), $e);
         }
     }
 }

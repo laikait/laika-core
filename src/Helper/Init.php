@@ -14,7 +14,7 @@ namespace Laika\Core\Helper;
 
 use PDO;
 use PDOException;
-use RuntimeException;
+use Laika\Service\Config;
 use Laika\Model\Connection;
 use Laika\Session\SessionManager;
 
@@ -25,12 +25,6 @@ class Init
 
     /**
      * Connect DB
-     *
-     * The 'default' connection is built from the DB_* environment variables.
-     * Any other named connection must already be registered — via
-     * `Connection::add($config, $name)` — before it's used here; there's no
-     * generic env-var scheme for an arbitrary number of connections.
-     *
      * @param ?string $name Connection Name. Default is 'default'
      * @return void
      */
@@ -42,21 +36,8 @@ class Init
         if (array_key_exists(strtolower($name), self::$connections) && self::$connections[strtolower($name)]) return;
 
         if (!Connection::has($name)) {
-            if (strtolower($name) !== 'default') {
-                throw new RuntimeException(
-                    "Database Connection [{$name}] Is Not Registered. Call Connection::add(\$config, '{$name}') before use."
-                );
-            }
-
             try {
-                Connection::add([
-                    'driver'   => env('DB_DRIVER', 'mysql'),
-                    'host'     => env('DB_HOST', 'localhost'),
-                    'port'     => (int) env('DB_PORT', 3306),
-                    'database' => env('DB_DATABASE', 'test'),
-                    'username' => env('DB_USERNAME', 'root'),
-                    'password' => env('DB_PASSWORD', ''),
-                ], $name);
+                Connection::add(Config::get('database', $name));
             } catch (PDOException $e) {
                 throw new RuntimeException("Framework Failed To Connect [{$name}] Database: " . $e->getMessage());
             }

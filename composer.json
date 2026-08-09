@@ -45,8 +45,7 @@
         "firebase/php-jwt": "^7",
         "aws/aws-sdk-php": "^3.275",
         "filp/whoops": "^2.18",
-        "phpmailer/phpmailer": "^7.0.0",
-        "vlucas/phpdotenv": "^5.6"
+        "phpmailer/phpmailer": "^7.0.0"
     },
     "require-dev": {
         "phpunit/phpunit": "^10.0",

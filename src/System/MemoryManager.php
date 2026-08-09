@@ -19,21 +19,24 @@ final class MemoryManager
     /** @var bool $monitorRegistered */
     private static bool $monitorRegistered = false;
 
+    public function __construct()
+    {
+        if (!defined('MEMORY_LIMIT')) define('MEMORY_LIMIT', '256M');
+        if (!defined('CLI_MEMORY_LIMIT')) define('CLI_MEMORY_LIMIT', '256M');
+    }
+
     /**
      * Apply Memory Limit
      * @return void
      */
     public function apply(): void
     {
-        $memoryLimit    = (string) env('MEMORY_LIMIT', '256M');
-        $cliMemoryLimit = (string) env('CLI_MEMORY_LIMIT', '256M');
-
-        // Check Arguments are Valid
-        if (!preg_match('/^\d+[kmg]$/i', $memoryLimit)) {
-            throw new \InvalidArgumentException("MEMORY_LIMIT Has Invalid Value: Valid Format: '256M', '512K', '1G'.");
+        // Check Argumentrs are Valid
+        if (!preg_match('/^\d+[kmg]$/i', MEMORY_LIMIT)) {
+            throw new \InvalidArgumentException("MEMORY_LIMIT Constant Has Invalid Value: Valid Format: '256M', '512K', '1G'.");
         }
-        if (!preg_match('/^\d+[kmg]$/i', $cliMemoryLimit)) {
-            throw new \InvalidArgumentException("CLI_MEMORY_LIMIT Has Invalid Value: Valid Format: '256M', '512K', '1G'.");
+        if (!preg_match('/^\d+[kmg]$/i', CLI_MEMORY_LIMIT)) {
+            throw new \InvalidArgumentException("CLI_MEMORY_LIMIT Constant Has Invalid Value: Valid Format: '256M', '512K', '1G'.");
         }
 
         $current = ini_get('memory_limit');
@@ -41,7 +44,7 @@ final class MemoryManager
             return;
         }
 
-        $target = $this->isCli() ? $cliMemoryLimit : $memoryLimit;
+        $target = $this->isCli() ? CLI_MEMORY_LIMIT : MEMORY_LIMIT;
 
         $this->setMemoryLimitSafely($target);
         return;

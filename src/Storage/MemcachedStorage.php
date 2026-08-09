@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace Laika\Core\Storage;
 
+use Laika\Service\Config;
 use Memcached as PhPMemcached;
 use Laika\Core\Exceptions\ExtensionException;
 
@@ -54,16 +55,15 @@ class MemcachedStorage
         }
 
         // Get Config
-        $username       =   env('MEMCACHED_USERNAME', '');
-        $password       =   env('MEMCACHED_PASSWORD', '');
-        $this->host     =   env('MEMCACHED_HOST', '127.0.0.1');
-        $this->port     =   (int) env('MEMCACHED_PORT', 11211);
-        $this->prefix   =   env('MEMCACHED_PREFIX', 'laika');
+        $config =   Config::get('memcached');
+        $this->host     =   $config['host'] ?? '127.0.0.1';
+        $this->port     =   (int) ($config['port'] ?? 11211);
+        $this->prefix   =   $config['prefix'] ?? 'laika';
         $this->expire   =   86400; // 1 Day
         $this->client   =   new PhPMemcached();
 
 
-        // Avoid adding duplicate servers if this constructor runs multiple times
+        // Avoid adding duplicate servers if config() is called multiple times
         $servers = $this->client->getServerList();
         if (empty($servers)) {
             $this->client->addServer($this->host, $this->port);
@@ -72,9 +72,9 @@ class MemcachedStorage
         $this->client->setOption(PhPMemcached::OPT_PREFIX_KEY, $this->prefix . ':');
 
         // SASL auth (needs binary protocol)
-        if ($username && $password) {
+        if (isset($config['username'], $config['password']) && $config['username'] && $config['password']) {
             $this->client->setOption(PhPMemcached::OPT_BINARY_PROTOCOL, true);
-            $this->client->setSaslAuthData($username, $password);
+            $this->client->setSaslAuthData($config['username'], $config['password']);
         }
     }
 

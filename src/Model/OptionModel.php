@@ -86,7 +86,7 @@ class OptionModel
             });
             return true;
         } catch (\Throwable $e) {
-            if (env('DEBUG', true)) throw new OptionException("Option Insert Failed. {$e->getMessage()}", (int) $e->getCode(), $e);
+            if (DEBUG) throw new OptionException("Option Insert Failed. {$e->getMessage()}", (int) $e->getCode(), $e);
         }
         return false;
     }
@@ -113,7 +113,7 @@ class OptionModel
             });
             return true;
         } catch (\Throwable $e) {
-            if (env('DEBUG', true)) throw new OptionException("Option Update Failed. {$e->getMessage()}", (int) $e->getCode(), $e);
+            if (DEBUG) throw new OptionException("Option Update Failed. {$e->getMessage()}", (int) $e->getCode(), $e);
         }
         return false;
     }

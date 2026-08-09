@@ -12,7 +12,7 @@ declare(strict_types=1);
 
 namespace Laika\Core\Helper;
 
-use Laika\Service\{File, Url, MimeType};
+use Laika\Service\{Config, File, Url, MimeType};
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
 use PHPMailer\PHPMailer\SMTP;
@@ -21,7 +21,7 @@ use Throwable;
 class Sendmail
 {
     /** @var ?PHPMailer $mailer The PHPMailer instance */
-    protected ?PHPMailer $mailer = null;
+    protected ?PHPMailer $mailer;
 
     /** @var array $config Mail configuration settings */
     private array $config;
@@ -44,18 +44,7 @@ class Sendmail
         $this->mailer = null;
 
         // Set Config
-        $this->config = $config ?? [
-            'driver'     => env('MAIL_DRIVER', 'sendmail'),
-            'charset'    => env('MAIL_CHARSET', 'UTF-8'),
-            'from_email' => env('MAIL_FROM_EMAIL'),
-            'from_name'  => env('MAIL_FROM_NAME'),
-            'host'       => env('MAIL_HOST'),
-            'username'   => env('MAIL_USERNAME'),
-            'password'   => env('MAIL_PASSWORD'),
-            'auth'       => env('MAIL_AUTH', true),
-            'port'       => (int) env('MAIL_PORT', 587),
-            'secure'     => env('MAIL_SECURE', 'ssl'),
-        ];
+        $this->config = $config ?? Config::get('mail');
 
         // Check Driver is Set in Mail Config File
         if (!isset($this->config['driver'])) {
@@ -73,10 +62,10 @@ class Sendmail
 
         // Set Charset
         $this->setCharset($this->config['charset'] ?? 'UTF-8');
-
+        
         // Set Sender Info
-        $from_email = (!empty($this->config['from_email']) && filter_var($this->config['from_email'], FILTER_VALIDATE_EMAIL)) ? $this->config['from_email'] : Url::host();
-        $from_name = $this->config['from_name'] ?? env('APP_NAME', 'Laika Framework');
+        $from_email = (empty($this->config['from_email']) && filter_var($this->config['from_email'], FILTER_VALIDATE_EMAIL)) ? Url::host() : $this->config['from_email'];
+        $from_name = $this->config['from_name'] ?? config('app', 'name', 'Laika Framework');
         $this->addFrom($from_email, $from_name);
 
         return $this;
