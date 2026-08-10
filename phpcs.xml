@@ -13,17 +13,19 @@
             Every package here requires PHP >= 8.1, so the old behaviour is unreachable.
         -->
         <exclude name="PHPCompatibility.Variables.NewUniformVariableSyntax"/>
+
+        <!--
+            "resource" is only a *soft* reserved word (PHP 7.0) and was never
+            enforced. Renaming Laika\Core\App\Resource would break the
+            Laika\Service\Resource service, Infra, helpers/loader.php, the
+            resource:* CLI commands and the docs. Not worth it for a non-rule.
+        -->
+        <exclude name="PHPCompatibility.Keywords.ForbiddenNames.resourceFound"/>
     </rule>
 
     <!-- Define target PHP version -->
     <config name="testVersion" value="8.1-8.5"/>
-    <!--
-        "resource" is only a *soft* reserved word (PHP 7.0) and was never
-        enforced. Renaming Laika\Core\App\Resource would break the
-        Laika\Service\Resource facade, Infra, helpers/loader.php, the
-        resource:* CLI commands and the docs. Not worth it for a non-rule.
-    -->
-    <exclude name="PHPCompatibility.Keywords.ForbiddenNames.resourceFound"/>
+
     <!-- Report every level, and fail the build on warnings too -->
     <arg name="colors"/>
     <arg value="sp"/>
