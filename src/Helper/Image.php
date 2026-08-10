@@ -41,9 +41,6 @@ class Image
     public function path(string $path): static // Must Run First
     {
         // Destroy previous image if present
-        if ($this->image) {
-            imagedestroy($this->image);
-        }
         $this->reset();
 
         if (!file_exists($path)) {
@@ -232,7 +229,7 @@ class Image
         } else {
             $this->mergeWithAlpha($this->image, $logo, $x, $y, $opacity);
         }
-        imagedestroy($logo);
+        unset($logo);
 
         return $this;
     }
@@ -377,7 +374,6 @@ class Image
             default                   => throw new RuntimeException("Cannot output unsupported image type: {$this->mime}")
         };
 
-        imagedestroy($this->image);
         $this->reset();
     }
 
@@ -438,10 +434,6 @@ class Image
     {
         // Check Resources
         $this->checkResources();
-
-        if ($this->image) {
-            imagedestroy($this->image);
-        }
         $this->image = null;
     }
 
@@ -484,9 +476,6 @@ class Image
      */
     protected function reset(): void
     {
-        if ($this->image) {
-            imagedestroy($this->image);
-        }
         $this->path   = null;
         $this->mime   = null;
         $this->width  = null;
@@ -534,6 +523,6 @@ class Image
         // Merge the temp canvas back onto the destination with the desired opacity
         imagecopymerge($dst, $cut, $x, $y, 0, 0, $w, $h, $opacity);
 
-        imagedestroy($cut);
+        unset($cut);
     }
 }

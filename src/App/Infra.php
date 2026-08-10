@@ -12,12 +12,12 @@ declare(strict_types=1);
 
 namespace Laika\Core\App;
 
-use RuntimeException;
 use Laika\Relay\Relay;
 use Laika\Service\Directory;
 use Laika\Queue\Abstracts\Job;
 use Laika\Core\Abstracts\SchemaAbstract;
 use Laika\Core\Exceptions\SchemaException;
+use Laika\Core\Exceptions\ResourceException;
 use Laika\Route\Interfaces\FilterInterface;
 use Laika\Route\Interfaces\PipelineInterface;
 
@@ -26,130 +26,76 @@ class Infra
 {
     /**
      * Get All Model Classes
-     * @return array
+     * @return array Table name => Model class
      */
     public function getModelClasses(): array
     {
-        Resource::register('models', APP_PATH . '/lf-app/Model', 'App\\Model');
-        $classes = Resource::getResources('models');
-        $list = [];
-        foreach ($classes as $class) {
-            $reflection = new \ReflectionClass($class);
-            $obj = $reflection->newInstanceWithoutConstructor();
-            $list[$obj->table] = $class;
-        }
-        ksort($list);
-        return $list;
+        return $this->discover('models', null, 'table');
     }
 
     /**
      * Get All Schema Classes
-     * @return array
+     * @return array Table name => Schema class
+     * @throws SchemaException
      */
     public function getSchemaClasses(): array
     {
-        Resource::register('schemas', APP_PATH . '/lf-app/Schema', 'App\\Schema');
-        $classes = Resource::getResources('schemas');
-        $list = [];
-
-        foreach ($classes as $t => $c) {
-            if (!class_exists($c)) {
-                throw new RuntimeException("Invalid schema class [{$c}]");
-            }
-            if (!is_subclass_of($c, SchemaAbstract::class)) {
-                throw new SchemaException("{$c} is not a child class of " . SchemaAbstract::class);
-            }
-            $reflection = new \ReflectionClass($c);
-            $obj = $reflection->newInstanceWithoutConstructor();
-            $list[$obj->table] = $c;
-        }
-        ksort($list);
-        return $list;
+        return $this->discover('schemas', SchemaAbstract::class, 'table', SchemaException::class);
     }
 
     /**
      * Get All Queue Jobs Classes
-     * @return array
+     * @return string[]
+     * @throws ResourceException
      */
     public function getQueueJobsClasses(): array
     {
-        Resource::register('jobs', APP_PATH . '/lf-app/Job', 'App\\Job');
-        $classes = Resource::getResources('jobs');
-        $list = [];
-
-        foreach ($classes as $class) {
-            if (!class_exists($class)) {
-                throw new RuntimeException("Invalid job class [{$class}]");
-            }
-            if (!is_subclass_of($class, Job::class)) {
-                throw new RuntimeException("{$class} is not a child class of " . Job::class);
-            }
-            $reflection = new \ReflectionClass($class);
-            $obj = $reflection->newInstanceWithoutConstructor();
-            $list[] = $class;
-        }
-        ksort($list);
-        return $list;
+        return $this->discover('jobs', Job::class);
     }
 
     /**
      * Get Controller Classes
-     * @return array
+     * @return string[]
+     * @throws ResourceException
      */
     public function getControllerClasses(): array
     {
-        Resource::register('controller', APP_PATH . '/lf-app/Controller', 'App\\Controller');
-        $classes = Resource::getResources('controller');
-        $list = [];
-        foreach ($classes as $class) $list[] = $class;
-        ksort($list);
-        return $list;
+        return $this->discover('controllers');
     }
 
     /**
      * Get Pipeline Classes
-     * @return array
-     * @throws RuntimeException
+     * @return string[]
+     * @throws ResourceException
      */
     public function getPipelineClasses(): array
     {
-        Resource::register('pipelines', APP_PATH . '/lf-app/Pipeline', 'App\\Pipeline');
-        $classes = Resource::getResources('pipelines');
-        $list = [];
-        foreach ($classes as $class) {
-            if (!class_exists($class)) {
-                throw new RuntimeException("Invalid pipeline class [{$class}]");
-            }
-            if (!is_subclass_of($class, PipelineInterface::class)) {
-                throw new RuntimeException("{$class} is not a child class of " . PipelineInterface::class);
-            }
-            $list[] = $class;
-        }
-        ksort($list);
-        return $list;
+        return $this->discover('pipelines', PipelineInterface::class);
     }
 
     /**
-     * Get Filre Classes
-     * @return array
-     * @throws RuntimeException
+     * Get Filter Classes
+     * @return string[]
+     * @throws ResourceException
      */
     public function getFilterClasses(): array
     {
-        Resource::register('filters', APP_PATH . '/lf-app/Filter', 'App\\Filter');
-        $classes = Resource::getResources('filters');
-        $list = [];
-        foreach ($classes as $class) {
-            if (!class_exists($class)) {
-                throw new RuntimeException("Invalid filter class [{$class}]");
-            }
-            if (!is_subclass_of($class, FilterInterface::class)) {
-                throw new RuntimeException("{$class} is not a child class of " . FilterInterface::class);
-            }
-            $list[] = $class;
-        }
-        ksort($list);
-        return $list;
+        return $this->discover('filters', FilterInterface::class);
+    }
+
+    /**
+     * Get Classes For Any Registered Resource
+     *
+     * The extension point for resource types declared in composer.json
+     * or a package's composer `extra.laika.resources`.
+     * @param string $name Resource Name
+     * @param ?string $contract Override the contract declared by the resource
+     * @return string[]
+     * @throws ResourceException
+     */
+    public function get(string $name, ?string $contract = null): array
+    {
+        return $this->discover($name, $contract);
     }
 
     /**
@@ -195,7 +141,7 @@ class Infra
      */
     public function getFunctionFiles(): array
     {
-        return Resource::getResources('functions');
+        return Resource::getFiles('functions');
     }
 
     /**
@@ -204,8 +150,7 @@ class Infra
      */
     public function getHookFiles(): array
     {
-        Resource::register('hooks', APP_PATH . '/lf-hooks');
-        return Resource::getResources('hooks');
+        return Resource::getFiles('hooks');
     }
 
     /**
@@ -214,7 +159,46 @@ class Infra
      */
     public function getRouteFiles(): array
     {
-        Resource::register('routes', APP_PATH . '/lf-routes');
-        return Resource::getResources('routes');
+        return Resource::getFiles('routes');
+    }
+
+    ############################################################################
+    /*============================= INTERNAL API =============================*/
+    ############################################################################
+
+    /**
+     * Resolve, Validate and Shape a Resource Class List
+     * @param string $name Resource Name
+     * @param ?string $contract Interface or Base Class Every Class Must Satisfy
+     * @param ?string $keyBy Property to key the result by. Null returns a plain list
+     * @param ?string $exception Exception class to rethrow resource errors as
+     * @return array
+     * @throws ResourceException
+     */
+    private function discover(string $name, ?string $contract = null, ?string $keyBy = null, ?string $exception = null): array
+    {
+        try {
+            $classes = Resource::getClasses($name, $contract);
+        } catch (ResourceException $e) {
+            if ($exception === null) {
+                throw $e;
+            }
+            throw new $exception($e->getMessage());
+        }
+
+        // Plain list
+        if ($keyBy === null) {
+            sort($classes);
+            return $classes;
+        }
+
+        // Keyed by a declared property, e.g. the model/schema table name
+        $list = [];
+        foreach ($classes as $class) {
+            $obj = (new \ReflectionClass($class))->newInstanceWithoutConstructor();
+            $list[$obj->{$keyBy}] = $class;
+        }
+        ksort($list);
+        return $list;
     }
 }

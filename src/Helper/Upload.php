@@ -70,7 +70,6 @@ class Upload
             if (isset($options['processimage']) && $options['processimage']) {
                 $finfo = finfo_open(FILEINFO_MIME_TYPE); 
                 $mime  = strtolower(finfo_file($finfo, $destination));
-                finfo_close($finfo);
 
                 if (str_starts_with($mime, 'image/')) {
                     $img = new Image($destination);
@@ -134,7 +133,6 @@ class Upload
                 if ($processImage) {
                     $finfo = finfo_open(FILEINFO_MIME_TYPE);      // safe here — file already moved
                     $mime  = strtolower(finfo_file($finfo, $destination));
-                    finfo_close($finfo);
 
                     if (str_starts_with($mime, 'image/')) {
                         $img = new Image($destination);
@@ -183,7 +181,6 @@ class Upload
         if ($allowedMime && $tmp && is_file($tmp)) {
             $finfo = finfo_open(FILEINFO_MIME_TYPE);
             $mime  = strtolower(finfo_file($finfo, $tmp));
-            finfo_close($finfo);
 
             if (!in_array($mime, $allowedMime)) {
                 return "MIME type {$mime} not allowed";
