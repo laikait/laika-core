@@ -89,10 +89,10 @@ class Key
     /**
      * Validdate Key
      * @param int $byte Default is 32
-     * @return true
+     * @return bool
      * @throws AppKeyException
      */
-    public function validate(int $byte = 32): true
+    public function validate(int $byte = 32): bool
     {
         try {
             $key = $this->get();
