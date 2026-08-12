@@ -16,6 +16,7 @@ use Laika\Service\CSRF;
 use Laika\Service\Meta;
 use Laika\Route\Handler;
 use Laika\Service\Asset;
+use Laika\Service\AppKey;
 use Laika\Service\Option;
 use Laika\Service\Config;
 use Laika\Service\Request;
@@ -129,23 +130,6 @@ function do_hook(string $filter, mixed ...$args): void
 function apply_hook(string $filter, mixed $value = null, mixed ...$args): mixed
 {
     return Hook::apply($filter, $value, ...$args);
-}
-
-/**
- * Get Encrypt Key
- * @return string
- */
-function enckey(): string
-{
-    static $key = null;
-    if ($key === null) {
-        $parts = explode('-', base64_decode((string) file_get_contents(APP_PATH . '/lf-storage/keys/app.key')));
-        if (count($parts) != 2) {
-            throw new \Exception("Invalid encrypt key detected!");
-        }
-        $key = $parts[1];
-    }
-    return $key;
 }
 
 /**

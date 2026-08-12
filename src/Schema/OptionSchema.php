@@ -19,8 +19,8 @@ defined('APP_PATH') || http_response_code(403) . die('403 Direct Access Denied!'
 use Laika\Service\Option;
 use Laika\Model\Schema\Schema;
 use Laika\Model\Schema\Blueprint;
+use Laika\Model\Contract\SchemaAbstract;
 use Laika\Core\Exceptions\OptionException;
-use Laika\Core\Abstracts\SchemaAbstract;
 
 class OptionSchema extends SchemaAbstract
 {

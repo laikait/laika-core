@@ -13,6 +13,7 @@ declare(strict_types=1);
 namespace Laika\Core\Http;
 use Laika\Service\Cookie;
 use Laika\Service\Visitor;
+use Laika\Service\AppKey;
 use Laika\Core\Exceptions\CSRFException;
 
 defined('APP_PATH') || http_response_code(403) . die('Direct access not allowed.');
@@ -59,7 +60,7 @@ class CSRF
             'fgp'   =>  $this->fingerprint(),
         ]));
 
-        $signature = $this->b64url(hash_hmac('sha256', "{$payload}", enckey(), true));
+        $signature = $this->b64url(hash_hmac('sha256', "{$payload}", AppKey::get(), true));
 
         return "{$payload}.{$signature}";
     }
@@ -86,7 +87,7 @@ class CSRF
         }
 
         // Validate Signature
-        if (hash_equals($this->b64url(hash_hmac('sha256', "{$payload}", enckey(), true)), $signature) === false) {
+        if (hash_equals($this->b64url(hash_hmac('sha256', "{$payload}", AppKey::get(), true)), $signature) === false) {
             throw new CSRFException('Invalid CSRF Signature');
         }
 

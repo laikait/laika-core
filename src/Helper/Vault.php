@@ -13,7 +13,9 @@ declare(strict_types=1);
 namespace Laika\Core\Helper;
 
 use RuntimeException;
-use Laika\Core\Exceptions\{ExtensionException, ConfigException};
+use Laika\Service\AppKey;
+use Laika\Core\Exceptions\ConfigException;
+use Laika\Core\Exceptions\ExtensionException;
 
 class Vault
 {
@@ -45,7 +47,7 @@ class Vault
         $this->cipher    = 'aes-256-gcm';
         $this->tagLength = 16;
 
-        $this->key = hash('sha256', enckey(), true);
+        $this->key = hash('sha256', AppKey::get(), true);
 
         $ivLength = openssl_cipher_iv_length($this->cipher);
         if ($ivLength === false) {
