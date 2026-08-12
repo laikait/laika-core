@@ -15,7 +15,7 @@ namespace Laika\Core\App;
 use Laika\Relay\Relay;
 use Laika\Service\Directory;
 use Laika\Queue\Abstracts\Job;
-use Laika\Core\Abstracts\SchemaAbstract;
+use Laika\Model\Contract\SchemaAbstract;
 use Laika\Core\Exceptions\SchemaException;
 use Laika\Core\Exceptions\ResourceException;
 use Laika\Route\Interfaces\FilterInterface;

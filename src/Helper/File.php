@@ -139,16 +139,16 @@ class File
 
     /**
      * Write Content in File
-     * @param string $str Required Argument
+     * @param string $content Required Argument
      * @param string $file
      * @return bool
      */
-    public function write(string $str, string $file): bool
+    public function write(string $content, string $file): bool
     {
         // Make Directory if Not Exists
         Directory::make($this->path($file));
         // Write Contents
-        return file_put_contents($file, $str) !== false;
+        return file_put_contents($file, $content) !== false;
     }
 
     /**

@@ -16,6 +16,7 @@ use Firebase\JWT\JWT;
 use Firebase\JWT\Key;
 use Laika\Service\Url;
 use Laika\Service\Vault;
+use Laika\Service\AppKey;
 
 /*======================================================================================*/
 /*================================= MOVED TO GENERATOR =================================*/
@@ -45,7 +46,7 @@ class Token
 
     public function __construct()
     {
-        $this->secret = enckey();
+        $this->secret = AppKey::get();
         $this->time = time();
         $this->issuer = Url::host();
         $this->algorithm = 'HS256';
