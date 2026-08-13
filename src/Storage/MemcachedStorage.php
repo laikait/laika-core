@@ -13,19 +13,21 @@ declare(strict_types=1);
 
 namespace Laika\Core\Storage;
 
-use Laika\Service\Config;
-use Memcached as PhPMemcached;
-use Laika\Core\Exceptions\ExtensionException;
+use Memcached;
+use Laika\Core\Storage\Connection\MemcachedConnection;
 
 /**
  * Memcached Storage
+ *
+ * addServer() Does Not Connect. A Dead Server is Not Reported Here,
+ * It Surfaces Later as false From set() and null From get().
  */
 class MemcachedStorage
 {
     /**
-     * @var PhPMemcached
+     * @var Memcached
      */
-    protected PhPMemcached $client;
+    protected Memcached $client;
 
     /**
      * @var string $host
@@ -38,7 +40,7 @@ class MemcachedStorage
     protected int $port;
 
     /**
-     * @var string $prefic
+     * @var string $prefix
      */
     protected string $prefix;
 
@@ -49,68 +51,63 @@ class MemcachedStorage
 
     public function __construct()
     {
-        // Check Extension Loaded
-        if (!extension_loaded('memcached')) {
-            throw new ExtensionException("Extension Not Loaded: [php-memcached]!", 500);
-        }
+        // Extension Check, Server Registration & SASL All Live in The Shared Factory
+        $this->expire   =   (int) config('memcached', 'expire', 0);
 
-        // Get Config
-        $config =   Config::get('memcached');
-        $this->host     =   $config['host'] ?? '127.0.0.1';
-        $this->port     =   (int) ($config['port'] ?? 11211);
-        $this->prefix   =   $config['prefix'] ?? 'laika';
-        $this->expire   =   86400; // 1 Day
-        $this->client   =   new PhPMemcached();
+        $this->client   =   MemcachedConnection::make();
 
-
-        // Avoid adding duplicate servers if config() is called multiple times
-        $servers = $this->client->getServerList();
-        if (empty($servers)) {
-            $this->client->addServer($this->host, $this->port);
-        }
-
-        $this->client->setOption(PhPMemcached::OPT_PREFIX_KEY, $this->prefix . ':');
-
-        // SASL auth (needs binary protocol)
-        if (isset($config['username'], $config['password']) && $config['username'] && $config['password']) {
-            $this->client->setOption(PhPMemcached::OPT_BINARY_PROTOCOL, true);
-            $this->client->setSaslAuthData($config['username'], $config['password']);
-        }
+        // Prefix All Keys Automatically
+        $this->prefix((string) config('memcached', 'prefix', 'laika'));
     }
 
     /**
      * Set Expire
-     * @param int $expire
+     * @param int $seconds Time to Live. 0 or Less Means No Expire Time
      * @return void
      */
     public function expire(int $seconds): void
     {
         $this->expire = $seconds;
-        return;
+    }
+
+    /**
+     * Prefix All Keys
+     * @param string $prefix Key Prefix. A Trailing Colon is Added Automatically
+     * @return void
+     */
+    public function prefix(string $prefix): void
+    {
+        $this->prefix = strtolower(\rtrim($prefix, ':') . ':');
+        $this->client->setOption(Memcached::OPT_PREFIX_KEY, $this->prefix);
     }
 
     /**
      * Set Value
+     * Memcached Limits a Key to 250 Bytes Including The Prefix
+     * And Rejects Spaces & Control Characters
      * @param string $key Key Name
      * @param mixed $value Key Value
      * @return bool
      */
     public function set(string $key, mixed $value): bool
     {
-        return $this->client->set($key, $value, $this->expire);
+        // Memcached Reads Anything Over 30 Days as an Absolute Unix Timestamp
+        $expire = ($this->expire > 2592000) ? \time() + $this->expire : $this->expire;
+
+        return $this->client->set($key, $value, $expire);
     }
 
     /**
      * Get Value
      * @param string $key Key Name
-     * @return mixed
+     * @return mixed Null When The Key is Missing. A Dead Server Also Returns Null
      */
-    public function get($key): mixed
+    public function get(string $key): mixed
     {
         $result = $this->client->get($key);
 
         // Return null if the key does not exist
-        if (($result === false) && ($this->client->getResultCode() !== PhPMemcached::RES_SUCCESS)) {
+        if (($result === false) && ($this->client->getResultCode() !== Memcached::RES_SUCCESS)) {
             return null;
         }
         return $result;
@@ -119,13 +116,10 @@ class MemcachedStorage
     /**
      * Remove Value
      * @param string $key Key Name
-     * @return bool
+     * @return bool False When The Key Does Not Exist
      */
-    public function pop($key): bool
+    public function pop(string $key): bool
     {
-        if ($this->get($key) !== null) {
-            return $this->client->delete($key);
-        }
-        return false;
+        return $this->client->delete($key);
     }
 }

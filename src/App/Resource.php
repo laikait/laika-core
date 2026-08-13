@@ -13,6 +13,7 @@ declare(strict_types=1);
 namespace Laika\Core\App;
 
 use Laika\Queue\Abstracts\Job;
+use Laika\Cli\Contracts\CommandInterface;
 use Laika\Core\Helper\Directory;
 use Laika\Model\Contract\SchemaAbstract;
 use Laika\Core\Exceptions\ResourceException;
@@ -605,6 +606,11 @@ final class Resource
                 'path' => 'lf-app/Filter',
                 'namespace' => 'App\\Filter',
                 'contract' => FilterInterface::class
+            ],
+            'commands'      =>  [
+                'path' => 'lf-app/Command',
+                'namespace' => 'App\\Command',
+                'contract' => CommandInterface::class
             ],
             'routes'        =>  ['path' => 'lf-routes'],
             'hooks'         =>  ['path' => 'lf-hooks']
