@@ -141,14 +141,15 @@ class File
      * Write Content in File
      * @param string $content Required Argument
      * @param string $file
+     * @param int $flags Flags for file_put_contents. Example: LOCK_EX
      * @return bool
      */
-    public function write(string $content, string $file): bool
+    public function write(string $content, string $file, int $flags = 0): bool
     {
         // Make Directory if Not Exists
         Directory::make($this->path($file));
         // Write Contents
-        return file_put_contents($file, $content) !== false;
+        return file_put_contents($file, $content, $flags) !== false;
     }
 
     /**

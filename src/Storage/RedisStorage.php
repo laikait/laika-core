@@ -12,10 +12,8 @@ declare(strict_types=1);
 
 namespace Laika\Core\Storage;
 
-use Laika\Core\Exceptions\ExtensionException;
-use Laika\Service\Config;
-use Redis as PhPRedis;
-use RuntimeException;
+use Redis;
+use Laika\Core\Storage\Connection\RedisConnection;
 
 /**
  * Redis Storage
@@ -23,9 +21,9 @@ use RuntimeException;
 class RedisStorage
 {
     /**
-     * @var PhPRedis
+     * @var Redis
      */
-    protected PhPRedis $client;
+    protected Redis $client;
 
     /**
      * @var string $host
@@ -38,61 +36,49 @@ class RedisStorage
     protected int $port;
 
     /**
-     * @var string $prefic
-     */
-    protected string $prefix;
-
-    /**
      * @var int $expire
      */
     protected int $expire;
 
     public function __construct()
     {
-        // Check Extension Loaded
-        if (!\extension_loaded('redis')) {
-            throw new ExtensionException("Extension Not Loaded: [php-redis]!", 500);
-        }
+        // Extension Check, Connect, Auth & Database Select All Live in The Shared Factory
+        $this->expire   =   (int) config('redis', 'expire', 0);
+        $this->client   =   RedisConnection::make();
 
-        // Get Config
-        $config         =   Config::get('redis');
-        $this->host     =   $config['host'] ?? '127.0.0.1';
-        $this->port     =   $config['port'] ?? 6379;
-        $this->prefix   =   $config['prefix'] ?? 'laika';
-        $this->expire   =   86400; // 1 Day
-
-        $this->client   =   new PhPRedis();
-
-        if (!$this->client->connect($this->host, $this->port)) {
-            throw new RuntimeException("Unable to connect to Redis at {$this->host}:{$this->port}");
-        }
-
-        if (isset($config['password']) && !$this->client->auth($config['password'])) {
-            throw new RuntimeException("Redis authentication failed!");
-        }
+        // Prefix All Keys Automatically
+        $this->prefix((string) config('redis', 'prefix', 'laika'));
     }
 
     /**
      * Set Expire
-     * @param int $expire
+     * @param int $seconds Time to Live. 0 or Less Means No Expire Time
      * @return void
      */
     public function expire(int $seconds): void
     {
         $this->expire = $seconds;
-        return;
+    }
+
+    /**
+     * Prefix All Keys
+     * @param string $prefix Key Prefix. A Trailing Colon is Added Automatically
+     * @return void
+     */
+    public function prefix(string $prefix): void
+    {
+        $prefix = strtolower(\rtrim($prefix, ':') . ':');
+        $this->client->setOption(Redis::OPT_PREFIX, $prefix);
     }
 
     /**
      * Set Value
      * @param string $key Key Name
      * @param mixed $value Key Value
-     * @param int $expiration Default is 0 for No Expire Time
      * @return bool
      */
     public function set(string $key, mixed $value): bool
     {
-        $key = $this->prefix . ':' . $key;
         return ($this->expire > 0)
             ? $this->client->setex($key, $this->expire, \serialize($value))
             : $this->client->set($key, \serialize($value));
@@ -103,12 +89,18 @@ class RedisStorage
      * @param string $key Key Name
      * @return mixed
      */
-    public function get($key): mixed
+    public function get(string $key): mixed
     {
-        $key = $this->prefix . ':' . $key;
-
         $value = $this->client->get($key);
-        return $value !== false ? \unserialize($value) : null;
+
+        // Key Does Not Exist
+        if ($value === false) {
+            return null;
+        }
+
+        // 'b:0;' is a Legitimately Stored false. Anything Else Returning false is Corrupt Data
+        $data = @\unserialize($value);
+        return ($data === false && $value !== 'b:0;') ? null : $data;
     }
 
     /**
@@ -116,10 +108,8 @@ class RedisStorage
      * @param string $key Key Name
      * @return bool
      */
-    public function pop($key): bool
+    public function pop(string $key): bool
     {
-        $key = $this->prefix . ':' . $key;
-
         return (bool) $this->client->del($key);
     }
 }
