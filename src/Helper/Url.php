@@ -41,17 +41,15 @@ class Url
 
     public function __construct()
     {
-        // Get Schema & Host
-        $this->scheme = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off' ? 'https' : 'http';
-        $host = $_SERVER['HTTP_HOST'] ?? $_SERVER['SERVER_NAME'] ?? 'localhost';
+        // Get Schema
+        $this->scheme = $this->detectScheme();
 
         // Get Host Name & Port
-        $hostParts = explode(':', $host);
-        $this->host = strtolower($hostParts[0]);
-        $this->port = isset($hostParts[1]) ? (int) $hostParts[1] : ($this->scheme === 'https' ? 443 : 80);
+        [$this->host, $port] = $this->detectHost();
+        $this->port = $port ?? ($this->scheme === 'https' ? 443 : 80);
 
         // Get Url Path
-        $this->path = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?? '/';
+        $this->path = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?: '/';
 
         // Get Query String
         $this->queryString = $_SERVER['QUERY_STRING'] ?? '';
@@ -61,6 +59,9 @@ class Url
 
         // Get Additional Directory if Exists
         $this->directory = rtrim(str_replace('\\', '/', dirname($this->scriptName)), '/');
+        if ($this->directory === '.') {
+            $this->directory = '';
+        }
 
         // Make Base Url
         $this->baseUrl = "{$this->scheme}://{$this->host}{$this->portSuffix()}{$this->directory}/";
@@ -268,5 +269,136 @@ class Url
     {
         $isStandard = ($this->scheme === 'https' && $this->port === 443) || ($this->scheme === 'http' && $this->port === 80);
         return $isStandard ? '' : ":{$this->port}";
+    }
+
+    /**
+     * Read a Server Variable as Trimmed String
+     * @param string $key
+     * @return string
+     */
+    protected function server(string $key): string
+    {
+        return is_string($_SERVER[$key] ?? null) ? trim($_SERVER[$key]) : '';
+    }
+
+    /**
+     * First Value of a Comma Separated Proxy Header
+     * @param string $key
+     * @return string
+     */
+    protected function forwarded(string $key): string
+    {
+        $value = $this->server($key);
+        return $value === '' ? '' : trim(explode(',', $value)[0]);
+    }
+
+    /**
+     * Detect Request Scheme
+     * Behind a Reverse Proxy or CDN The TLS Leg Ends at The Proxy, So $_SERVER['HTTPS']
+     * is Unset And The Real Client Facing Scheme Only Arrives in a Forwarded Header
+     * @return string
+     */
+    protected function detectScheme(): string
+    {
+        // Standard Proxy Header. May Hold a List Like "https, http"
+        $proto = strtolower($this->forwarded('HTTP_X_FORWARDED_PROTO'));
+        if ($proto === 'https' || $proto === 'http') {
+            return $proto;
+        }
+
+        // Nginx & Microsoft Proxy Variants
+        foreach (['HTTP_X_FORWARDED_SSL', 'HTTP_FRONT_END_HTTPS'] as $key) {
+            $value = strtolower($this->server($key));
+            if ($value !== '' && $value !== 'off') {
+                return 'https';
+            }
+        }
+
+        $scheme = strtolower($this->server('HTTP_X_URL_SCHEME'));
+        if ($scheme === 'https' || $scheme === 'http') {
+            return $scheme;
+        }
+
+        // Cloudflare Sends {"scheme":"https"}
+        if (str_contains(str_replace(' ', '', $this->server('HTTP_CF_VISITOR')), '"scheme":"https"')) {
+            return 'https';
+        }
+
+        // TLS Terminated by PHP Itself. IIS Sends 'off' And Some FastCGI Setups Send ''
+        $https = strtolower($this->server('HTTPS'));
+        if ($https !== '' && $https !== 'off') {
+            return 'https';
+        }
+
+        $scheme = strtolower($this->server('REQUEST_SCHEME'));
+        if ($scheme === 'https' || $scheme === 'http') {
+            return $scheme;
+        }
+
+        return ((int) $this->server('SERVER_PORT') === 443) ? 'https' : 'http';
+    }
+
+    /**
+     * Detect Host Name & Port
+     * @return array{0:string,1:?int}
+     */
+    protected function detectHost(): array
+    {
+        // The Proxy Keeps The Original Host Here When It Rewrites The Host Header
+        $candidates = [
+            $this->forwarded('HTTP_X_FORWARDED_HOST'),
+            $this->server('HTTP_HOST'),
+            $this->server('SERVER_NAME')
+        ];
+
+        foreach ($candidates as $candidate) {
+            if ($candidate === '') {
+                continue;
+            }
+
+            [$host, $port] = $this->splitHost($candidate);
+            if (!$this->isValidHost($host)) {
+                continue;
+            }
+
+            // SERVER_PORT is The Internal Port Behind a Proxy, So It is Never Used Here
+            if ($port === null) {
+                $forwardedPort = (int) $this->forwarded('HTTP_X_FORWARDED_PORT');
+                if ($forwardedPort > 0 && $forwardedPort <= 65535) {
+                    $port = $forwardedPort;
+                }
+            }
+            return [$host, $port];
+        }
+        return ['localhost', null];
+    }
+
+    /**
+     * Split "host:port" Keeping IPv6 Literals Intact
+     * @param string $host
+     * @return array{0:string,1:?int}
+     */
+    protected function splitHost(string $host): array
+    {
+        if (preg_match('/^(\[[^\]]+\])(?::(\d+))?$/', $host, $matches)) {
+            return [strtolower($matches[1]), isset($matches[2]) ? (int) $matches[2] : null];
+        }
+        if (preg_match('/^([^:]+):(\d+)$/', $host, $matches)) {
+            return [strtolower($matches[1]), (int) $matches[2]];
+        }
+        return [strtolower($host), null];
+    }
+
+    /**
+     * Validate a Host Name. The Host Header is Client Controlled
+     * @param string $host
+     * @return bool
+     */
+    protected function isValidHost(string $host): bool
+    {
+        if ($host === '' || strlen($host) > 253) {
+            return false;
+        }
+        return (bool) preg_match('/^\[[0-9a-f:.]+\]$|^[a-z0-9][a-z0-9._\-]*$/', $host);
     }
 }
