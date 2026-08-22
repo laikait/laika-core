@@ -35,7 +35,7 @@
         "ext-openssl": "*",
         "laikait/laika-auth": "^2.0",
         "laikait/laika-cli": "^3.0",
-        "laikait/laika-model": "^3.2",
+        "laikait/laika-model": "^4.0",
         "laikait/laika-queue": "^1.0",
         "laikait/laika-relay": "^1.2",
         "laikait/laika-route": "^1.1",
@@ -65,6 +65,9 @@
     "config": {
         "allow-plugins": {
             "dealerdirect/phpcodesniffer-composer-installer": true
+        },
+        "platform": {
+            "php": "8.1.0"
         }
     },
     "extra": {
