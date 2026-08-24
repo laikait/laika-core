@@ -13,13 +13,13 @@ declare(strict_types=1);
 namespace Laika\Core\App;
 
 use Laika\Relay\Relay;
-use Laika\Service\Directory;
 use Laika\Queue\Abstracts\Job;
+use Laika\Core\Helper\Directory;
 use Laika\Model\Contract\SchemaAbstract;
 use Laika\Core\Exceptions\SchemaException;
 use Laika\Core\Exceptions\ResourceException;
-use Laika\Route\Interfaces\FilterInterface;
-use Laika\Route\Interfaces\PipelineInterface;
+use Laika\Route\Contracts\FilterInterface;
+use Laika\Route\Contracts\PipelineInterface;
 
 // Application Infrastructure Info
 class Infra
@@ -105,7 +105,7 @@ class Infra
     public function getTemplateNames(): array
     {
         $base = realpath(APP_PATH . '/template');
-        $paths = Directory::scan($base, false, ['html','twig']);
+        $paths = (new Directory())->scan($base, false, ['html','twig']);
         $list = [];
         foreach ($paths as $path) {
             $name = trim(str_replace($base, '', $path), DS);
