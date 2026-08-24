@@ -14,6 +14,8 @@ use Laika\Relay\Relay;
 use Laika\Relay\RelayRegistry;
 use Laika\Relay\CoreProviders;
 use Laika\Relay\ProviderRegistry;
+use Laika\Relay\RelayProvider;
+use Laika\Core\App\Resource;
 
 // Define Constants
 defined('APP_PATH') || define('APP_PATH', realpath(__DIR__ . '/../../../../'));
@@ -31,25 +33,29 @@ $providers = new ProviderRegistry($registry);
 // Register Core Services
 $providers->register(CoreProviders::class);
 
-$json_file = APP_PATH.DS.'vendor'.DS.'composer'.DS.'installed.json';
+// Auto Discover Relay Providers
+//
+// Packages and the application both declare a `relays` resource - a directory of
+// RelayProvider classes. Packages are registered first so an application provider
+// can still override a package binding: RelayRegistry::singleton() is
+// last-write-wins, and Resource seeds framework defaults before packages.
+$packageRelays = [];
+$appRelays = [];
 
-if (is_file($json_file)) {
-    $installed = json_decode(file_get_contents($json_file), true);
-
-    foreach ($installed['packages'] ?? $installed as $package) {
-        // Load Relay Classes
-        $services = (array) ($package['extra']['laika']['relays'] ?? []);
-        foreach ($services as $service) $providers->register($service);
+foreach (Resource::definitions('relays') as $definition) {
+    if (in_array($definition->source, ['default', 'app'], true)) {
+        $appRelays[] = $definition;
+    } else {
+        $packageRelays[] = $definition;
     }
 }
 
-// Auto Discover App Providers
-$appProviderDir = APP_PATH . '/lf-app/Service';
-if ($appProviderDir && is_dir($appProviderDir)) {
-    $appProviderFiles = glob("{$appProviderDir}/*.php");
-    foreach($appProviderFiles as $file) {
-        $className = 'App\\Relay\\' . basename($file, '.php');
-        if (class_exists($className)) {
+foreach (array_merge($packageRelays, $appRelays) as $definition) {
+    foreach (Resource::entries($definition) as $className) {
+        // Tolerant on purpose: the shipped lf-app/Relay/Example.php stub is fully
+        // commented out, and this runs before Handler::register() below - a throw
+        // here would be an uncatchable fatal with no error page.
+        if (class_exists($className) && is_subclass_of($className, RelayProvider::class)) {
             $providers->register($className);
         }
     }
@@ -61,6 +67,7 @@ Relay::setRegistry($registry);
 // Boot Providers
 $providers->boot();
 
-// Resources are not registered here. Every package — this one included — declares
-// them in its composer.json under extra.laika.resources, and they are discovered
-// from vendor/composer/installed.json on first use, exactly like extra.laika.relays.
+// Relay providers are the only resource read during autoload. Every other resource
+// stays lazy: packages - this one included - declare them in composer.json under
+// extra.laika.resources, and Resource discovers them from
+// vendor/composer/installed.json on first use.

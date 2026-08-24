@@ -39,7 +39,7 @@
         "laikait/laika-queue": "^1.0",
         "laikait/laika-relay": "^1.2",
         "laikait/laika-route": "^1.1",
-        "laikait/laika-session": "^4.0",
+        "laikait/laika-session": "^5.0",
         "laikait/laika-shield": "^2.0",
         "twig/twig": "^3.28",
         "firebase/php-jwt": "^7.1",

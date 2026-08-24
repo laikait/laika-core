@@ -13,12 +13,13 @@ declare(strict_types=1);
 namespace Laika\Core\App;
 
 use Laika\Queue\Abstracts\Job;
-use Laika\Cli\Contracts\CommandInterface;
+use Laika\Relay\RelayProvider;
 use Laika\Core\Helper\Directory;
 use Laika\Model\Contract\SchemaAbstract;
+use Laika\Cli\Contracts\CommandInterface;
+use Laika\Route\Contracts\FilterInterface;
 use Laika\Core\Exceptions\ResourceException;
-use Laika\Route\Interfaces\FilterInterface;
-use Laika\Route\Interfaces\PipelineInterface;
+use Laika\Route\Contracts\PipelineInterface;
 
 /**
  * Resource Registry.
@@ -611,6 +612,12 @@ final class Resource
                 'path' => 'lf-app/Command',
                 'namespace' => 'App\\Command',
                 'contract' => CommandInterface::class
+            ],
+            // Relay providers, not the bound accessors Infra::getRelayClasses() reports
+            'relays'        =>  [
+                'path' => 'lf-app/Relay',
+                'namespace' => 'App\\Relay',
+                'contract' => RelayProvider::class
             ],
             'routes'        =>  ['path' => 'lf-routes'],
             'hooks'         =>  ['path' => 'lf-hooks']
