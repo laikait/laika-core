@@ -432,7 +432,7 @@ function asset(string $path): void
         return;
     }
     $path = trim($path, '/.');
-    echo Url::base() . $path;
+    echo "./{$path}";
 }
 
 /**
