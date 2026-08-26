@@ -254,7 +254,7 @@ function setPermissionRecursive(string $path, int $dirMode = 0755, int $fileMode
  * @param null|string|int $default
  * @return ?string
  */
-function option(string $key, null|string|int $default = null): string
+function option(string $key, null|string|int $default = null): ?string
 {
     static $options = [];
     if (!isset($options[$key])) $options[$key] = Option::single($key, $default ? (string) $default : null);
