@@ -423,16 +423,15 @@ function page_number(): int
 /**
  * Load Template Asset
  * @param string $path
- * @return void
+ * @return string
  */
-function asset(string $path): void
+function asset(string $path): string
 {
     if(parse_url($path, PHP_URL_HOST)){
-        echo $path;
-        return;
+        return $path;
     }
     $path = trim($path, '/.');
-    echo "./{$path}";
+    return "./{$path}";
 }
 
 /**
