@@ -26,13 +26,14 @@ class Context
      * Set a value in the context.
      * @param string $key The key to set.
      * @param mixed $value The value to set.
+     * @return void
      */
     public static function set(string $key, mixed $value): void
     {
         // Validate the key
         self::validateKey($key);
 
-        self::$context[$key] = $value;
+        self::$context[strtolower($key)] = $value;
     }
 
     /**
@@ -47,7 +48,7 @@ class Context
         // Validate the key
         self::validateKey($key);
 
-        return self::$context[$key] ?? $default;
+        return self::$context[strtolower($key)] ?? $default;
     }
 
     /**
@@ -58,7 +59,7 @@ class Context
     public static function has(string $key): bool
     {
         self::validateKey($key);
-        return array_key_exists($key, self::$context);
+        return array_key_exists(strtolower($key), self::$context);
     }
 
     /**
@@ -69,7 +70,7 @@ class Context
     public static function pop(string $key): void
     {
         self::validateKey($key);
-        unset(self::$context[$key]);
+        unset(self::$context[strtolower($key)]);
     }
 
     /**
@@ -93,7 +94,7 @@ class Context
     private static function validateKey(string $key): void
     {
         if (!preg_match('/^\w+$/', $key)) {
-            throw new ContextException("Invalid key format: [{$key}]. Key must be a non-empty string containing only alphanumeric characters and underscores.");
+            throw new ContextException("Invalid key format: [{$key}]. Key must be a non-empty string containing only alphanumeric characters and underscores.", 500);
         }
     }
 }
