@@ -16,6 +16,7 @@ use Laika\Relay\CoreProviders;
 use Laika\Relay\ProviderRegistry;
 use Laika\Relay\RelayProvider;
 use Laika\Core\App\Resource;
+use Laika\Route\Invoke;
 
 // Define Constants
 defined('APP_PATH') || define('APP_PATH', realpath(__DIR__ . '/../../../../'));
@@ -63,6 +64,15 @@ foreach (array_merge($packageRelays, $appRelays) as $definition) {
 
 // Wire Registry
 Relay::setRegistry($registry);
+
+// Wire The Router To The Container
+//
+// laika-route has no container of its own - it requires nothing but PHP. This is
+// the single line that joins the two, and it lives here because laika-core is the
+// package that already requires both. Pipelines, filters and controllers are built
+// through RelayRegistry::make() from here on, so their constructor dependencies are
+// auto-wired; without this call the router falls back to a plain `new`.
+Invoke::setResolver(static fn (string $class): object => $registry->make($class));
 
 // Boot Providers
 $providers->boot();

@@ -18,7 +18,7 @@ use InvalidArgumentException;
 class Unique
 {
     /** @var array $tokens */
-    protected array $tokens = ['{Y}', '{y}', '{d}', '{m}', '{G}', '{H}', '{s}', '{c}', '{n}'];
+    protected array $tokens = ['{Y}', '{y}', '{D}', '{d}', '{m}', '{G}', '{H}', '{h}', '{I}', '{i}', '{s}', '{c}', '{n}'];
 
     /*##########################################################################*/
     /*############################### PUBLIC API ###############################*/
@@ -36,14 +36,18 @@ class Unique
         $result = $this->validatePattern($pattern);
 
         // Replace every token individually via callback
-        $result = preg_replace_callback('/\{Y\}|\{y\}|\{d\}|\{m\}|\{G\}|\{H\}|\{s\}|\{c\}|\{n\}/', function (array $match): string {
+        $result = preg_replace_callback('/\{Y\}|\{y\}|\{D\}|\{d\}|\{m\}|\{G\}|\{H\}|\{h\}|\{i\}|\{I\}|\{s\}|\{c\}|\{n\}/', function (array $match): string {
             return match ($match[0]) {
                 '{Y}' => date('Y'),
                 '{y}' => date('y'),
+                '{D}' => date('D'),
                 '{d}' => date('d'),
                 '{m}' => date('i'),
                 '{G}' => date('G'),
                 '{H}' => date('H'),
+                '{h}' => date('h'),
+                '{i}' => date('i'),
+                '{I}' => date('I'),
                 '{s}' => date('s'),
                 '{c}' => $this->singleChar(),
                 '{n}' => $this->singleNumber(),
