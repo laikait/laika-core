@@ -282,8 +282,8 @@ final class Resource
      */
     public static function manifestPath(): string
     {
-        // lf-storage, not lf-cache: lf-cache belongs to the template engine and
-        // is wiped wholesale by `php laika app:sync`.
+        // The manifest sits beside the compiled templates under lf-storage/cache,
+        // which `php laika app:sync` wipes wholesale, hence the rebuild it runs after.
         return APP_PATH . DS . 'lf-storage' . DS . 'cache' . DS . 'resources.php';
     }
 

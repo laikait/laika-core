@@ -607,3 +607,12 @@ function response(bool $status, int|string $message, array $data = []): array
         'data' => $data
     ];
 }
+
+/**
+ * Generate UID
+ * @return string
+ */
+function uid(): string
+{        
+    return implode('-', str_split(bin2hex(random_bytes(16)), 8));
+}

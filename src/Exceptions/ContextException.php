@@ -19,9 +19,9 @@ class ContextException extends Exception
 {
     protected int $statusCode;
 
-    public function __construct(string $message = '', $code = 0, ?Throwable $previous = null)
+    public function __construct(string $message = '', int $code = 0, ?Throwable $previous = null)
     {
-        $this->statusCode = $statusCode;
+        $this->statusCode = $code;
         parent::__construct($message, $code, $previous);
     }
 
