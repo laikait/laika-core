@@ -59,8 +59,12 @@ class OptionModel
         // Check Already Cached
         if (isset($this->cached[$key])) return $this->cached[$key];
 
-        $opt = $this->model->table($this->table)->where([$this->key => $key])->first();
-        $this->cached[$key] = $opt[$this->value] ?? $default;
+        try {
+            $opt = $this->model->table($this->table)->where([$this->key => $key])->first();
+            $this->cached[$key] = $opt[$this->value] ?? $default;
+        } catch (\Throwable $th) {
+            return $default;
+        }
         return $this->cached[$key];
     }
 
