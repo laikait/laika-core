@@ -13,6 +13,7 @@ declare(strict_types=1);
 namespace Laika\Core\Helper;
 
 use Laika\Service\File;
+use RuntimeException;
 use InvalidArgumentException;
 
 class Upload
@@ -73,10 +74,11 @@ class Upload
             return false;
         }
 
-        $error = $this->validate($this->fields, $options);
-        if ($error !== null) {
+        try {
+            $this->validate($this->fields, $options);
+        } catch (RuntimeException $e) {
             $this->fields = [];
-            return false;        // or throw, depending on your preference
+            return false;
         }
 
         if (!is_dir($directory)) {
@@ -149,10 +151,10 @@ class Upload
                 continue;
             }
 
-            $validationError = $this->validate($file, $options);
-            if ($validationError !== null) {
-                $results['errors'][$name] = $validationError;
-                continue;
+            try {
+                $this->validate($file, $options);
+            } catch (RuntimeException $e) {
+                $results['errors'][$name] = $e->getMessage();
             }
 
             $finalName   = $baseName ? "{$baseName}_{$index}"  : $slug;
@@ -179,9 +181,10 @@ class Upload
      * Validate a Single File Against Options
      * @param array $file Normalized File Array
      * @param array $options Options: maxsize, extensions, mimetypes
-     * @return string|null Error message or null if valid
+     * @return void
+     * @throws RuntimeException
      */
-    protected function validate(array $file, array $options): ?string
+    protected function validate(array $file, array $options): void
     {
         $maxSize     = $options['maxsize'] ?? null;
         $allowedMime = isset($options['mimetypes']) ? array_map('strtolower', $options['mimetypes']) : null;
@@ -192,12 +195,12 @@ class Upload
 
         if ($maxSize && ($size > (int) $maxSize)) {
             $maxSizeMB = (int) $maxSize / 1024 / 1024;
-            return "File exceeds max size ({$maxSizeMB} MB)";
+            throw new RuntimeException("File exceeds max size ({$maxSizeMB} MB)", 500);
         }
 
         // Unconditional: a caller cannot re-enable these through $options.
         if ($ext === '' || in_array($ext, $this->blockedExtensions, true)) {
-            return "Extension .{$ext} is not permitted";
+            throw new RuntimeException("Extension .{$ext} is not permitted", 500);
         }
 
         $allowedExt = isset($options['extensions'])
@@ -205,7 +208,7 @@ class Upload
             : $this->defaultExtensions;
 
         if (!in_array($ext, $allowedExt, true)) {
-            return "Extension .{$ext} not allowed";
+            throw new RuntimeException("Extension .{$ext} not allowed", 500);
         }
 
         if ($allowedMime && $tmp && is_file($tmp)) {
@@ -214,17 +217,15 @@ class Upload
             $mime = File::mime($tmp);
 
             if ($mime === false) {
-                return 'Unable to determine the file type';
+                throw new RuntimeException('Unable to determine the file type');
             }
 
             $mime = strtolower($mime);
 
             if (!in_array($mime, $allowedMime, true)) {
-                return "MIME type {$mime} not allowed";
+                throw new RuntimeException("MIME type {$mime} not allowed", 500);
             }
         }
-
-        return null;
     }
 
     /**
