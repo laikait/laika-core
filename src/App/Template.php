@@ -28,6 +28,9 @@ class Template
     /** @var Environment Twig Environment */
     protected Environment $twig;
 
+    /** @var Engine Twig Filesystem Loader */
+    protected Engine $loader;
+
     /** @var array $vars */
     protected array $vars = [];
 
@@ -37,21 +40,24 @@ class Template
     /** @var string $cacheDirectory Template Cache Directory */
     protected string $cacheDirectory;
 
+    /** @var string[] $extraPaths Additional Loader Paths Registered By The Caller */
+    protected array $extraPaths = [];
+
     /**
      * File Extension
      * @var string
      */
     protected string $extension = 'twig';
 
-    public function __construct(?string $templateSubDirectory = null, ?string $cacheSubDirectory = null)
+    public function __construct()
     {
         // Ensure Template & Cache Paths
-        $this->ensureTemplatePath($templateSubDirectory);
-        $this->ensureCachePath($cacheSubDirectory);
+        $this->ensureTemplatePath();
+        $this->ensureCachePath();
 
         // Run Template Engine
-        $engine = new Engine($this->templateDirectory);
-        $this->twig = new Environment($engine, [
+        $this->loader = new Engine($this->templateDirectory);
+        $this->twig = new Environment($this->loader, [
             'debug' =>  DEBUG,
             'cache' =>  $this->cacheDirectory
         ]);
@@ -116,12 +122,46 @@ class Template
 
     /**
      * Render View
+     *
+     * The name carries the directory: 'admin/bootstrap/home' renders
+     * template/admin/bootstrap/home.twig, cached under
+     * cache/template/admin/bootstrap. The loader is re-pointed per render, so
+     * one instance may render views from several sub directories in turn.
      * @param string $name View Name. Always Slash Separated: a Twig name is not a file path
      * @return string Rendered View
+     * @throws PathException
      */
     public function view(string $name): string
     {
-        return $this->twig->render("{$name}.{$this->extension}", $this->vars());
+        [$subdir, $file] = $this->splitViewName($name);
+
+        // Ensure Template & Cache Paths
+        $this->ensureTemplatePath($subdir);
+        $this->ensureCachePath($subdir);
+
+        // Re-point The Engine At The Resolved Directories
+        $this->loader->setPaths($this->paths());
+        $this->twig->setCache($this->cacheDirectory);
+
+        // Load The Sub Directory's Own Function File, If It Has One
+        $this->loadSubFunctions();
+
+        return $this->twig->render("{$file}.{$this->extension}", $this->vars());
+    }
+
+    /**
+     * Register An Additional Loader Path
+     *
+     * A view resolves against its own directory and nothing else. This adds a
+     * fallback searched after it, for templates shared across sub directories.
+     * A path set here survives the per-render re-point that view() performs.
+     * @param string $path Absolute Directory Path
+     * @return static
+     */
+    public function addPath(string $path): static
+    {
+        $this->extraPaths[] = rtrim($path, '/\\');
+        return $this;
     }
 
     /**
@@ -173,6 +213,50 @@ class Template
     ###########################################################################
 
     /**
+     * Split a View Name Into Its Directory And File Parts
+     *
+     * A Twig name is always slash separated, so this splits the name, never a
+     * filesystem path. 'admin/bootstrap/home' gives ['admin/bootstrap', 'home'],
+     * 'home' gives [null, 'home'].
+     * @param string $name View Name
+     * @return array{0: ?string, 1: string}
+     * @throws PathException
+     */
+    protected function splitViewName(string $name): array
+    {
+        $name = trim(str_replace('\\', '/', $name), '/');
+
+        if ($name === '') {
+            throw new PathException('Invalid view name: a view name must not be empty.');
+        }
+
+        $pos = strrpos($name, '/');
+
+        if ($pos === false) {
+            return [null, $name];
+        }
+
+        $file = substr($name, $pos + 1);
+
+        if ($file === '') {
+            throw new PathException("Invalid view name: [{$name}]. A view name must end in a file name.");
+        }
+
+        return [substr($name, 0, $pos), $file];
+    }
+
+    /**
+     * Loader Paths For The Current Render
+     *
+     * The view's own directory first, then anything addPath() registered.
+     * @return string[]
+     */
+    protected function paths(): array
+    {
+        return array_values(array_unique(array_merge([$this->templateDirectory], $this->extraPaths)));
+    }
+
+    /**
      * Ensure Template Path
      * @param ?string $subdir Sub Directory Path
      * @return void
@@ -181,7 +265,6 @@ class Template
     protected function ensureTemplatePath(?string $subdir = null): void
     {
         $this->templateDirectory = $this->resolvePath($subdir, TEMPLATE_PATH);
-        Directory::make($this->templateDirectory);
     }
 
     /**
@@ -197,14 +280,14 @@ class Template
     }
 
     /**
-     * Resolve a Directory Argument
+     * Resolve a Sub Directory Taken From a View Name
      *
-     * An absolute path is taken as given. Anything else is a sub directory of
-     * $base. It is deliberately not tested with is_dir(): that resolves a bare
-     * name against the process CWD, which is the document root under the front
-     * controller but the invocation directory under the CLI and the queue
-     * worker, so a name colliding with a directory there would silently escape.
-     * @param ?string $path Absolute Path or Sub Directory Name
+     * Always a sub directory of $base. It is deliberately not tested with
+     * is_dir(): that resolves a bare name against the process CWD, which is the
+     * document root under the front controller but the invocation directory
+     * under the CLI and the queue worker, so a name colliding with a directory
+     * there would silently escape.
+     * @param ?string $path Sub Directory Name
      * @param string $base Base Directory a Sub Directory Hangs Off
      * @return string
      * @throws PathException
@@ -218,11 +301,11 @@ class Template
             return $base;
         }
 
+        // A view name is caller supplied. Trimming leading separators does not
+        // strip a drive prefix, so 'C:/windows/x' would otherwise escape.
         if ($this->isAbsolute($path)) {
-            return $path;
+            throw new PathException("Invalid view name: [{$path}]. A view name must be relative to the template directory.");
         }
-
-        $path = ltrim($path, DS);
 
         // A sub directory may not climb out of its base
         if (in_array('..', explode(DS, $path), true)) {
@@ -245,31 +328,40 @@ class Template
     }
 
     /**
-     * Root Template Directory
-     * @return string
-     */
-    protected function templateBase(): string
-    {
-        return APP_PATH . DS . 'template';
-    }
-
-    /**
-     * Load Template Function Files
+     * Load The Root Template Function File
      *
-     * The root loader is scaffolded on first run and always loads, so global
-     * enqueues stay in effect for a sub directory instance too. A sub directory
-     * may add its own loader, but one is never generated for it.
+     * Scaffolded on first run and always loaded, so global enqueues stay in
+     * effect whichever sub directory a view comes from.
      * @return void
      */
     protected function loadFunctions(): void
     {
-        $loader = $this->templateDirectory . DS . 'loader.php';
+        $loader = TEMPLATE_PATH . DS . 'loader.php';
         if (!File::exists($loader)) {
             File::touch($loader);
             File::write("<?php\n//Auto Generated by Framework\n", $loader);
         }
 
         require_once $loader;
+    }
+
+    /**
+     * Load a Sub Directory's Own Function File
+     *
+     * Loads after the root one, and only when it is already there: unlike the
+     * root loader, one is never generated for a sub directory.
+     * @return void
+     */
+    protected function loadSubFunctions(): void
+    {
+        if ($this->templateDirectory === TEMPLATE_PATH) {
+            return;
+        }
+
+        $loader = $this->templateDirectory . DS . 'loader.php';
+        if (File::exists($loader)) {
+            require_once $loader;
+        }
     }
 
     /**
