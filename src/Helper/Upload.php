@@ -215,7 +215,11 @@ class Upload
             }
 
             $mime = strtolower((string) finfo_file($finfo, $tmp));
-            finfo_close($finfo);
+            if (\PHP_VERSION_ID < 80500) {
+                @finfo_close($finfo);
+            } else {
+                unset($finfo);
+            }
 
             if (!in_array($mime, $allowedMime, true)) {
                 return "MIME type {$mime} not allowed";
@@ -243,7 +247,11 @@ class Upload
         }
 
         $mime = strtolower((string) finfo_file($finfo, $destination));
-        finfo_close($finfo);
+        if (\PHP_VERSION_ID < 80500) {
+            @finfo_close($finfo);
+        } else {
+            unset($finfo);
+        }
 
         if (!str_starts_with($mime, 'image/')) {
             return;

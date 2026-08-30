@@ -89,7 +89,11 @@ class File
         }
 
         $mime = finfo_file($finfo, $file);
-        finfo_close($finfo);
+        if (\PHP_VERSION_ID < 80500) {
+            @finfo_close($finfo);
+        } else {
+            unset($finfo);
+        }
 
         return $mime;
     }
