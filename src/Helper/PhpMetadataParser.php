@@ -46,8 +46,16 @@ final class PhpMetadataParser
             throw new InvalidArgumentException("Invalid file path: {$file}");
         }
 
-        $meta = [];
-        $tokens = token_get_all(file_get_contents($file));
+        $meta   = [];
+        $source = file_get_contents($file);
+
+        // is_readable() above can still be raced or defeated by an open_basedir
+        // restriction; token_get_all(false) is a TypeError.
+        if ($source === false) {
+            throw new InvalidArgumentException("Unable to read file: {$file}");
+        }
+
+        $tokens = token_get_all($source);
 
         foreach ($tokens as $token) {
             if (

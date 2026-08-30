@@ -93,7 +93,7 @@ final class MimeType
      */
     public static function fromFile(string $filename): string
     {
-        return static::get(strtolower(pathinfo($filename, PATHINFO_EXTENSION)));
+        return static::fromExtension(pathinfo($filename, PATHINFO_EXTENSION));
     }
 
     /**

@@ -9,6 +9,8 @@
  * For the full copyright and license information, please view the LICENSE file that was distributed with this source code.
  */
 
+declare(strict_types=1);
+
 namespace Laika\Core\Helper;
 
 use Laika\Service\{Url, Request};
@@ -22,9 +24,11 @@ class Page
      */
     public function number(?string $key = null): int
     {
-        $key = $key ?: 'page';
-        $number = (int) Request::input($key, 1);
-        return max(1, $number);
+        // Url::incrementQuery() lowercases the key, so this has to agree or
+        // next() writes a query key that number() never reads back.
+        $key = strtolower($key ?: 'page');
+
+        return max(1, (int) Request::input($key, 1));
     }
 
     /**

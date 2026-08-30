@@ -12,6 +12,10 @@ declare(strict_types=1);
 
 namespace Laika\Core\Helper;
 
+use Laika\Core\Http\ProxyTrust;
+use Laika\Service\Config;
+use Throwable;
+
 class Url
 {
     /** @var string Scheme */
@@ -67,9 +71,9 @@ class Url
         $this->baseUrl = "{$this->scheme}://{$this->host}{$this->portSuffix()}{$this->directory}/";
     }
 
-    ##############################################################################
-    //------------------------------- PUBLIC API------------------------------- //
-    ##############################################################################
+    ##########################################################################
+    # ============================ EXTERNAL API ============================ #
+    ##########################################################################
 
     /**
      * Get Current URL
@@ -86,6 +90,16 @@ class Url
      */
     public function base(): string
     {
+        // An explicit base_url takes the request out of the equation entirely,
+        // which is the only complete answer to a poisoned Host header. Set it in
+        // production; every generated URL then stops depending on what the
+        // client sent.
+        $configured = $this->config('base_url');
+
+        if ($configured !== '') {
+            return rtrim($configured, '/') . '/';
+        }
+
         return $this->baseUrl;
     }
 
@@ -105,9 +119,20 @@ class Url
     public function path(): string
     {
         $path = $this->path;
-        if ($this->directory !== '' && strpos($path, $this->directory) === 0) {
-            $path = substr($path, strlen($this->directory));
+
+        // The prefix must end at a segment boundary. A bare strpos() match let
+        // directory "/app" eat the front of "/application/list" and return
+        // "lication/list".
+        if ($this->directory !== '') {
+            $prefix = rtrim($this->directory, '/');
+
+            if ($path === $prefix) {
+                $path = '/';
+            } elseif (str_starts_with($path, $prefix . '/')) {
+                $path = substr($path, strlen($prefix));
+            }
         }
+
         return trim($path, '/');
     }
 
@@ -258,9 +283,9 @@ class Url
         return $this->scheme;
     }
 
-    ##################################################################################
-    /*================================ INTERNAL API ================================*/
-    ##################################################################################
+    ############################################################################
+    /*============================= INTERNAL API =============================*/
+    ############################################################################
     /**
      * Port Suffix
      * @return string
@@ -282,14 +307,45 @@ class Url
     }
 
     /**
+     * Read a String From lf-config/app.php Without Requiring a Booted Container
+     * @param string $key
+     * @return string
+     */
+    protected function config(string $key): string
+    {
+        try {
+            return trim((string) (Config::get('app', $key) ?? ''));
+        } catch (Throwable) {
+            return '';
+        }
+    }
+
+    /**
      * First Value of a Comma Separated Proxy Header
+     *
+     * Empty unless the request reached us through a configured proxy - the
+     * header is client controlled on every other request.
      * @param string $key
      * @return string
      */
     protected function forwarded(string $key): string
     {
+        if (!ProxyTrust::trusts()) {
+            return '';
+        }
+
         $value = $this->server($key);
         return $value === '' ? '' : trim(explode(',', $value)[0]);
+    }
+
+    /**
+     * A Proxy Header Read Whole Rather Than as a Comma Separated List
+     * @param string $key
+     * @return string
+     */
+    protected function proxyHeader(string $key): string
+    {
+        return ProxyTrust::trusts() ? $this->server($key) : '';
     }
 
     /**
@@ -308,19 +364,19 @@ class Url
 
         // Nginx & Microsoft Proxy Variants
         foreach (['HTTP_X_FORWARDED_SSL', 'HTTP_FRONT_END_HTTPS'] as $key) {
-            $value = strtolower($this->server($key));
+            $value = strtolower($this->proxyHeader($key));
             if ($value !== '' && $value !== 'off') {
                 return 'https';
             }
         }
 
-        $scheme = strtolower($this->server('HTTP_X_URL_SCHEME'));
+        $scheme = strtolower($this->proxyHeader('HTTP_X_URL_SCHEME'));
         if ($scheme === 'https' || $scheme === 'http') {
             return $scheme;
         }
 
         // Cloudflare Sends {"scheme":"https"}
-        if (str_contains(str_replace(' ', '', $this->server('HTTP_CF_VISITOR')), '"scheme":"https"')) {
+        if (str_contains(str_replace(' ', '', $this->proxyHeader('HTTP_CF_VISITOR')), '"scheme":"https"')) {
             return 'https';
         }
 

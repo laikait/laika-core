@@ -39,6 +39,14 @@ class Cron
      */
     public function add(string $expression, string $command, ?string $label = null): static
     {
+        // A newline in any field writes extra crontab lines, so the whole job
+        // is rejected rather than silently scheduling something else.
+        foreach (['expression' => $expression, 'command' => $command, 'label' => (string) $label] as $field => $value) {
+            if (preg_match('/[\r\n]/', $value)) {
+                throw new \InvalidArgumentException("Cron {$field} must not contain a line break.");
+            }
+        }
+
         $this->jobs[] = [
             'expression' => $expression,
             'command'    => $command,
@@ -154,7 +162,7 @@ class Cron
      */
     public function daily(string $command, string $time = '00:00', ?string $label = null): static
     {
-        [$hour, $minute] = explode(':', $time);
+        [$hour, $minute] = $this->parseTime($time);
         return $this->add("{$minute} {$hour} * * *", $command, $label);
     }
 
@@ -168,7 +176,7 @@ class Cron
      */
     public function weekly(string $command, int $dayOfWeek = 0, string $time = '00:00', ?string $label = null): static
     {
-        [$hour, $minute] = explode(':', $time);
+        [$hour, $minute] = $this->parseTime($time);
         return $this->add("{$minute} {$hour} * * {$dayOfWeek}", $command, $label);
     }
 
@@ -182,7 +190,7 @@ class Cron
      */
     public function monthly(string $command, int $dayOfMonth = 1, string $time = '00:00', ?string $label = null): static
     {
-        [$hour, $minute] = explode(':', $time);
+        [$hour, $minute] = $this->parseTime($time);
         return $this->add("{$minute} {$hour} {$dayOfMonth} * *", $command, $label);
     }
 
@@ -197,7 +205,7 @@ class Cron
      */
     public function yearly(string $command, int $month = 1, int $day = 1, string $time = '00:00', ?string $label = null): static
     {
-        [$hour, $minute] = explode(':', $time);
+        [$hour, $minute] = $this->parseTime($time);
         return $this->add("{$minute} {$hour} {$day} {$month} *", $command, $label);
     }
 
@@ -212,9 +220,12 @@ class Cron
         $block    = $this->buildBlock();
 
         if (str_contains($existing, '# [LAIKA-CRON-START]')) {
-            $existing = preg_replace(
+            // A callback, not a replacement string: in a replacement, $1 and \1
+            // are backreferences, so a command containing $1 - ordinary in
+            // shell - was silently rewritten.
+            $existing = preg_replace_callback(
                 '/# \[LAIKA-CRON-START\].*?# \[LAIKA-CRON-END\]/s',
-                $block,
+                static fn (): string => $block,
                 $existing
             );
         } else {
@@ -255,20 +266,29 @@ class Cron
     public function installed(): array
     {
         $this->assertLinux();
-        $raw   = $this->readCrontab();
-        $lines = explode("\n", trim($raw));
-        $jobs  = [];
 
-        foreach ($lines as $line) {
+        // Scoped to our own marker block. Parsing the whole crontab reported
+        // jobs the framework does not own, and invited a caller to act on them.
+        if (!preg_match('/# \[LAIKA-CRON-START\](.*?)# \[LAIKA-CRON-END\]/s', $this->readCrontab(), $match)) {
+            return [];
+        }
+
+        $jobs = [];
+
+        foreach (explode("\n", trim($match[1])) as $line) {
             $line = trim($line);
             if ($line === '' || str_starts_with($line, '#')) continue;
 
             $parts = preg_split('/\s+/', $line, 6);
-            if (count($parts) < 6) continue;
+            if ($parts === false || count($parts) < 6) continue;
+
+            // buildBlock() appends " # label", so recover it here.
+            [$command, $label] = array_pad(explode(' # ', $parts[5], 2), 2, null);
 
             $jobs[] = [
                 'expression' => implode(' ', array_slice($parts, 0, 5)),
-                'command'    => $parts[5],
+                'command'    => trim($command),
+                'label'      => $label !== null ? trim($label) : null,
             ];
         }
 
@@ -287,6 +307,25 @@ class Cron
     ########################################################################################
     ##################################### INTERNAL API #####################################
     ########################################################################################
+    /**
+     * Parse an HH:MM Time
+     *
+     * The schedule helpers used to destructure explode(':', $time) directly, so
+     * a value like '9' produced an undefined offset and a null minute - and a
+     * malformed cron expression written to the user's crontab.
+     * @param string $time
+     * @return array{0:int,1:int} Hour, Minute
+     * @throws \InvalidArgumentException
+     */
+    protected function parseTime(string $time): array
+    {
+        if (!preg_match('/^([01]?\d|2[0-3]):([0-5]\d)$/', trim($time), $match)) {
+            throw new \InvalidArgumentException("Invalid time [{$time}]. Expected HH:MM.");
+        }
+
+        return [(int) $match[1], (int) $match[2]];
+    }
+
     /**
      * Build Block
      * @return string
@@ -308,7 +347,10 @@ class Cron
      */
     protected function readCrontab(): string
     {
-        $cmd = $this->user ? "crontab -u {$this->user} -l 2>/dev/null" : 'crontab -l 2>/dev/null';
+        $cmd = $this->user !== ''
+            ? 'crontab -u ' . escapeshellarg($this->user) . ' -l 2>/dev/null'
+            : 'crontab -l 2>/dev/null';
+
         return shell_exec($cmd) ?? '';
     }
 
@@ -319,10 +361,23 @@ class Cron
     protected function writeCrontab(string $content): bool
     {
         $tmp = tempnam(sys_get_temp_dir(), 'laika_cron_');
-        file_put_contents($tmp, $content);
-        $cmd = $this->user ? "crontab -u {$this->user} {$tmp}" : "crontab {$tmp}";
+
+        if ($tmp === false) {
+            throw new \RuntimeException('Unable to create a temporary crontab file.');
+        }
+
+        if (file_put_contents($tmp, $content) === false) {
+            unlink($tmp);
+            throw new \RuntimeException('Unable to write the temporary crontab file.');
+        }
+
+        $cmd = $this->user !== ''
+            ? 'crontab -u ' . escapeshellarg($this->user) . ' ' . escapeshellarg($tmp)
+            : 'crontab ' . escapeshellarg($tmp);
+
         system($cmd, $result);
         unlink($tmp);
+
         return $result === 0;
     }
 

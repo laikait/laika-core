@@ -17,6 +17,15 @@ use DivisionByZeroError;
 
 class Math
 {
+    /**
+     * Scale used only for "is this zero?" style comparisons.
+     *
+     * The working scale defaults to 4, so comparing a divisor against zero at
+     * that scale treated 0.00001 as zero and threw DivisionByZeroError on a
+     * perfectly valid number.
+     */
+    private const ZERO_SCALE = 50;
+
     /** @var int $scale */
     protected int $scale = 4;
 
@@ -29,13 +38,24 @@ class Math
     }
 
     /**
-     * Set Global Scale
+     * Return a Copy Configured With The Given Scale
+     *
+     * Returns a clone rather than mutating: this class is a container
+     * singleton, so setting the scale in place changed the precision of every
+     * later calculation anywhere in the request.
      * @param int $scale
-     * @return void
+     * @return static
      */
-    public function scale(int $scale): void
+    public function scale(int $scale): static
     {
-        $this->scale = $scale;
+        if ($scale < 0) {
+            throw new \InvalidArgumentException('Scale must not be negative.');
+        }
+
+        $clone = clone $this;
+        $clone->scale = $scale;
+
+        return $clone;
     }
 
     /**
@@ -84,7 +104,7 @@ class Math
      */
     public function div(int|float|string $a, int|float|string $b, ?int $scale = null): string
     {
-        if (bccomp((string) $b, '0', $this->scale) === 0) {
+        if (bccomp((string) $b, '0', self::ZERO_SCALE) === 0) {
             throw new DivisionByZeroError('Division by zero.');
         }
         return bcdiv((string) $a, (string) $b, $scale ?? $this->scale);
@@ -100,7 +120,7 @@ class Math
      */
     public function mod(int|float|string $a, int|float|string $b, ?int $scale = null): string
     {
-        if (bccomp((string) $b, '0', $this->scale) === 0) {
+        if (bccomp((string) $b, '0', self::ZERO_SCALE) === 0) {
             throw new DivisionByZeroError('Division by zero.');
         }
         return bcmod((string) $a, (string) $b, $scale ?? $this->scale);
@@ -127,7 +147,7 @@ class Math
      */
     public function sqrt(int|float|string $number, ?int $scale = null): string
     {
-        if (bccomp((string) $number, '0', $this->scale) < 0) {
+        if (bccomp((string) $number, '0', self::ZERO_SCALE) < 0) {
             throw new \InvalidArgumentException('Square root of negative number.');
         }
         return bcsqrt((string) $number, $scale ?? $this->scale);
@@ -163,11 +183,16 @@ class Math
      * @param int|float|string $a
      * @return string
      */
-    public function abs(int|float|string $a): string
+    public function abs(int|float|string $a, ?int $scale = null): string
     {
-        return bccomp((string) $a, '0', $this->scale) < 0
-            ? bcmul((string) $a, '-1', $this->scale)
-            : $a;
+        // The positive branch used to return $a untouched, which is a TypeError
+        // under strict_types for any int or float input.
+        $scale = $scale ?? $this->scale;
+        $a     = (string) $a;
+
+        return bccomp($a, '0', $scale) < 0
+            ? bcmul($a, '-1', $scale)
+            : bcadd($a, '0', $scale);
     }
 
     /**
@@ -188,7 +213,7 @@ class Math
     public function floor(int|float|string $a): string
     {
         $result = bcdiv((string) $a, '1', 0);
-        if (bccomp((string) $a, '0', $this->scale) < 0 && bccomp($result, (string) $a, $this->scale) !== 0) {
+        if (bccomp((string) $a, '0', self::ZERO_SCALE) < 0 && bccomp($result, (string) $a, self::ZERO_SCALE) !== 0) {
             $result = bcsub($result, '1', 0);
         }
         return $result;
@@ -202,7 +227,7 @@ class Math
     public function ceil(int|float|string $a): string
     {
         $result = bcdiv((string) $a, '1', 0);
-        if (bccomp((string) $a, '0', $this->scale) > 0 && bccomp($result, (string) $a, $this->scale) !== 0) {
+        if (bccomp((string) $a, '0', self::ZERO_SCALE) > 0 && bccomp($result, (string) $a, self::ZERO_SCALE) !== 0) {
             $result = bcadd($result, '1', 0);
         }
         return $result;
@@ -218,9 +243,11 @@ class Math
     {
         $a = (string) $a;
         $precision = (int) $precision;
-        $sign = bccomp($a, '0', $this->scale) < 0 ? '-' : '';
+        $sign = bccomp($a, '0', self::ZERO_SCALE) < 0 ? '-' : '';
         $shift = bcpow('10', (string) $precision, 0);
-        $shifted = bcmul(static::abs($a), $shift, $precision + 1);
+        // Strip the sign textually rather than through abs(): abs() pads and
+        // truncates to a scale, which would discard digits this still needs.
+        $shifted = bcmul(ltrim($a, '-'), $shift, $precision + 1);
         $floored = bcdiv($shifted, '1', 0);
         $decimal = bcsub($shifted, $floored, 1);
         if (bccomp($decimal, '0.5', 1) >= 0) {
@@ -239,7 +266,7 @@ class Math
      */
     public function percent(int|float|string $value, int|float|string $total, ?int $scale = null): string
     {
-        if (bccomp((string) $total, '0', $this->scale) === 0) {
+        if (bccomp((string) $total, '0', self::ZERO_SCALE) === 0) {
             throw new DivisionByZeroError('Total cannot be zero.');
         }
         return bcdiv(bcmul((string) $value, '100', $this->scale), (string) $total, $scale ?? $this->scale);
@@ -306,7 +333,7 @@ class Math
         if (empty($values)) {
             throw new \InvalidArgumentException('Array is empty.');
         }
-        $sum = static::sum($values, $scale);
+        $sum = $this->sum($values, $scale);
         return bcdiv($sum, (string) count($values), $scale ?? $this->scale);
     }
 
@@ -317,7 +344,7 @@ class Math
      */
     public function isZero(int|float|string $a): bool
     {
-        return bccomp((string) $a, '0', $this->scale) === 0;
+        return bccomp((string) $a, '0', self::ZERO_SCALE) === 0;
     }
 
     /**
@@ -327,7 +354,7 @@ class Math
      */
     public function isPositive(int|float|string $a): bool
     {
-        return bccomp((string) $a, '0', $this->scale) > 0;
+        return bccomp((string) $a, '0', self::ZERO_SCALE) > 0;
     }
 
     /**
@@ -337,7 +364,7 @@ class Math
      */
     public function isNegative(int|float|string $a): bool
     {
-        return bccomp((string) $a, '0', $this->scale) < 0;
+        return bccomp((string) $a, '0', self::ZERO_SCALE) < 0;
     }
 
     /**

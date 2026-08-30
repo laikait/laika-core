@@ -86,12 +86,18 @@ class Image
         // Check Resources
         $this->checkResources();
 
+        // Guards a division by zero below, and imagecreatetruecolor() throwing
+        // ValueError on a zero dimension.
+        if ($width < 1 || $height < 1) {
+            throw new InvalidArgumentException('Resize dimensions must be at least 1px.');
+        }
+
         if ($keepAspect) {
             $ratio = $this->width / $this->height;
             if ($width / $height > $ratio) {
-                $width = (int)($height * $ratio);
+                $width = max(1, (int) round($height * $ratio));
             } else {
-                $height = (int)($width / $ratio);
+                $height = max(1, (int) round($width / $ratio));
             }
         }
 
@@ -321,7 +327,7 @@ class Image
      * @param int $quality 0–100. For PNG, higher = less compression (larger file).
      * @return bool
      */
-    public function save(string $path, int $quality = 100): bool
+    public function save(string $path, ?int $quality = null): bool
     {
         // Check Resources
         $this->checkResources();
@@ -331,18 +337,36 @@ class Image
             imagesavealpha($this->image, true);
         }
         return match ($this->mime) {
-            'image/jpeg', 'image/jpg' => imagejpeg($this->image, $path, $quality),
-            'image/png'               => imagepng($this->image, $path, (int) round((100 - $quality) * 9 / 100)),
+            'image/jpeg', 'image/jpg' => imagejpeg($this->image, $path, $quality ?? 85),
+            'image/png'               => imagepng($this->image, $path, $this->pngLevel($quality)),
             'image/gif'               => imagegif($this->image, $path),
-            'image/webp'              => imagewebp($this->image, $path, $quality),
+            'image/webp'              => imagewebp($this->image, $path, $quality ?? 85),
             'image/bmp'               => function_exists('imagebmp')
                 ? imagebmp($this->image, $path)
                 : throw new RuntimeException("Cannot save BMP: not supported"),
             'image/avif'              => function_exists('imageavif')
-                ? imageavif($this->image, $path, $quality)
+                ? imageavif($this->image, $path, $quality ?? 85)
                 : throw new RuntimeException("Cannot save AVIF: not supported"),
             default                   => throw new RuntimeException("Cannot save unsupported image type: {$this->mime}")
         };
+    }
+
+    /**
+     * PNG Compression Level For a JPEG-Shaped Quality Number
+     *
+     * PNG takes a zlib level (0-9), not a quality. The old mapping turned the
+     * default quality of 100 into level 0 - no compression at all - so saving
+     * an uploaded PNG rewrote it larger than it arrived.
+     * @param ?int $quality Null when the caller expressed no preference
+     * @return int
+     */
+    private function pngLevel(?int $quality): int
+    {
+        if ($quality === null) {
+            return 6; // zlib default: good ratio at sane speed
+        }
+
+        return max(0, min(9, (int) round((100 - $quality) * 9 / 100)));
     }
 
     /**
@@ -417,13 +441,14 @@ class Image
     {
         // Check Resources
         $this->checkResources();
-        $result = [
-            'width' => $this->width,
+
+        // No reset() here: reading an image's dimensions should not destroy it,
+        // which made ->path($p)->info() then ->resize() impossible.
+        return [
+            'width'  => $this->width,
             'height' => $this->height,
-            'mime' => $this->mime
+            'mime'   => $this->mime
         ];
-        $this->reset();
-        return $result;
     }
 
     /**
@@ -432,8 +457,8 @@ class Image
      */
     public function destroy(): void
     {
-        // Check Resources
-        $this->checkResources();
+        // Idempotent on purpose: callers pair save()/destroy(), and checking
+        // resources first meant a second call threw instead of doing nothing.
         $this->image = null;
     }
 
@@ -490,7 +515,8 @@ class Image
      */
     protected function checkResources(): void
     {
-        if (in_array(null, [$this->path, $this->mime, $this->width, $this->height, $this->image])) {
+        // Was a loose in_array(), which compares null == 0 as true.
+        if ($this->image === null || $this->mime === null || $this->path === null) {
             throw new RuntimeException("Run Image::path(\$path) To Set Image File Path");
         }
     }
