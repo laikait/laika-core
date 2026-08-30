@@ -13,7 +13,6 @@ declare(strict_types=1);
 namespace Laika\Core\Helper;
 
 use Laika\Core\Http\ProxyTrust;
-use Laika\Service\Config;
 use Throwable;
 
 class Url
@@ -90,16 +89,6 @@ class Url
      */
     public function base(): string
     {
-        // An explicit base_url takes the request out of the equation entirely,
-        // which is the only complete answer to a poisoned Host header. Set it in
-        // production; every generated URL then stops depending on what the
-        // client sent.
-        $configured = $this->config('base_url');
-
-        if ($configured !== '') {
-            return rtrim($configured, '/') . '/';
-        }
-
         return $this->baseUrl;
     }
 
@@ -304,20 +293,6 @@ class Url
     protected function server(string $key): string
     {
         return is_string($_SERVER[$key] ?? null) ? trim($_SERVER[$key]) : '';
-    }
-
-    /**
-     * Read a String From lf-config/app.php Without Requiring a Booted Container
-     * @param string $key
-     * @return string
-     */
-    protected function config(string $key): string
-    {
-        try {
-            return trim((string) (Config::get('app', $key) ?? ''));
-        } catch (Throwable) {
-            return '';
-        }
     }
 
     /**
