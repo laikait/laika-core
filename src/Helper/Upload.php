@@ -12,6 +12,7 @@ declare(strict_types=1);
 
 namespace Laika\Core\Helper;
 
+use Laika\Service\File;
 use InvalidArgumentException;
 
 class Upload
@@ -208,18 +209,15 @@ class Upload
         }
 
         if ($allowedMime && $tmp && is_file($tmp)) {
-            $finfo = finfo_open(FILEINFO_MIME_TYPE);
+            // File::mime() is already "MIME type of a path", so this does not
+            // open its own finfo handle.
+            $mime = File::mime($tmp);
 
-            if ($finfo === false) {
+            if ($mime === false) {
                 return 'Unable to determine the file type';
             }
 
-            $mime = strtolower((string) finfo_file($finfo, $tmp));
-            if (\PHP_VERSION_ID < 80500) {
-                @finfo_close($finfo);
-            } else {
-                unset($finfo);
-            }
+            $mime = strtolower($mime);
 
             if (!in_array($mime, $allowedMime, true)) {
                 return "MIME type {$mime} not allowed";
@@ -240,20 +238,9 @@ class Upload
      */
     protected function processImage(string $destination): void
     {
-        $finfo = finfo_open(FILEINFO_MIME_TYPE);
+        $mime = File::mime($destination);
 
-        if ($finfo === false) {
-            return;
-        }
-
-        $mime = strtolower((string) finfo_file($finfo, $destination));
-        if (\PHP_VERSION_ID < 80500) {
-            @finfo_close($finfo);
-        } else {
-            unset($finfo);
-        }
-
-        if (!str_starts_with($mime, 'image/')) {
+        if ($mime === false || !str_starts_with(strtolower($mime), 'image/')) {
             return;
         }
 

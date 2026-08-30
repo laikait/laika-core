@@ -88,14 +88,10 @@ class File
             return false;
         }
 
-        $mime = finfo_file($finfo, $file);
-        if (\PHP_VERSION_ID < 80500) {
-            @finfo_close($finfo);
-        } else {
-            unset($finfo);
-        }
-
-        return $mime;
+        // No finfo_close(): it has been a no-op since the ext/fileinfo object
+        // migration in PHP 8.1 (this package's minimum), and PHP 8.5 deprecates
+        // it. The finfo object is freed when it goes out of scope.
+        return finfo_file($finfo, $file);
     }
 
     /**
