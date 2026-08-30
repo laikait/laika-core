@@ -22,8 +22,12 @@ class Cookie
     /** @var int $ttl Total Time Limit */
     protected int $ttl = 604800; // 7 Days
 
-    /** @var bool $httponly Http Only */
-    protected bool $httponly = false;
+    /**
+     * @var bool $httponly Http Only
+     * Defaults on: a cookie readable by script is the exception, not the norm,
+     * and the auth token cookie was picking up the permissive default.
+     */
+    protected bool $httponly = true;
 
     /** @var string $path Cookie Path */
     protected string $path = '/';
@@ -35,10 +39,20 @@ class Cookie
      */
     public function policy(string $policy): static
     {
-        if (!in_array(strtolower($policy), ['none', 'lax', 'strict'])) {
+        // Validated the lowercased string but stored ucfirst() of the raw one,
+        // so policy('STRICT') passed and then wrote SameSite=STRICT.
+        $policy = strtolower(trim($policy));
+
+        if (!in_array($policy, ['none', 'lax', 'strict'], true)) {
             throw new InvalidArgumentException("Invalid SameSite Policy [{$policy}]! Only Accepted Strict or Lax or None.");
         }
-        $this->samesite = ucfirst(trim($policy));
+
+        // Browsers ignore SameSite=None unless the cookie is also Secure.
+        if ($policy === 'none' && !Url::isHttps()) {
+            throw new InvalidArgumentException('SameSite=None requires a secure (HTTPS) connection.');
+        }
+
+        $this->samesite = ucfirst($policy);
         return $this;
     }
 
@@ -89,10 +103,11 @@ class Cookie
             $value = (string) $value;
         }
 
+        // No 'domain': under RFC 6265 an explicit Domain *widens* the cookie to
+        // subdomains, where omitting it yields the tighter host-only cookie.
         $result = setcookie($name, rawurlencode($value), [
             'expires'  => time() + $this->ttl,
             'path'     => $this->path,
-            'domain'   => Url::host(),
             'secure'   => Url::isHttps(),
             'httponly' => $this->httponly,
             'samesite' => $this->samesite
@@ -133,15 +148,20 @@ class Cookie
         if (!isset($_COOKIE[$name])) {
             return;
         }
+        // Attributes must mirror set() or the browser treats this as a
+        // different cookie and the original survives.
         setcookie($name, '', [
             'expires'  => time() - 3600,
             'path'     => $this->path,
-            'domain'   => Url::host(),
             'secure'   => Url::isHttps(),
             'httponly' => $this->httponly,
             'samesite' => $this->samesite
         ]);
         unset($_COOKIE[$name]);
+
+        // set() resets; pop() did not, so configuration leaked into every later
+        // cookie on this shared instance.
+        $this->reset();
     }
 
     /*==============================================================================*/
@@ -151,11 +171,11 @@ class Cookie
      * Reset Properties to Default
      * @return void
      */
-    protected function reset()
+    protected function reset(): void
     {
         $this->samesite = 'Strict';
         $this->ttl = 604800;
-        $this->httponly = false;
+        $this->httponly = true;
         $this->path = '/';
     }
 }

@@ -19,6 +19,25 @@ use Laika\Core\Exceptions\ExtensionException;
 
 class Vault
 {
+    /** @var string First byte of a versioned payload. */
+    private const FORMAT_V1 = "\x01";
+
+    /**
+     * @var array<string,string> Payload cipher id => cipher name.
+     * Stored in the ciphertext so decrypt() never has to guess from instance
+     * state, which a setCipher() elsewhere in the request could have changed.
+     */
+    private const CIPHER_IDS = [
+        "\x01" => 'aes-256-gcm',
+        "\x02" => 'aes-128-gcm',
+        "\x03" => 'chacha20-poly1305',
+    ];
+
+    /** @var string[] Vetted HMAC algorithms. hash_algos() also lists crc32b and md5. */
+    private array $allowedHashAlgos = [
+        'sha256', 'sha384', 'sha512', 'sha3-256', 'sha3-384', 'sha3-512',
+    ];
+
     /** @var string $cipher */
     private string $cipher;
 
@@ -77,10 +96,13 @@ class Vault
             throw new RuntimeException("Could not determine IV length for cipher: '{$cipher}'");
         }
 
-        $this->cipher   = $cipher;
-        $this->ivLength = $ivLength;
+        // A clone, not a mutation: this is a container singleton, so setting the
+        // cipher in place changed how unrelated later decrypt() calls behaved.
+        $clone = clone $this;
+        $clone->cipher   = $cipher;
+        $clone->ivLength = $ivLength;
 
-        return $this;
+        return $clone;
     }
 
     // -------------------------------------------------------------------------
@@ -102,7 +124,13 @@ class Vault
             throw new RuntimeException("Encryption failed.");
         }
 
-        return base64_encode($iv . $tag . $encrypted);
+        $id = array_search($this->cipher, self::CIPHER_IDS, true);
+
+        if ($id === false) {
+            throw new RuntimeException("Cipher '{$this->cipher}' has no payload id.");
+        }
+
+        return base64_encode(self::FORMAT_V1 . $id . $iv . $tag . $encrypted);
     }
 
     /**
@@ -113,15 +141,33 @@ class Vault
     public function decrypt(string $encryptedBase64): string
     {
         $data = base64_decode($encryptedBase64, true);
-        if ($data === false || strlen($data) <= ($this->ivLength + $this->tagLength)) {
+
+        if ($data === false || $data === '') {
             throw new RuntimeException("Invalid Encrypted Data!");
         }
 
-        $iv        = substr($data, 0, $this->ivLength);
-        $tag       = substr($data, $this->ivLength, $this->tagLength);
-        $encrypted = substr($data, $this->ivLength + $this->tagLength);
+        if ($data[0] === self::FORMAT_V1 && isset(self::CIPHER_IDS[$data[1] ?? ''])) {
+            // Versioned payload: the cipher travels with the data.
+            $cipher   = self::CIPHER_IDS[$data[1]];
+            $ivLength = (int) openssl_cipher_iv_length($cipher);
+            $body     = substr($data, 2);
+        } else {
+            // Pre-versioning ciphertext, which carried no marker. Assume the
+            // instance cipher, as the old code always did.
+            $cipher   = $this->cipher;
+            $ivLength = $this->ivLength;
+            $body     = $data;
+        }
 
-        $decrypted = openssl_decrypt($encrypted, $this->cipher, $this->key, OPENSSL_RAW_DATA, $iv, $tag);
+        if (strlen($body) <= ($ivLength + $this->tagLength)) {
+            throw new RuntimeException("Invalid Encrypted Data!");
+        }
+
+        $iv        = substr($body, 0, $ivLength);
+        $tag       = substr($body, $ivLength, $this->tagLength);
+        $encrypted = substr($body, $ivLength + $this->tagLength);
+
+        $decrypted = openssl_decrypt($encrypted, $cipher, $this->key, OPENSSL_RAW_DATA, $iv, $tag);
         if ($decrypted === false) {
             throw new RuntimeException("Decryption failed. Data may be tampered.");
         }
@@ -164,9 +210,16 @@ class Vault
      */
     public function hash(string $text, string $algo = 'sha256'): string
     {
-        if (!in_array($algo, hash_algos(), true)) {
-            throw new RuntimeException("Unsupported hash algorithm: '{$algo}'");
+        // hash_algos() admits crc32b and md5 as readily as sha256, so a typo
+        // used to downgrade security silently.
+        $algo = strtolower($algo);
+
+        if (!in_array($algo, $this->allowedHashAlgos, true)) {
+            throw new RuntimeException(
+                "Unsupported hash algorithm: '{$algo}'. Allowed: " . implode(', ', $this->allowedHashAlgos)
+            );
         }
+
         return hash_hmac($algo, $text, $this->key);
     }
 

@@ -36,6 +36,12 @@ defined('TEMPLATE_PATH') || define('TEMPLATE_PATH', APP_PATH . DS . 'template');
 // Define Template Cache Path
 defined('TEMPLATE_CACHE_PATH') || define('TEMPLATE_CACHE_PATH', STORAGE_PATH . DS . 'cache' . DS . 'template');
 
+// Define Config Path
+defined('CONFIG_PATH') || define('CONFIG_PATH', APP_PATH . DS . 'lf-config');
+
+// Define Language Path
+defined('LANG_PATH') || define('LANG_PATH', APP_PATH . DS . 'lf-lang');
+
 ####################################################################################
 /*--------------------------------- RELAY LOADER ---------------------------------*/
 ####################################################################################

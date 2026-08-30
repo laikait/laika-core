@@ -21,6 +21,19 @@ class Date
     protected string $format;
     protected string $timezone;
 
+    /**
+     * Relative-time units. Year and month are the mean Gregorian lengths, not
+     * the hard-coded 365 and 30 days the old match() arms used.
+     */
+    private const UNITS = [
+        [31556952, 'year'],
+        [2629746,  'month'],
+        [604800,   'week'],
+        [86400,    'day'],
+        [3600,     'hour'],
+        [60,       'minute'],
+    ];
+
     public function __construct(
         string $timezone = 'UTC',
         string $format = 'Y-m-d H:i:s'
@@ -28,6 +41,16 @@ class Date
         $this->timezone = $timezone;
         $this->format   = $format;
         $this->dt       = new DateTime('now', new DateTimeZone($timezone));
+    }
+
+    /**
+     * DateTime is mutable, so a shallow clone would share it and a "copy" would
+     * still mutate its original.
+     * @return void
+     */
+    public function __clone(): void
+    {
+        $this->dt = clone $this->dt;
     }
 
     ##########################################################################
@@ -61,9 +84,23 @@ class Date
         ?string $outputFormat = null,
         ?string $timezone     = null
     ): static {
+        $tz = new DateTimeZone($timezone ?? $this->timezone);
+        $dt = DateTime::createFromFormat($format, $time, $tz);
+
+        // The ?: fallback assumed new DateTime() returns false on bad input.
+        // It throws, so an unparseable string escaped as a raw Exception.
+        if ($dt === false) {
+            try {
+                $dt = new DateTime($time, $tz);
+            } catch (\Exception $e) {
+                throw new \InvalidArgumentException(
+                    "Unable to parse [{$time}] with format [{$format}].", 0, $e
+                );
+            }
+        }
+
         $clone         = clone $this;
-        $tz            = new DateTimeZone($timezone ?? $this->timezone);
-        $clone->dt     = DateTime::createFromFormat($format, $time, $tz) ?: new DateTime($time, $tz);
+        $clone->dt     = $dt;
         $clone->format = $outputFormat ?? $this->format;
         return $clone;
     }
@@ -127,8 +164,11 @@ class Date
      */
     public function setFormat(string $format): static
     {
-        $this->format = $format;
-        return $this;
+        // Clones, like now()/parse()/modify() do. Mutating in place changed the
+        // shared container instance for the rest of the request.
+        $clone = clone $this;
+        $clone->format = $format;
+        return $clone;
     }
 
     /**
@@ -152,9 +192,10 @@ class Date
      */
     public function setTimezone(string $timezone): static
     {
-        $this->timezone = $timezone;
-        $this->dt->setTimezone(new DateTimeZone($timezone));
-        return $this;
+        $clone = clone $this;
+        $clone->timezone = $timezone;
+        $clone->dt->setTimezone(new DateTimeZone($timezone));
+        return $clone;
     }
 
     /**
@@ -217,7 +258,7 @@ class Date
     /**
      * Return the date components as an associative array.
      *
-     * @return array{year: int, month: int, day: int, hour: int, minute: int, second: int, timezone: string}
+     * @return array{year:int,month:int,day:int,hour:int,minute:int,second:int,timezone:string}
      * @example Date::now()->toArray()
      * // ['year'=>2025, 'month'=>4, 'day'=>21, 'hour'=>10, 'minute'=>30, 'second'=>0, 'timezone'=>'Europe/London']
      */
@@ -258,16 +299,21 @@ class Date
      */
     public function humanDiff(?Date $other = null): string
     {
-        $secs = abs($this->dt->getTimestamp() - ($other?->getTimestamp() ?? time()));
+        // The old abs() discarded direction, so a future date read "3 days ago".
+        $delta  = $this->dt->getTimestamp() - ($other?->getTimestamp() ?? time());
+        $future = $delta > 0;
+        $secs   = abs($delta);
 
-        return match (true) {
-            $secs < 60       => 'just now',
-            $secs < 3600     => (int)($secs / 60) . ' minute' . ((int)($secs / 60) !== 1 ? 's' : '') . ' ago',
-            $secs < 86400    => (int)($secs / 3600) . ' hour' . ((int)($secs / 3600) !== 1 ? 's' : '') . ' ago',
-            $secs < 2592000  => (int)($secs / 86400) . ' day' . ((int)($secs / 86400) !== 1 ? 's' : '') . ' ago',
-            $secs < 31536000 => (int)($secs / 2592000) . ' month' . ((int)($secs / 2592000) !== 1 ? 's' : '') . ' ago',
-            default          => (int)($secs / 31536000) . ' year' . ((int)($secs / 31536000) !== 1 ? 's' : '') . ' ago',
-        };
+        foreach (self::UNITS as [$size, $label]) {
+            if ($secs >= $size) {
+                $count  = intdiv($secs, $size);
+                $phrase = $count . ' ' . $label . ($count !== 1 ? 's' : '');
+
+                return $future ? "in {$phrase}" : "{$phrase} ago";
+            }
+        }
+
+        return 'just now';
     }
 
     /**
@@ -280,16 +326,23 @@ class Date
      */
     public function humanDiffShort(?Date $other = null): string
     {
-        $secs = abs($this->dt->getTimestamp() - ($other?->getTimestamp() ?? time()));
+        $delta = $this->dt->getTimestamp() - ($other?->getTimestamp() ?? time());
+        $secs  = abs($delta);
 
-        return match (true) {
-            $secs < 60       => 'now',
-            $secs < 3600     => (int)($secs / 60) . 'm',
-            $secs < 86400    => (int)($secs / 3600) . 'h',
-            $secs < 2592000  => (int)($secs / 86400) . 'd',
-            $secs < 31536000 => (int)($secs / 2592000) . 'mo',
-            default          => (int)($secs / 31536000) . 'y',
-        };
+        if ($secs < 60) {
+            return 'now';
+        }
+
+        $short = ['year' => 'y', 'month' => 'mo', 'week' => 'w', 'day' => 'd', 'hour' => 'h', 'minute' => 'm'];
+
+        foreach (self::UNITS as [$size, $label]) {
+            if ($secs >= $size) {
+                // Leading '+' marks the future, mirroring humanDiff()'s "in ...".
+                return ($delta > 0 ? '+' : '') . intdiv($secs, $size) . $short[$label];
+            }
+        }
+
+        return 'now';
     }
 
     /**

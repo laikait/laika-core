@@ -23,9 +23,9 @@ class Config
     /** @var string $path */
     private static string $path = APP_PATH . '/lf-config';
 
-    ######################################################################################
-    ## --------------------------------- PUBLIC API ----------------------------------- ##
-    ######################################################################################
+    ##########################################################################
+    /* -------------------------- EXTERNAL API ---------------------------- */
+    ##########################################################################
 
     /**
      * Get Config Value
@@ -42,7 +42,9 @@ class Config
 
         // Get Value
         if ($key !== null) {
-            return self::$config[$name][$key] ?? $default;
+            // set(), pop() and has() all lowercase the key; get() did not, so a
+            // key written as APP_NAME was stored as app_name and never read back.
+            return self::$config[$name][strtolower(trim($key))] ?? $default;
         }
         return self::$config[$name] ?? $default;
     }
@@ -62,21 +64,21 @@ class Config
      * Modify a Config Value
      * @param string $name Config file name (without extension)
      * @param string $key Config key (optional)
-     * @param null|int|string|bool $value Value to Set
+     * @param null|int|float|string|bool|array $value Value to Set
      * @return void
      * @throws RuntimeException
      */
-    public static function set(string $name, string $key, null|int|string|bool|array $value): void
+    public static function set(string $name, string $key, null|int|float|string|bool|array $value): void
     {
         // Initiate
         self::init();
         $name = strtolower(trim($name));
         $key = strtolower(trim($key));
 
-        $file = self::$path . "/{$name}.php";
+        $file = CONFIG_PATH . DS . "{$name}.php";
 
         if (!File::exists($file)) {
-            throw new RuntimeException("Config File [$name}] Does Not Exist.");
+            throw new RuntimeException("Config File [{$name}] Does Not Exist.");
         }
 
         // Ensure config exists in memory
@@ -90,8 +92,8 @@ class Config
         // Rebuild file content with short array syntax
         $content = self::make(self::$config[$name]);
 
-        if (!File::write($content, $file)) {
-            throw new RuntimeException("Config Write Failed: [$name}]");
+        if (!File::write($content, $file, LOCK_EX)) {
+            throw new RuntimeException("Config Write Failed: [{$name}]");
         }
     }
 
@@ -108,11 +110,18 @@ class Config
         self::init();
         $name = strtolower(trim($name));
 
-        if ($key !== null) {
-            $key = strtolower($key);
-            return array_key_exists($key, self::$config[$name]);
+        // Indexing self::$config[$name] unguarded made the one method whose job
+        // is answering "does this exist?" throw a TypeError when it did not.
+        if (!array_key_exists($name, self::$config)) {
+            return false;
         }
-        return array_key_exists($name, self::$config);
+
+        if ($key === null) {
+            return true;
+        }
+
+        return is_array(self::$config[$name])
+            && array_key_exists(strtolower(trim($key)), self::$config[$name]);
     }
 
     /**
@@ -129,10 +138,10 @@ class Config
         $name = strtolower(trim($name));
         $key = strtolower(trim($key));
 
-        $file = self::$path . "/{$name}.php";
+        $file = CONFIG_PATH . DS . "{$name}.php";
 
         if (!File::exists($file)) {
-            throw new RuntimeException("Config File [$name}] Does Not Exist.");
+            throw new RuntimeException("Config File [{$name}] Does Not Exist.");
         }
 
         // Ensure config exists in memory
@@ -146,8 +155,8 @@ class Config
         // Rebuild file content with short array syntax
         $content = self::make(self::$config[$name]);
 
-        if (!File::write($content, $file)) {
-            throw new RuntimeException("Config Write Failed: [$name}]");
+        if (!File::write($content, $file, LOCK_EX)) {
+            throw new RuntimeException("Config Write Failed: [{$name}]");
         }
         return true;
     }
@@ -165,11 +174,11 @@ class Config
         self::init();
         $name = trim(strtolower($name));
 
-        $file = self::$path . DIRECTORY_SEPARATOR . "{$name}.php";
+        $file = CONFIG_PATH . DS . "{$name}.php";
 
         // Check File Already Exist
         if (File::exists($file)) {
-            throw new RuntimeException("Config File [$name}] Already Exists.");
+            throw new RuntimeException("Config File [{$name}] Already Exists.");
         }
 
         self::$config[$name] = $data;
@@ -177,7 +186,7 @@ class Config
         // Make Array Values
         $content = self::make($data);
         // Create Config File
-        if (!File::write($content, $file)) {
+        if (!File::write($content, $file, LOCK_EX)) {
             throw new RuntimeException("Config [{$name}] Write Failed!");
         }
         return true;
@@ -198,9 +207,9 @@ class Config
         }
 
         // Make Config Directory if Not Exists
-        Directory::make(self::$path);
+        Directory::make(CONFIG_PATH);
 
-        $files = Directory::files(self::$path, 'php');
+        $files = Directory::files(CONFIG_PATH, 'php');
 
         foreach ($files as $file) {
             if (is_file($file)) {
@@ -215,16 +224,18 @@ class Config
 
     /**
      * Export a value into short array-friendly PHP syntax
-     * @param null|int|string|bool $value Value to Export
+     * @param null|int|float|string|bool $value Value to Export
      * @return string
      */
-    private static function exportValue(null|int|string|bool $value): string
+    private static function exportValue(null|int|float|string|bool $value): string
     {
         return match (true) {
             is_null($value)   => 'null',
             is_bool($value)   => $value ? 'true' : 'false',
             is_int($value)    => (string)$value,
-            is_float($value)  => (string)$value,
+            // var_export() keeps full precision and avoids the scientific
+            // notation a plain (string) cast produces for large/small floats.
+            is_float($value)  => var_export($value, true),
             is_string($value) => "'" . str_replace("'", "\\'", $value) . "'",
             default           => 'null',
         };

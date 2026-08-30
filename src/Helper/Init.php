@@ -12,8 +12,8 @@ declare(strict_types=1);
 
 namespace Laika\Core\Helper;
 
-use PDOException;
 use RuntimeException;
+use Throwable;
 use Laika\Service\Config;
 use Laika\Model\Connection;
 use Laika\Session\SessionConfig;
@@ -50,20 +50,36 @@ class Init
      */
     public function db(?string $name = null): void
     {
-        $name = $name ?? 'default';
+        $name  = $name ?? 'default';
+        $cache = strtolower($name);
 
         // Skip If Already Booted
-        if (array_key_exists(strtolower($name), self::$connections) && self::$connections[strtolower($name)]) return;
+        if (self::$connections[$cache] ?? false) return;
 
-        if (!Connection::has($name)) {
-            try {
-                Connection::add(Config::get('database', $name));
-            } catch (PDOException $e) {
-                throw new RuntimeException("Framework Failed To Connect [{$name}] Database: " . $e->getMessage());
-            }
-
-            self::$connections[strtolower($name)] = true;
+        // The flag used to be set only inside the branch below, so a connection
+        // registered elsewhere never took this fast path.
+        if (Connection::has($name)) {
+            self::$connections[$cache] = true;
+            return;
         }
+
+        $config = Config::get('database', $name);
+
+        // By far the likeliest failure, and one that used to surface as a bare
+        // TypeError from Connection::add(null) rather than the message below.
+        if (!is_array($config) || $config === []) {
+            throw new RuntimeException("Database connection [{$name}] is not defined in lf-config/database.php.");
+        }
+
+        try {
+            Connection::add($config);
+        } catch (Throwable $e) {
+            // Not just PDOException: a bad DSN raises InvalidArgumentException
+            // or TypeError, neither of which the old clause caught.
+            throw new RuntimeException("Framework Failed To Connect [{$name}] Database: " . $e->getMessage(), 0, $e);
+        }
+
+        self::$connections[$cache] = true;
     }
 
     /**

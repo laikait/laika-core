@@ -18,7 +18,7 @@ use Laika\Core\Exceptions\LocalException;
 class Local
 {
     /** @var string Local Path */
-    private string $path = APP_PATH . '/lf-lang';
+    private string $path = LANG_PATH;
 
     /** @var string Local Name */
     private string $lang = 'en';
@@ -30,7 +30,19 @@ class Local
      */
     public function set(string $lang = 'en'): void
     {
-        $this->lang = strtolower(trim($lang ?: $this->lang));
+        $lang = strtolower(trim($lang));
+
+        if ($lang === '') {
+            return;
+        }
+
+        // This value becomes a filename in load(), which require_once's it.
+        // Anything looser than a language tag is a path traversal.
+        if (!preg_match('/^[a-z]{2}(-[a-z]{2})?$/', $lang)) {
+            throw new LocalException("Invalid Language Code [{$lang}]", 400);
+        }
+
+        $this->lang = $lang;
     }
 
     /**
@@ -50,15 +62,18 @@ class Local
      */
     public function setPath(string $path): void
     {
-        if (is_dir($path)) {
-            $this->path = realpath($path);
-        } else {
-            $this->path .= '/' . trim($path, '/.\\');
+        // Always resolved from the base, so a second call replaces the first.
+        // Appending to $this->path meant repeated calls concatenated fragments
+        // onto each other - and this is a container singleton, so that stuck.
+        $resolved = is_dir($path)
+            ? realpath($path)
+            : realpath(LANG_PATH . DS . trim(str_replace(['/', '\\'], DS, $path), DS));
+
+        if ($resolved === false || !is_dir($resolved)) {
+            throw new LocalException("Invalid Local Path [{$path}]", 500);
         }
 
-        if (!is_dir($this->path)) {
-            throw new LocalException("Invalid Local Path [{$this->path}]", 500);
-        }
+        $this->path = $resolved;
     }
 
     /**
@@ -71,7 +86,7 @@ class Local
         Directory::make($this->path);
 
         // Get File Name
-        $file = $this->path . '/' . $this->get() . '.local.php';
+        $file = $this->path . DS . $this->get() . '.local.php';
 
         if (!File::exists($file)) {
             $content = <<<HTML

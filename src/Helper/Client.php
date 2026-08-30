@@ -12,26 +12,40 @@ declare(strict_types=1);
 
 namespace Laika\Core\Helper;
 
+use Laika\Core\Http\ProxyTrust;
+use Laika\Shield\Support\IpHelper;
+
 class Client
 {
-    /** @var string $userAgent */
-    protected string $userAgent;
+    /**
+     * Known crawlers, plus two generic shapes: a "SomeBot/1.0" product token and
+     * the "+http://..." contact URL crawlers conventionally carry.
+     *
+     * Deliberately not a bare "bot" substring - that matched Cubot handsets and
+     * made every named entry above it redundant.
+     */
+    private const BOT_PATTERN = '/(?:googlebot|bingbot|slurp|duckduckbot|baiduspider'
+        . '|yandexbot|sogou|exabot|facebot|ia_archiver|mj12bot|semrushbot|ahrefsbot'
+        . '|dotbot|uptimebot|twitterbot|petalbot|applebot|crawler|spider'
+        . '|bot\/|\+https?:\/\/)/i';
+
+    /** @var ?string $userAgent Resolved on first use, not at construction. */
+    protected ?string $userAgent = null;
 
     /** @var ?string $ip */
-    protected ?string $ip;
+    protected ?string $ip = null;
 
-    public function __construct()
-    {
-        $this->userAgent =  $_SERVER['HTTP_USER_AGENT'] ?? 'Unknown';
-        $this->ip        =  $this->detectIp();
-    }
+    /** @var bool $ipResolved Distinguishes "not looked up yet" from "looked up, found nothing". */
+    protected bool $ipResolved = false;
 
     /**
      * @return string User Agent Name
      */
     public function userAgent(): string
     {
-        return $this->userAgent;
+        return $this->userAgent ??= (is_string($_SERVER['HTTP_USER_AGENT'] ?? null)
+            ? $_SERVER['HTTP_USER_AGENT']
+            : 'Unknown');
     }
 
     /**
@@ -39,7 +53,28 @@ class Client
      */
     public function ip(): ?string
     {
+        if (!$this->ipResolved) {
+            $this->ip         = $this->detectIp();
+            $this->ipResolved = true;
+        }
+
         return $this->ip;
+    }
+
+    /**
+     * Drop the Cached Request Snapshot
+     *
+     * This class is a container singleton, so a long running worker would
+     * otherwise report the values the process started with for every job.
+     * @return static
+     */
+    public function refresh(): static
+    {
+        $this->userAgent  = null;
+        $this->ip         = null;
+        $this->ipResolved = false;
+
+        return $this;
     }
 
     /**
@@ -56,7 +91,7 @@ class Client
      */
     public function os(): string
     {
-        $ua = $this->userAgent;
+        $ua = $this->userAgent();
 
         $osPatterns = [
             '/Android\s+([0-9\.]+)/i'       => 'Android %s',
@@ -91,7 +126,7 @@ class Client
      */
     public function browser(): string
     {
-        $ua = $this->userAgent;
+        $ua = $this->userAgent();
 
         $browsers = [
             ['name' => 'Edge',              'pattern' => '/Edg\/([0-9\.]+)/'],
@@ -125,7 +160,7 @@ class Client
      */
     public function deviceType(): string
     {
-        $ua = strtolower($this->userAgent);
+        $ua = strtolower($this->userAgent());
 
         if ($this->isBot()) {
             return 'Bot';
@@ -147,38 +182,7 @@ class Client
      */
     public function isBot(): bool
     {
-        $ua = strtolower($this->userAgent);
-
-        $bots = [
-            'googlebot',
-            'bingbot',
-            'slurp',
-            'duckduckbot',
-            'baiduspider',
-            'yandexbot',
-            'sogou',
-            'exabot',
-            'facebot',
-            'ia_archiver',
-            'mj12bot',
-            'semrushbot',
-            'ahrefsbot',
-            'dotbot',
-            'uptimebot',
-            'twitterbot',
-            'petalbot',
-            'crawler',
-            'spider',
-            'bot'
-        ];
-
-        foreach ($bots as $bot) {
-            if (strpos($ua, $bot) !== false) {
-                return true;
-            }
-        }
-
-        return false;
+        return (bool) preg_match(self::BOT_PATTERN, $this->userAgent());
     }
 
     /**
@@ -201,31 +205,22 @@ class Client
     /*============================== INTERNAL API ==============================*/
     /*==========================================================================*/
     /**
-     * @return string Detect Client IP
-     * @return ?string IPv4/IPv6 on Success and null of Failure
+     * Detect Client IP
+     *
+     * Forwarded headers are set by whoever sent the request, so they are only
+     * consulted when the immediate peer is a proxy named in
+     * lf-config/app.php -> trusted_proxies. Resolution itself is delegated to
+     * laika-shield's IpHelper, which walks X-Forwarded-For right to left -
+     * discarding hops we added and stopping at the first we did not - and
+     * strips ports and IPv6 brackets on the way.
+     * @return ?string IPv4/IPv6 on Success and null on Failure
      */
     protected function detectIp(): ?string
     {
-        foreach (
-            [
-                'HTTP_CLIENT_IP',
-                'HTTP_X_FORWARDED_FOR',
-                'HTTP_X_FORWARDED',
-                'HTTP_FORWARDED_FOR',
-                'HTTP_FORWARDED',
-                'REMOTE_ADDR'
-            ] as $key
-        ) {
-            if (!empty($_SERVER[$key])) {
-                $ips = explode(',', $_SERVER[$key]);
-                foreach ($ips as $ip) {
-                    $ip = trim($ip);
-                    if (filter_var($ip, FILTER_VALIDATE_IP, [FILTER_FLAG_IPV4, FILTER_FLAG_IPV6])) {
-                        return $ip;
-                    }
-                }
-            }
-        }
-        return null;
+        $ip = IpHelper::resolve(ProxyTrust::enabled(), ProxyTrust::ranges());
+
+        // Flags are a bitmask. The old code passed a list array, which carries
+        // no 'flags' key, so it silently validated with no flags at all.
+        return filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4 | FILTER_FLAG_IPV6) ?: null;
     }
 }
