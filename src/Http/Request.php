@@ -60,21 +60,6 @@ class Request
         return $this->method;
     }
 
-    // /**
-    //  * Get Header Key Values
-    //  * @return array
-    //  */
-    // public function headers(): array
-    // {
-    //     $headers = [];
-    //     foreach ($_SERVER as $key => $value) {
-    //         if (str_starts_with($key, 'HTTP_')) {
-    //             $headers[strtolower(str_replace('_', '-', substr($key, 5)))] = $value;
-    //         }
-    //     }
-    //     return $headers;
-    // }
-
     /**
      * Get Request Headers
      * @return array
