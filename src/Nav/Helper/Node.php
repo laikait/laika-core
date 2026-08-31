@@ -12,6 +12,9 @@ declare(strict_types=1);
 
 namespace Laika\Core\Nav\Helper;
 
+use Laika\Route\Handler;
+use Laika\Service\Url;
+
 abstract class Node
 {
     /** @var Item[] */
@@ -19,14 +22,18 @@ abstract class Node
 
     /**
      * Create and Register a Item Into This Node
+     * A Hidden Item is Still Created and Returned - it is Simply Never
+     * Registered, so its Entire Subtree Falls Out of the Tree While the
+     * Caller's Chain Keeps Working.
      * @param string $title Item Title
-     * @param string $url Item URL
+     * @param string $named Named Route, or an Already-Final URL
+     * @param array $params Named Route Parameters
      * @param bool $display Set false to Hide
      * @return Item
      */
-    protected function createItem(string $title, string $url, bool $display): Item
+    protected function createItem(string $title, string $named, array $params, bool $display): Item
     {
-        $item = new Item($title, $url, $this);
+        $item = new Item($title, $this->resolveUrl($named, $params), $this);
         if ($display) {
             $this->items[] = $item;
         }
@@ -34,31 +41,38 @@ abstract class Node
     }
 
     /**
-     * Build HTML List Recursively
-     * @param Item[] $items
+     * Turn a Named Route Into a URL
+     * Mirrors the named() Helper, but Reaches Handler and Url Directly - a
+     * src/ Class Cannot Assume helpers/functions Has Been Loaded, Since Those
+     * Arrive Lazily Through the Resource System at App Boot.
+     * @param string $named Named Route, or an Already-Final URL
+     * @param array $params Named Route Parameters
+     * @throws \RuntimeException When the Route Name is Not Registered
      * @return string
      */
-    protected function build(array $items): string
+    protected function resolveUrl(string $named, array $params): string
     {
-        if (empty($items)) {
-            return '';
+        // Already-Final Targets Pass Straight Through: Absolute and
+        // Protocol-Relative URLs, Other Schemes (mailto:, tel:) and Fragments.
+        // A Malformed URL Gives false Here, Which Also Passes Through - Better
+        // a Suspect Link Than a Route Lookup That Cannot Possibly Succeed.
+        if (
+            parse_url($named, PHP_URL_HOST) !== null
+            || parse_url($named, PHP_URL_SCHEME) !== null
+            || str_starts_with($named, '#')
+        ) {
+            return $named;
         }
 
-        $html = '<ul>';
-        foreach ($items as $item) {
-            $title = htmlspecialchars($item->getTitle(), ENT_QUOTES, 'UTF-8');
-            $url   = htmlspecialchars($item->getUrl(), ENT_QUOTES, 'UTF-8');
+        $name  = parse_url($named, PHP_URL_PATH) ?: '';
+        $query = parse_url($named, PHP_URL_QUERY);
 
-            $html .= '<li>';
-            $html .= "<a href=\"{$url}\">{$title}</a>";
+        $path = trim(Handler::namedUrl(trim($name, '/'), $params), '/');
 
-            if ($item->hasChildren()) {
-                $html .= $this->build($item->getChildren());
-            }
-
-            $html .= '</li>';
+        if (is_string($query) && $query !== '') {
+            $path .= '?' . $query;
         }
 
-        return $html . '</ul>';
+        return Url::base() . $path;
     }
 }

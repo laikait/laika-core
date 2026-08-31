@@ -5,6 +5,7 @@
     <!-- Directories to scan -->
     <file>src</file>
     <file>helpers</file>
+    <file>tests</file>
 
     <!-- PHPCompatibility standard -->
     <rule ref="PHPCompatibility">
