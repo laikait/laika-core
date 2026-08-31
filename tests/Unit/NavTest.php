@@ -4,16 +4,16 @@ declare(strict_types=1);
 
 namespace Laika\Tests\Unit;
 
-use InvalidArgumentException;
-use Laika\Core\Helper\Url as UrlHelper;
-use Laika\Core\Nav\Builder;
-use Laika\Core\Nav\Helper\Item;
-use Laika\Relay\Relay;
-use Laika\Relay\RelayRegistry;
-use Laika\Route\Handler;
-use PHPUnit\Framework\TestCase;
-use RuntimeException;
 use Throwable;
+use RuntimeException;
+use Laika\Relay\Relay;
+use Laika\Route\Handler;
+use Laika\Core\Nav\Builder;
+use InvalidArgumentException;
+use Laika\Relay\RelayRegistry;
+use Laika\Core\Nav\Helper\Item;
+use PHPUnit\Framework\TestCase;
+use Laika\Core\Helper\Url as UrlHelper;
 
 final class NavTest extends TestCase
 {
@@ -69,7 +69,7 @@ final class NavTest extends TestCase
                 continue;
             }
 
-            Handler::get($uri, static fn (): null => null);
+            Handler::get($uri, static fn (): mixed => null);
             Handler::name($name, 'GET', $uri);
         }
     }
