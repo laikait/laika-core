@@ -41,6 +41,29 @@ abstract class Node
     }
 
     /**
+     * Find a Named Item Anywhere Below This Node
+     * Depth-First, First Match Wins - Names Are Not Enforced Unique.
+     * A Hidden Item Was Never Registered in $items, so it is Invisible Here
+     * Along With its Subtree, Matching How the Renderer Treats it.
+     * @param string $name Name Set Through Item::name()
+     * @return Item|null
+     */
+    protected function findNamed(string $name): ?Item
+    {
+        foreach ($this->items as $item) {
+            if ($item->getName() === $name) {
+                return $item;
+            }
+
+            if (($found = $item->findNamed($name)) !== null) {
+                return $found;
+            }
+        }
+
+        return null;
+    }
+
+    /**
      * Turn a Named Route Into a URL
      * Mirrors the named() Helper, but Reaches Handler and Url Directly - a
      * src/ Class Cannot Assume helpers/functions Has Been Loaded, Since Those
