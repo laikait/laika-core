@@ -14,8 +14,9 @@ namespace Laika\Core\Nav\Helper;
 
 /**
  * Turns a Nav Tree Into HTML.
- * Every Value That Reaches the Output Passes Through esc() - This is the Only
- * Class in Nav That Emits Markup.
+ * Every Value That Reaches the Output Passes Through esc(), With One Exception:
+ * Item::svg() is Author-Supplied Markup and is Emitted Verbatim.
+ * This is the Only Class in Nav That Emits Markup.
  */
 final class Renderer
 {
@@ -154,10 +155,16 @@ final class Renderer
         $link .= $this->attributes($item->getAttributes());
 
         $label = '';
-        if (($icon = $item->getIcon()) !== null && $icon !== '') {
+
+        // Inline SVG and an Icon Class Fill the Same Slot, so SVG Wins. It is
+        // the One Value That Skips esc() - See Item::svg() for Why That Holds.
+        if (($svg = $item->getSvg()) !== null && $svg !== '') {
+            $label .= $svg;
+        } elseif (($icon = $item->getIcon()) !== null && $icon !== '') {
             $iconTag = $this->esc((string) ($this->config['icon_tag'] ?: 'i'));
             $label  .= '<' . $iconTag . ' class="' . $this->esc($icon) . '" aria-hidden="true"></' . $iconTag . '>';
         }
+
         $label .= $this->esc($item->getTitle());
 
         $html  = '<li' . $this->classAttribute($classes) . '>';

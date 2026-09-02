@@ -23,6 +23,9 @@ class Item extends Node
     /** A Valid HTML Attribute Name. */
     private const ATTRIBUTE = '/^[A-Za-z_:][A-Za-z0-9_.:-]*$/';
 
+    /** Markup That Opens With an <svg> Element. */
+    private const SVG = '/^<svg[\s\/>]/i';
+
     /** @var string[] Extra Classes for the <li> */
     private array $classes = [];
 
@@ -31,6 +34,9 @@ class Item extends Node
 
     /** @var string|null Icon CSS Class Rendered Before the Title */
     private ?string $icon = null;
+
+    /** @var string|null Inline SVG Markup Rendered Before the Title */
+    private ?string $svg = null;
 
     /** @var bool|null Forced Active State. Null Means Detect From the URL. */
     private ?bool $active = null;
@@ -51,6 +57,7 @@ class Item extends Node
     public function getClasses(): array       { return $this->classes; }
     public function getAttributes(): array    { return $this->attributes; }
     public function getIcon(): ?string        { return $this->icon; }
+    public function getSvg(): ?string         { return $this->svg; }
     public function getActive(): ?bool        { return $this->active; }
     public function getName(): ?string        { return $this->name; }
 
@@ -202,6 +209,30 @@ class Item extends Node
     public function icon(string $icon): static
     {
         $this->icon = $icon;
+        return $this;
+    }
+
+    /**
+     * Set Inline SVG Markup Rendered Before the Title
+     * Fills the Same Slot as icon() and Wins When Both Are Set.
+     * The Markup is Emitted Verbatim, Unescaped - it is Author-Supplied and
+     * Trusted the Same Way a Template Partial is. Never Pass User Input Here.
+     * Mark a Decorative Icon aria-hidden="true" Yourself: the Renderer Emits
+     * What You Give it and Rewrites Nothing.
+     * @param string $svg e.g. '<svg viewBox="0 0 24 24" aria-hidden="true">...</svg>'
+     * @throws InvalidArgumentException When the Markup is Not an <svg> Element
+     * @return static
+     */
+    public function svg(string $svg): static
+    {
+        $svg = trim($svg);
+
+        // Also Catches the Likely Slip of Passing a CSS Class Here - That is icon().
+        if (!preg_match(self::SVG, $svg)) {
+            throw new InvalidArgumentException('Item SVG Must Be an <svg> Element. Use icon() for a CSS Class.');
+        }
+
+        $this->svg = $svg;
         return $this;
     }
 

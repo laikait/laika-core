@@ -654,6 +654,78 @@ final class NavTest extends TestCase
         );
     }
 
+    public function testSvgIsRenderedBeforeTheTitle(): void
+    {
+        $svg = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M0 0h24v24H0z"/></svg>';
+
+        $this->nav->add('Home', 'nav.home')->svg($svg);
+
+        $this->assertStringContainsString($svg . 'Home', $this->nav->render());
+    }
+
+    public function testSvgMarkupIsNotEscaped(): void
+    {
+        $this->nav->add('Home', 'nav.home')->svg('<svg><use href="#home"></use></svg>');
+
+        $html = $this->nav->render();
+
+        $this->assertStringContainsString('<svg><use href="#home"></use></svg>', $html);
+        $this->assertStringNotContainsString('&lt;svg', $html);
+    }
+
+    public function testSvgWinsTheIconSlotWhenBothAreSet(): void
+    {
+        $this->nav->add('Home', 'nav.home')
+            ->icon('fa fa-home')
+            ->svg('<svg id="s"></svg>');
+
+        $html = $this->nav->render();
+
+        $this->assertStringContainsString('<svg id="s"></svg>Home', $html);
+        $this->assertStringNotContainsString('fa fa-home', $html);
+    }
+
+    public function testSvgIsTrimmedAndRoundTrips(): void
+    {
+        $item = $this->nav->add('Home', 'nav.home')->svg("  <svg id=\"s\"></svg>
+");
+
+        $this->assertSame('<svg id="s"></svg>', $item->getSvg());
+    }
+
+    public function testAnUnsetSvgIsNull(): void
+    {
+        $this->assertNull($this->nav->add('Home', 'nav.home')->getSvg());
+    }
+
+    public function testSelfClosingSvgIsAccepted(): void
+    {
+        $this->nav->add('Home', 'nav.home')->svg('<svg/>');
+
+        $this->assertStringContainsString('<svg/>Home', $this->nav->render());
+    }
+
+    /**
+     * @dataProvider nonSvgMarkup
+     */
+    public function testMarkupThatIsNotAnSvgElementThrows(string $value): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+
+        $this->nav->add('Home', 'nav.home')->svg($value);
+    }
+
+    public static function nonSvgMarkup(): array
+    {
+        return [
+            'css class'   => ['fa fa-home'],
+            'blank'       => ['   '],
+            'other tag'   => ['<span>x</span>'],
+            'script'      => ['<script>alert(1)</script>'],
+            'svg-ish name'=> ['<svgfoo></svgfoo>'],
+        ];
+    }
+
     public function testInvalidAttributeNameThrows(): void
     {
         $this->expectException(InvalidArgumentException::class);
