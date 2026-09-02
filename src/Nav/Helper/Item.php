@@ -35,6 +35,9 @@ class Item extends Node
     /** @var bool|null Forced Active State. Null Means Detect From the URL. */
     private ?bool $active = null;
 
+    /** @var string|null Stable Lookup Key. Null Means the Item Cannot Be Targeted. */
+    private ?string $name = null;
+
     /**
      * @internal Items are Only Legitimate Through Builder::add() or Item::child().
      */
@@ -49,6 +52,7 @@ class Item extends Node
     public function getAttributes(): array    { return $this->attributes; }
     public function getIcon(): ?string        { return $this->icon; }
     public function getActive(): ?bool        { return $this->active; }
+    public function getName(): ?string        { return $this->name; }
 
     /**
      * Get the Node This Item Hangs Under
@@ -81,6 +85,37 @@ class Item extends Node
     public function end(): Node
     {
         return $this->parent;
+    }
+
+    /**
+     * Give the Item a Stable Lookup Key
+     * This is What Builder::find() and Builder::extend() Target, so it Should
+     * Outlive the Title - Which Gets Translated and Reworded.
+     * @param string $name e.g. 'services'
+     * @throws InvalidArgumentException When the Name is Blank
+     * @return static
+     */
+    public function name(string $name): static
+    {
+        $name = trim($name);
+
+        if ($name === '') {
+            throw new InvalidArgumentException('Item Name Cannot Be Blank.');
+        }
+
+        $this->name = $name;
+        return $this;
+    }
+
+    /**
+     * Find a Named Item Below This One
+     * Scopes a Lookup to This Subtree - Builder::find() Searches the Whole Tree.
+     * @param string $name Name Set Through name()
+     * @return Item|null
+     */
+    public function find(string $name): ?Item
+    {
+        return $this->findNamed($name);
     }
 
     /**

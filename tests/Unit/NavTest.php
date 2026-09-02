@@ -273,6 +273,253 @@ final class NavTest extends TestCase
     }
 
     // -----------------------------------------------------------------------
+    // Naming and lookup
+    // -----------------------------------------------------------------------
+
+    public function testNameRoundTripsAndStaysChainable(): void
+    {
+        $item = $this->nav->add('Services', 'nav.services')->name('services');
+
+        $this->assertInstanceOf(Item::class, $item);
+        $this->assertSame('services', $item->getName());
+    }
+
+    public function testAnUnnamedItemHasANullName(): void
+    {
+        $this->assertNull($this->nav->add('Home', 'nav.home')->getName());
+    }
+
+    public function testBlankNameThrows(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+
+        $this->nav->add('Services', 'nav.services')->name('   ');
+    }
+
+    public function testFindLocatesATopLevelItem(): void
+    {
+        $this->nav->add('Home', 'nav.home');
+        $this->nav->add('Services', 'nav.services')->name('services');
+
+        $this->assertSame('Services', $this->nav->find('services')?->getTitle());
+    }
+
+    public function testFindDescendsIntoTheTree(): void
+    {
+        $this->nav->add('Services', 'nav.services')
+            ->child('Other', 'nav.other')
+            ->child('Etc', 'nav.etc1')->name('etc');
+
+        $this->assertSame('Etc', $this->nav->find('etc')?->getTitle());
+    }
+
+    public function testFindReturnsNullForAnUnknownName(): void
+    {
+        $this->nav->add('Services', 'nav.services')->name('services');
+
+        $this->assertNull($this->nav->find('nothing'));
+    }
+
+    public function testFindDoesNotSeeItemsUnderAHiddenParent(): void
+    {
+        $this->nav->add('Admin', 'nav.admin', [], false)
+            ->child('Staff', 'nav.staff')->name('staff');
+
+        $this->assertNull($this->nav->find('staff'));
+    }
+
+    public function testItemFindScopesTheSearchToItsOwnSubtree(): void
+    {
+        $services = $this->nav->add('Services', 'nav.services');
+        $services->child('Help', 'nav.help')->name('help');
+
+        $this->nav->add('Admin', 'nav.admin')
+            ->child('Staff', 'nav.staff')->name('staff');
+
+        $this->assertSame('Help', $services->find('help')?->getTitle());
+        $this->assertNull($services->find('staff'));
+    }
+
+    // -----------------------------------------------------------------------
+    // Deferred injection
+    // -----------------------------------------------------------------------
+
+    public function testExtendInjectsWhenRegisteredBeforeTheParentExists(): void
+    {
+        // The ordering that motivates extend(): a pipeline runs before the
+        // controller that builds the tree.
+        $this->nav->extend('services', static function (Item $item): void {
+            $item->child('Help', 'nav.help');
+        });
+
+        $this->nav->add('Services', 'nav.services')->name('services');
+
+        $html = $this->nav->render();
+
+        $this->assertStringContainsString('nav-submenu', $html);
+        $this->assertStringContainsString($this->url('services/help'), $html);
+    }
+
+    public function testExtendInjectsWhenRegisteredAfterTheParentExists(): void
+    {
+        $this->nav->add('Services', 'nav.services')->name('services');
+
+        $this->nav->extend('services', static function (Item $item): void {
+            $item->child('Help', 'nav.help');
+        });
+
+        $this->assertStringContainsString($this->url('services/help'), $this->nav->render());
+    }
+
+    public function testExtendReturnsTheBuilderForChaining(): void
+    {
+        $this->assertSame(
+            $this->nav,
+            $this->nav->extend('services', static fn (Item $item): Item => $item)
+        );
+    }
+
+    public function testExtendOnAnAbsentNameIsSilentlyDropped(): void
+    {
+        $this->nav->add('Home', 'nav.home');
+        $this->nav->extend('nothing', static function (Item $item): void {
+            $item->child('Help', 'nav.help');
+        });
+
+        $html = $this->nav->render();
+
+        $this->assertStringNotContainsString('nav-submenu', $html);
+        $this->assertStringContainsString($this->url(), $html);
+    }
+
+    public function testExtendOnAHiddenParentIsSilentlyDropped(): void
+    {
+        $this->nav->add('Admin', 'nav.admin', [], false)->name('admin');
+        $this->nav->extend('admin', static function (Item $item): void {
+            $item->child('Staff', 'nav.staff');
+        });
+
+        $this->assertStringNotContainsString('/admin', $this->nav->render());
+    }
+
+    public function testSeveralExtendsOnOneNameApplyInRegistrationOrder(): void
+    {
+        $this->nav->add('Services', 'nav.services')->name('services');
+
+        $this->nav->extend('services', static function (Item $item): void {
+            $item->child('Help', 'nav.help');
+        });
+        $this->nav->extend('services', static function (Item $item): void {
+            $item->child('Other', 'nav.other');
+        });
+
+        // find() does not drain; items() is the drain point.
+        $this->nav->items();
+
+        $children = $this->nav->find('services')?->getChildren() ?? [];
+
+        $this->assertCount(2, $children);
+        $this->assertSame('Help', $children[0]->getTitle());
+        $this->assertSame('Other', $children[1]->getTitle());
+    }
+
+    public function testAnExtendCanTargetAnItemAnEarlierExtendAdded(): void
+    {
+        $this->nav->extend('services', static function (Item $item): void {
+            $item->child('Other', 'nav.other')->name('other');
+        });
+        $this->nav->extend('other', static function (Item $item): void {
+            $item->child('Etc', 'nav.etc1');
+        });
+
+        $this->nav->add('Services', 'nav.services')->name('services');
+
+        $this->assertStringContainsString($this->url('services/other/etc1'), $this->nav->render());
+    }
+
+    public function testItemsDrainsTheQueueWithoutRendering(): void
+    {
+        $this->nav->extend('services', static function (Item $item): void {
+            $item->child('Help', 'nav.help');
+        });
+
+        $this->nav->add('Services', 'nav.services')->name('services');
+
+        $items = $this->nav->items();
+
+        $this->assertTrue($items[0]->hasChildren());
+        $this->assertSame('Help', $items[0]->getChildren()[0]->getTitle());
+    }
+
+    public function testRenderingTwiceDoesNotDuplicateAnInjectedChild(): void
+    {
+        $this->nav->add('Services', 'nav.services')->name('services');
+        $this->nav->extend('services', static function (Item $item): void {
+            $item->child('Help', 'nav.help');
+        });
+
+        $this->nav->render();
+        $this->nav->render();
+
+        $this->assertCount(1, $this->nav->find('services')?->getChildren() ?? []);
+    }
+
+    public function testFindDoesNotConsumePendingInjections(): void
+    {
+        $this->nav->extend('services', static function (Item $item): void {
+            $item->child('Help', 'nav.help');
+        });
+
+        // Draining here would discard the injection before its parent exists.
+        $this->assertNull($this->nav->find('services'));
+
+        $this->nav->add('Services', 'nav.services')->name('services');
+
+        $this->assertStringContainsString($this->url('services/help'), $this->nav->render());
+    }
+
+    public function testFlushDiscardsPendingInjections(): void
+    {
+        $this->nav->extend('services', static function (Item $item): void {
+            $item->child('Help', 'nav.help');
+        });
+
+        $this->nav->flush();
+        $this->nav->add('Services', 'nav.services')->name('services');
+
+        $this->assertStringNotContainsString('nav-submenu', $this->nav->render());
+    }
+
+    public function testACallbackMayQueueAFurtherExtend(): void
+    {
+        $this->nav->add('Services', 'nav.services')->name('services');
+
+        $this->nav->extend('services', function (Item $item): void {
+            $item->child('Other', 'nav.other')->name('other');
+
+            $this->nav->extend('other', static function (Item $child): void {
+                $child->child('Etc', 'nav.etc2');
+            });
+        });
+
+        $this->assertStringContainsString($this->url('services/other/etc2'), $this->nav->render());
+    }
+
+    public function testACallbackMayReadItemsWithoutReEntering(): void
+    {
+        $this->nav->add('Services', 'nav.services')->name('services');
+
+        $this->nav->extend('services', function (Item $item): void {
+            // Re-entrant read - the guard must stop this recursing.
+            $this->assertNotEmpty($this->nav->items());
+
+            $item->child('Help', 'nav.help');
+        });
+
+        $this->assertStringContainsString($this->url('services/help'), $this->nav->render());
+    }
+
+    // -----------------------------------------------------------------------
     // Conditional display
     // -----------------------------------------------------------------------
 

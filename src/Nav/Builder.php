@@ -27,6 +27,12 @@ class Builder extends Node
     /** @var bool Was current() Called? Distinguishes "Auto" From "Deliberately Off". */
     private bool $currentSet = false;
 
+    /** @var list<array{0:string,1:callable}> Injections Waiting for Their Parent */
+    private array $pending = [];
+
+    /** @var bool Guards Re-Entry While the Queue Drains */
+    private bool $applying = false;
+
     /**
      * Add a Top-Level Nav Item
      * @param string $title Item Title
@@ -69,6 +75,38 @@ class Builder extends Node
     }
 
     /**
+     * Find a Named Item Anywhere in the Tree
+     * Eager - the Item Must Already Exist. Use extend() When it Might Not.
+     * Deliberately Does Not Drain the extend() Queue: Draining Early Would
+     * Discard Every Injection Whose Parent Has Not Been Added Yet, Which is
+     * the Exact Case extend() Exists to Cover.
+     * @param string $name Name Set Through Item::name()
+     * @return Item|null First Depth-First Match, Null When Nothing Carries the Name
+     */
+    public function find(string $name): ?Item
+    {
+        return $this->findNamed($name);
+    }
+
+    /**
+     * Queue a Child Injection Against a Name That Need Not Exist Yet
+     * The Callback Receives the Named Item and Runs When the Tree is Read -
+     * at render() or items(). This is What Lets a Pipeline Extend a Nav it
+     * Does Not Own: the Pipeline Runs Before the Controller, so a find() There
+     * Would Miss a Tree the Controller Has Not Built Yet.
+     * A Name That Never Appears is Dropped Silently - a Module May Legitimately
+     * Target a Nav That is Absent From This Page.
+     * @param string $name Name Set Through Item::name()
+     * @param callable $callback fn(Item $item): void
+     * @return static
+     */
+    public function extend(string $name, callable $callback): static
+    {
+        $this->pending[] = [$name, $callback];
+        return $this;
+    }
+
+    /**
      * Render the Nav as HTML
      * @param string $class Wrapper class. Default is 'navbar'
      * @return string
@@ -76,16 +114,21 @@ class Builder extends Node
     public function render(string $class = 'navbar'): string
     {
         $config = array_merge(['class' => $class], $this->config);
+        $items  = $this->items();
 
-        return (new Renderer($config, $this->resolveCurrent(), $this->resolveBase()))->render($this->items);
+        return (new Renderer($config, $this->resolveCurrent(), $this->resolveBase()))->render($items);
     }
 
     /**
      * Get Raw Item Objects
+     * Drains the extend() Queue First, so a Template That Walks the Items and
+     * Writes its Own Markup Still Sees Deferred Injections.
      * @return Item[]
      */
     public function items(): array
     {
+        $this->applyPending();
+
         return $this->items;
     }
 
@@ -93,12 +136,43 @@ class Builder extends Node
      * Drop Every Item and Start Over
      * The 'nav' Relay is a Registry Singleton, so the Same Builder Lives for
      * the Whole Request - This is How a Second Nav (or a Test) Gets a Clean One.
+     * Pending Injections Go Too, or They Would Replay Into the Next Tree.
      * @return static
      */
     public function flush(): static
     {
-        $this->items = [];
+        $this->items   = [];
+        $this->pending = [];
         return $this;
+    }
+
+    /**
+     * Run Every Queued Injection Whose Parent Now Exists
+     * Shifts Rather Than Iterates: a Callback That Queues Another extend() is
+     * Picked Up in the Same Drain. Entries Are Consumed, so a Second render()
+     * Cannot Duplicate a Child.
+     * @return void
+     */
+    private function applyPending(): void
+    {
+        // A Callback That Calls items() Would Otherwise Re-Enter Mid-Drain.
+        if ($this->applying || $this->pending === []) {
+            return;
+        }
+
+        $this->applying = true;
+
+        try {
+            while (($entry = array_shift($this->pending)) !== null) {
+                [$name, $callback] = $entry;
+
+                if (($item = $this->findNamed($name)) !== null) {
+                    $callback($item);
+                }
+            }
+        } finally {
+            $this->applying = false;
+        }
     }
 
     /**
