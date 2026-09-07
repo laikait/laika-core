@@ -12,42 +12,53 @@ declare(strict_types=1);
 
 namespace Laika\Core\Http;
 
+use Laika\Core\Contracts\SanitizerInterface;
+use Laika\Core\Sanitizer\InputSanitizer;
+
+
 class Request
 {
-    /** @property array $get */
+    /** @var array $get */
     protected array $get;
 
-    /** @property array $post */
+    /** @var array $post */
     protected array $post;
 
-    /** @property array $files */
+    /** @var array $files */
     protected array $files;
 
-    /** @property array $json */
+    /** @var array $json */
     protected array $json;
 
-    /** @property string $rawBody */
+    /** @var string $rawBody */
     protected string $rawBody;
 
-    /** @property string $method */
+    /** @var ?array Cached Headers */
+    protected ?array $cachedHeaders = null;
+
+    /** @var string $method */
     protected string $method;
 
-    /** @property array $errors Request Validation Errors */
+    /** @var array $errors Request Validation Errors */
     protected array $errors = [];
+
+    /** @var SanitizerInterface Input Sanitizer Interface */
+    protected SanitizerInterface $sanitizer;
 
     ####################################################################
     /*------------------------- EXTERNAL API -------------------------*/
     ####################################################################
 
-    public function __construct()
+    public function __construct(?SanitizerInterface $sanitizer = null)
     {
-        $this->get = purify($_GET ?? []);
-        $this->post = purify($_POST ?? []);
+        $this->sanitizer = $sanitizer ?? new InputSanitizer();
+        $this->get = $this->sanitizer->sanitize($_GET ?? []);
+        $this->post = $this->sanitizer->sanitize($_POST ?? []);
         $this->files = $_FILES ?? [];
-        $this->rawBody = file_get_contents('php://input');
-        $this->json = purify($this->decode($this->rawBody));
+        $this->rawBody = file_get_contents('php://input') ?: '';
+        $this->json = $this->sanitizer->sanitize($this->decode($this->rawBody));
         $spoofable = ['PUT', 'PATCH', 'DELETE'];
-        $spoofed = strtoupper($this->post['_method'] ?? '');
+        $spoofed = strtoupper($this->post['_method'] ?? $this->json['_method'] ?? '');
         $this->method = in_array($spoofed, $spoofable, true) ? $spoofed : strtoupper($_SERVER['REQUEST_METHOD'] ?? 'GET');
     }
 
@@ -66,19 +77,28 @@ class Request
      */
     public function headers(): array
     {
-        if (function_exists('getallheaders')) return getallheaders();
+        if ($this->cachedHeaders !== null) return $this->cachedHeaders;
 
-        $headers = [];
-        foreach ($_SERVER as $key => $value) {
-            if (str_starts_with($key, 'HTTP_')) {
-                $name = ucwords(strtolower(str_replace('_', '-', substr($key, 5))), '-');
-                $headers[$name] = $value;
-            } elseif (in_array($key, ['CONTENT_TYPE', 'CONTENT_LENGTH', 'CONTENT_MD5'])) {
-                $name = ucwords(strtolower(str_replace('_', '-', $key)), '-');
-                $headers[$name] = $value;
+        $this->cachedHeaders = [];
+
+        if (function_exists('getallheaders')) {
+            $all = getallheaders();
+            if (is_array($all)) {
+                $this->cachedHeaders = $all;
+            }
+        } else {
+            foreach ($_SERVER as $key => $value) {
+                if (str_starts_with($key, 'HTTP_')) {
+                    $name = ucwords(strtolower(str_replace('_', '-', substr($key, 5))), '-');
+                    $this->cachedHeaders[$name] = $value;
+                } elseif (in_array($key, ['CONTENT_TYPE', 'CONTENT_LENGTH', 'CONTENT_MD5'], true)) {
+                    $name = ucwords(strtolower(str_replace('_', '-', $key)), '-');
+                    $this->cachedHeaders[$name] = $value;
+                }
             }
         }
-        return $headers;
+
+        return $this->cachedHeaders;
     }
 
     /**
@@ -88,20 +108,24 @@ class Request
      */
     public function header(string $name): ?string
     {
-        // return $this->headers()[strtolower($key)] ?? null;
-        $key = 'HTTP_' . strtoupper(str_replace('-', '_', trim($name)));
-
-        if (isset($_SERVER[$key])) return $_SERVER[$key];
-
-        if (isset($_SERVER[$name])) return $_SERVER[$name];
-
         $normalized = $this->normalizeHeaderName($name);
+    
+        // Fast path: direct $_SERVER lookup
+        $key = strtoupper(str_replace('-', '_', $normalized));
+        if (str_starts_with($key, 'CONTENT_')) {
+            if (isset($_SERVER[$key])) return $_SERVER[$key];
+        } else {
+            $httpKey = 'HTTP_' . $key;
+            if (isset($_SERVER[$httpKey])) return $_SERVER[$httpKey];
+        }
+        
+        // Fallback: case-insensitive search
         foreach ($this->headers() as $k => $v) {
             if ($this->normalizeHeaderName($k) === $normalized) {
                 return $v;
             }
         }
-
+        
         return null;
     }
 
@@ -167,7 +191,10 @@ class Request
      */
     public function input(string $key, mixed $default = null): mixed
     {
-        return $this->post[$key] ?? $this->get[$key] ?? $this->json[$key] ?? $default;
+        if (array_key_exists($key, $this->json)) return $this->json[$key];
+        if (array_key_exists($key, $this->post)) return $this->post[$key];
+        if (array_key_exists($key, $this->get)) return $this->get[$key];
+        return $default;
     }
 
     /**
@@ -176,7 +203,7 @@ class Request
      */
     public function inputs(): array
     {
-        return array_merge($this->get, $this->json, $this->post);
+        return array_merge($this->get, $this->post, $this->json);
     }
 
     /**
@@ -207,7 +234,7 @@ class Request
      * Get JSON Body
      * @return array
      */
-    public function array(): array
+    public function body(): array
     {
         return $this->json;
     }
@@ -219,7 +246,7 @@ class Request
      */
     public function file(?string $key = null): ?array
     {
-        return $key ? ($this->files[$key] ?? null) : $this->files;
+        return $key !== null ? ($this->files[$key] ?? null) : $this->files;
     }
 
     /**
@@ -232,14 +259,28 @@ class Request
     }
 
     /**
-     * @param array $rules Required Argument. Example ['email'=>'required','age'=>'required|min:18|max:65']
-     * @param array $customMessages Optional Argument. Example: ['email.required'=>'Email is Required!']
-     * @return void
+     * Validate request inputs against rules.
+     * Preserves manually added errors; only validation errors are replaced.
+     * @param array $rules Required. Example: ['email'=>'required','age'=>'required|min:18|max:65']
+     * @param array $customMessages Optional. Example: ['email.required'=>'Email is Required!']
+     * @return bool True if validation passes (no new errors), false otherwise
      */
-    public function validate(array $rules, array $customMessages = []): void
+    public function validate(array $rules, array $customMessages = []): bool
     {
-        $this->errors = Validator::make($this->inputs(), $rules, $customMessages);
-        return;
+        $validationErrors = Validator::make($this->inputs(), $rules, $customMessages);
+
+        // Guard: ensure Validator returns an array
+        if (!is_array($validationErrors)) {
+            $validationErrors = [];
+        }
+
+        // Merge validation errors without wiping manually added ones
+        foreach ($validationErrors as $key => $messages) {
+            $messages = is_array($messages) ? $messages : [$messages];
+            $this->errors[$key] = array_merge($this->errors[$key] ?? [], $messages);
+        }
+
+        return empty($validationErrors);
     }
 
     /**
@@ -249,7 +290,10 @@ class Request
      */
     public function addBulkError(array $errors): void
     {
-        $this->errors = array_merge($this->errors, $errors);
+        foreach ($errors as $key => $messages) {
+            $messages = is_array($messages) ? $messages : [$messages];
+            $this->errors[$key] = array_merge($this->errors[$key] ?? [], $messages);
+        }
     }
 
     /**
@@ -284,6 +328,10 @@ class Request
         $contentType = $_SERVER['CONTENT_TYPE'] ?? '';
         if (str_starts_with(strtolower($contentType), 'application/json')) {
             $decoded = json_decode($rawBody, true);
+            if (json_last_error() !== JSON_ERROR_NONE) {
+                $this->addError('body', 'Invalid JSON: ' . json_last_error_msg());
+                return [];
+            }
             return is_array($decoded) ? $decoded : [];
         }
         return [];
