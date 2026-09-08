@@ -26,203 +26,8 @@ class Response
     /** @var mixed Body */
     protected mixed $body = null;
 
-    ##############################################################################
-    /*============================== EXTERNAL API ==============================*/
-    ##############################################################################
-    /**
-     * Set Status Code
-     * @param int $code
-     * @return static
-     */
-    public function setStatus(int $code): static
-    {
-        $this->statusCode = $code;
-        return $this;
-    }
-
-    /**
-     * Get Status Code
-     * @return int
-     */
-    public function getStatus(): int
-    {
-        return $this->statusCode;
-    }
-
-    /**
-     * Set Content Type
-     * @param string $type
-     * @return static
-     */
-    public function setContentType(string $type): static
-    {
-        $this->contentType = $type;
-        return $this;
-    }
-
-    /**
-     * Get Content Type
-     * @return string
-     */
-    public function getContentType(): string
-    {
-        return $this->contentType;
-    }
-
-    /**
-     * Set Header
-     * @param string $name
-     * @param string $value
-     * @return static
-     */
-    public function setHeader(string $name, string $value): static
-    {
-        $this->headers[static::normalizeHeaderName($name)] = $value;
-        return $this;
-    }
-
-    /**
-     * Set Headers
-     * @param array<non-empty-string,string> $headers
-     * @return static
-     */
-    public function setHeaders(array $headers): static
-    {
-        foreach ($headers as $name => $value) {
-            $this->setHeader($name, (string) $value);
-        }
-        return $this;
-    }
-
-    /**
-     * Get Header
-     * @param string $name
-     * @return ?string
-     */
-    public function getHeader(string $name): ?string
-    {
-        return $this->headers[static::normalizeHeaderName($name)] ?? null;
-    }
-
-    /**
-     * Get Headers
-     * @return array
-     */
-    public function getHeaders(): array
-    {
-        return $this->headers;
-    }
-
-    /**
-     * Remove Header
-     * @param string $name
-     * @return static
-     */
-    public function removeHeader(string $name): static
-    {
-        unset($this->headers[static::normalizeHeaderName($name)]);
-        return $this;
-    }
-
-    /**
-     * Set Body
-     * @param mixed $body
-     * @return static
-     */
-    public function body(mixed $body): static
-    {
-        $this->body = $body;
-        return $this;
-    }
-
-    /**
-     * Get Body
-     * @return mixed
-     */
-    public function getBody(): mixed
-    {
-        return $this->body;
-    }
-
-    /**
-     * Set JSON Content Type
-     * @param mixed $data
-     * @param int $status
-     * @return static
-     */
-    public function json(mixed $data, int $status = 200): static
-    {
-        $this->setStatus($status)
-             ->setContentType('application/json; charset=UTF-8')
-             ->body(json_encode($data, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT));
-        return $this;
-    }
-
-    /**
-     * Set HTML Content Type
-     * @param mixed $data
-     * @param int $status
-     * @return static
-     */
-    public function html(string $html, int $status = 200): static
-    {
-        $this->setStatus($status)
-             ->setContentType('text/html; charset=UTF-8')
-             ->body($html);
-        return $this;
-    }
-
-    /**
-     * Set TEXT Content Type
-     * @param mixed $data
-     * @param int $status
-     * @return static
-     */
-    public function text(string $text, int $status = 200): static
-    {
-        $this->setStatus($status)
-             ->setContentType('text/plain; charset=UTF-8')
-             ->body($text);
-        return $this;
-    }
-
-    /**
-     * Set No Content Header
-     * @return static
-     */
-    public function noContent(): static
-    {
-        $this->setStatus(204)->body(null);
-        return $this;
-    }
-
-    /**
-     * Send Response
-     */
-    public function send(): void
-    {
-        // Check If Alredy Sent
-        if (headers_sent()) return;
-
-        http_response_code($this->statusCode);
-        header("Content-Type: {$this->contentType}");
-
-        foreach ($this->headers as $name => $value) {
-            header("{$name}: {$value}");
-        }
-
-        if ($this->body !== null) {
-            echo $this->body;
-        }
-    }
-
-    /**
-     * Response Status Codes With Message & Reference
-     * @return array
-     */
-    public function statusCodes(): array
-    {
-        return [
+    /** @var const Status Codes */
+    protected const STATUS_CODES = [
             // 1xx Informational Responses
             100 => ['message' => 'Continue', 'reference' => 'RFC9110, Section 15.2.1'],
             101 => ['message' => 'Switching Protocols', 'reference' => 'RFC9110, Section 15.2.2'],
@@ -319,18 +124,281 @@ class Response
             // 512–599 Unassigned
             512 => ['message' => 'Unassigned', 'reference' => 'Unassigned'],
         ];
+
+    ##############################################################################
+    /*============================== EXTERNAL API ==============================*/
+    ##############################################################################
+    /**
+     * Set Status Code
+     * @param int $code
+     * @return static
+     */
+    public function setStatus(int $code): static
+    {
+        if ($code < 100 || $code > 599) {
+            throw new \InvalidArgumentException("Invalid HTTP status code: {$code}");
+        }
+        $this->statusCode = $code;
+        return $this;
+    }
+
+    /**
+     * Get Status Code
+     * @return int
+     */
+    public function getStatus(): int
+    {
+        return $this->statusCode;
+    }
+
+    /**
+     * Set Content Type
+     * @param string $type
+     * @return static
+     */
+    public function setContentType(string $type): static
+    {
+        $this->contentType = static::sanitizeHeaderValue($type);
+        return $this;
+    }
+
+    /**
+     * Get Content Type
+     * @return string
+     */
+    public function getContentType(): string
+    {
+        return $this->contentType;
+    }
+
+    /**
+     * Set Header
+     * @param string $name
+     * @param string $value
+     * @return static
+     */
+    public function setHeader(string $name, string $value): static
+    {
+        $sanitized = static::sanitizeHeaderName($name);
+        if ($sanitized === '') {
+            throw new \InvalidArgumentException('Header name cannot be empty');
+        }
+        $this->headers[$sanitized] = static::sanitizeHeaderValue($value);
+        return $this;
+    }
+
+    /**
+     * Set Headers
+     * @param array<non-empty-string,string> $headers
+     * @return static
+     */
+    public function setHeaders(array $headers): static
+    {
+        foreach ($headers as $name => $value) {
+            $this->setHeader($name, (string) $value);
+        }
+        return $this;
+    }
+
+    /**
+     * Get Header
+     * @param string $name
+     * @return ?string
+     */
+    public function getHeader(string $name): ?string
+    {
+        return $this->headers[static::sanitizeHeaderName($name)] ?? null;
+    }
+
+    /**
+     * Get Headers
+     * @return array
+     */
+    public function getHeaders(): array
+    {
+        return $this->headers;
+    }
+
+    /**
+     * Remove Header
+     * @param string $name
+     * @return static
+     */
+    public function removeHeader(string $name): static
+    {
+        unset($this->headers[static::sanitizeHeaderName($name)]);
+        return $this;
+    }
+
+    /**
+     * Set Body
+     * @param mixed $body
+     * @return static
+     */
+    public function setBody(mixed $body): static
+    {
+        $this->body = $body;
+        return $this;
+    }
+
+    /**
+     * Set Body
+     * @param mixed $body
+     * @return static
+     * @deprecated Use setBody() instead. This method is retained for backward compatibility.
+     */
+    public function body(mixed $body): static
+    {
+        $this->setBody($body);
+        return $this;
+    }
+
+    /**
+     * Get Body
+     * @return mixed
+     */
+    public function getBody(): mixed
+    {
+        return $this->body;
+    }
+
+    /**
+     * Set JSON Content Type
+     * @param mixed $data
+     * @param int $status Default is 200 (OK)
+     * @param bool $pretty Default is false. If true, the JSON output will be pretty-printed.
+     * @return static
+     */
+    public function json(mixed $data, int $status = 200, bool $pretty = false): static
+    {
+        $flags = JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR;
+        if ($pretty) {
+            $flags |= JSON_PRETTY_PRINT;
+        }
+
+        try {
+            $json = json_encode($data, $flags);
+        } catch (\JsonException $e) {
+            throw new \RuntimeException('JSON encoding failed: ' . $e->getMessage(), 0, $e);
+        }
+
+        $this->setStatus($status)
+            ->setContentType('application/json; charset=UTF-8')
+            ->setBody($json);
+
+        return $this;
+    }
+
+    /**
+     * Set HTML Content Type
+     * @param string $html
+     * @param int $status
+     * @return static
+     */
+    public function html(string $html, int $status = 200): static
+    {
+        $this->setStatus($status)
+             ->setContentType('text/html; charset=UTF-8')
+             ->setBody($html);
+        return $this;
+    }
+
+    /**
+     * Set TEXT Content Type
+     * @param string $text
+     * @param int $status
+     * @return static
+     */
+    public function text(string $text, int $status = 200): static
+    {
+        $this->setStatus($status)
+             ->setContentType('text/plain; charset=UTF-8')
+             ->setBody($text);
+        return $this;
+    }
+
+    /**
+     * Set No Content Header
+     * @return static
+     */
+    public function noContent(): static
+    {
+        $this->setStatus(204)->setBody(null);
+        return $this;
+    }
+
+    /**
+     * Send Response
+     */
+    public function send(): void
+    {
+        if (headers_sent()) return;
+
+        $noBody = ($this->statusCode < 200) || ($this->statusCode === 204) || ($this->statusCode === 304);
+
+        http_response_code($this->statusCode);
+
+        if (!$noBody) {
+            header('Content-Type: ' . static::sanitizeHeaderValue($this->contentType));
+        }
+
+        foreach ($this->headers as $name => $value) {
+            if (strtolower($name) === 'content-type') continue;
+            header($name . ': ' . $value);
+        }
+
+        if ($noBody || $this->body === null) {
+            return;
+        }
+
+        if (is_string($this->body) || is_numeric($this->body)) {
+            echo $this->body;
+        } elseif (is_object($this->body) && method_exists($this->body, '__toString')) {
+            echo (string) $this->body;
+        }
+    }
+
+    /**
+     * Response Status Codes With Message & Reference
+     * @return array
+     */
+    public function statusCodes(): array
+    {
+        return static::STATUS_CODES;
     }
 
     ##############################################################################
     ################################ INTERNAL API ################################
     ##############################################################################
+    // /**
+    //  * Normalize Header Name
+    //  * @param string $name
+    //  * @return string
+    //  */
+    // protected function normalizeHeaderName(string $name): string
+    // {
+    //     return ucwords(strtolower(trim($name)), '-');
+    // }
+
     /**
-     * Normalize Header Name
+     * Sanitize Header Value
+     * @param string $value
+     * @return string
+     */
+    protected static function sanitizeHeaderValue(string $value): string
+    {
+        // Remove CRLF and other control chars except tab
+        return preg_replace('/[\x00-\x08\x0A-\x1F\x7F]/', '', $value);
+    }
+
+    /**
+     * Sanitize Header Name
      * @param string $name
      * @return string
      */
-    protected static function normalizeHeaderName(string $name): string
+    protected static function sanitizeHeaderName(string $name): string
     {
-        return ucwords(strtolower(trim($name)), '-');
+        $clean = preg_replace('/[^a-zA-Z0-9\-_]/', '', $name);
+        return ucwords(strtolower(trim($clean)), '-');
     }
 }
