@@ -1,5 +1,7 @@
 # Configuration & App
 
+<!-- {% raw %} -->
+
 ## Config
 
 **Relay:** `Laika\Service\Config` (`config`). **Class:** `Laika\Core\Helper\Config` (static). **Helper:** `config()`.
@@ -221,3 +223,5 @@ Shortcuts over [Resources](#resources), used by the CLI and the router.
 - It throws `RuntimeException` if the target is below the memory already in use.
 
 > **Note:** only laika-queue's `worker` calls `apply()`. Web requests never do, so `MEMORY_LIMIT` in `lf-inc/const.php` currently has no effect on them. To enforce it, call `(new \Laika\Core\System\MemoryManager())->apply();` from a hook file.
+
+<!-- {% endraw %} -->

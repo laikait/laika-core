@@ -1,5 +1,7 @@
 # Templates
 
+<!-- {% raw %} -->
+
 ## Template
 
 **Class:** `Laika\Core\App\Template`. It's not a relay; controllers create one per render.
@@ -195,3 +197,5 @@ $tpl->addFilter('icon', [\Laika\Core\Generator\Icon::class, 'svg']);
 ```twig
 <button>{{ 'trash'|icon(14)|raw }} Delete</button>
 ```
+
+<!-- {% endraw %} -->
