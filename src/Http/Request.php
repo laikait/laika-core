@@ -98,6 +98,16 @@ class Request
             }
         }
 
+        // Apache + php-fpm never passes Authorization through, so recover it
+        // from the server variables it leaves behind instead
+        $names = array_map(fn($k) => $this->normalizeHeaderName((string) $k), array_keys($this->cachedHeaders));
+        if (!in_array('Authorization', $names, true)) {
+            $authorization = $this->serverAuthorization();
+            if ($authorization !== null) {
+                $this->cachedHeaders['Authorization'] = $authorization;
+            }
+        }
+
         return $this->cachedHeaders;
     }
 
@@ -335,6 +345,34 @@ class Request
             return is_array($decoded) ? $decoded : [];
         }
         return [];
+    }
+
+    /**
+     * Authorization From Server Variables
+     *
+     * Apache hands FastCGI (php-fpm) no Authorization header. The .htaccess
+     * rule restores it as HTTP_AUTHORIZATION, or as REDIRECT_HTTP_AUTHORIZATION
+     * once the rewrite to index.php runs, and PHP itself parses Basic & Digest
+     * credentials into PHP_AUTH_* instead.
+     * @return ?string
+     */
+    protected function serverAuthorization(): ?string
+    {
+        foreach (['HTTP_AUTHORIZATION', 'REDIRECT_HTTP_AUTHORIZATION'] as $key) {
+            if (is_string($_SERVER[$key] ?? null) && $_SERVER[$key] !== '') {
+                return $_SERVER[$key];
+            }
+        }
+
+        if (isset($_SERVER['PHP_AUTH_USER'])) {
+            return 'Basic ' . base64_encode($_SERVER['PHP_AUTH_USER'] . ':' . ($_SERVER['PHP_AUTH_PW'] ?? ''));
+        }
+
+        if (isset($_SERVER['PHP_AUTH_DIGEST'])) {
+            return 'Digest ' . $_SERVER['PHP_AUTH_DIGEST'];
+        }
+
+        return null;
     }
 
     /**

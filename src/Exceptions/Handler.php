@@ -29,6 +29,12 @@ class Handler
 
         // Convert PHP warnings & notices into exceptions
         set_error_handler(function ($severity, $message, $file, $line) {
+            // PHP 8 still calls the handler for @-suppressed errors, with
+            // error_reporting() narrowed to fatal types. Throwing here turned
+            // every deliberate fail-open @mkdir/@fopen into a 500.
+            if (!(error_reporting() & $severity)) {
+                return false;
+            }
             throw new \ErrorException($message, 0, $severity, $file, $line);
         });
 

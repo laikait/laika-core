@@ -17,6 +17,8 @@ use Laika\Core\Exceptions\HttpException;
 
 class Redirect
 {
+    private const ALLOWED_CODES = [301, 302, 303];
+
     ##################################################################
     /*------------------------- PUBLIC API -------------------------*/
     ##################################################################
@@ -36,12 +38,27 @@ class Redirect
     /**
      * Redirect Back to The Previous Link
      * @param int $code Response Code. Default is 302
-     * @return static
+     * @return void
      */
-    public function back(int $code = 302): static
+    public function back(int $code = 302): void
     {
-        $this->send($_SERVER['HTTP_REFERER'] ?? '/', $code);
-        return $this;
+        $to = $_SERVER['HTTP_REFERER'] ?? '/';
+        if (strpbrk($to, "\r\n") !== false) {
+            $to = '/';
+        } else {
+            $parts = parse_url($to);
+            $host  = $parts['host'] ?? null;
+            // Accept same-host referers, rebuild as path; reject external hosts
+            if ($host === null) {
+                $to = '/'; // not a valid absolute URL — fail safe
+            } elseif ($host !== ($_SERVER['HTTP_HOST'] ?? '')) {
+                $to = '/';
+            } else {
+                $to = ($parts['path'] ?? '/') . (isset($parts['query']) ? "?{$parts['query']}" : '');
+            }
+        }
+
+        $this->send($to, $code);
     }
 
     /**
@@ -49,21 +66,12 @@ class Redirect
      * @param string $to Named/URL to Redirect.
      * @param array $params Named Route Parameters.
      * @param int $code HTTP Status Code. Default is 302.
-     * @return static
+     * @return void
      */
-    public function to(string $to, array $params = [], int $code = 302): static
+    public function to(string $to, array $params = [], int $code = 302): void
     {
-        if (!in_array($code, [301,302])) {
-            throw new HttpException(500, "Invelid Redirect Code: {$code}", 500);
-        }
-
-        if (parse_url($to, PHP_URL_HOST)) {
-            $this->send($to, $code);
-            return $this;
-        }
-
-        $this->send(named($to, $params, true), $code);
-        return $this;
+        $target = parse_url($to, PHP_URL_HOST) ? $to : named($to, $params, true);
+        $this->send($target, $code);
     }
 
     ####################################################################
@@ -78,10 +86,10 @@ class Redirect
      */
     private function send(string $to, int $code = 302): never
     {
-        if (!in_array($code, [301,302])) {
-            throw new HttpException(500, "Invalid Redirect Code: {$code}", 500);
+        if (!in_array($code, self::ALLOWED_CODES, true)) {
+            throw new HttpException(500, "Invalid redirect status code: {$code}", 500);
         }
-        header("Location:{$to}", true, $code);
-        exit();
+        header("Location: {$to}", true, $code);
+        exit;
     }
 }

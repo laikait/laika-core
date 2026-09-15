@@ -15,6 +15,7 @@ namespace Laika\Core\Helper;
 use RuntimeException;
 use Throwable;
 use Laika\Service\Config;
+use Laika\Service\Url;
 use Laika\Model\Connection;
 use Laika\Session\SessionConfig;
 use Laika\Core\Storage\Connection\RedisConnection;
@@ -90,6 +91,7 @@ class Init
     public function file(array $params = []): void
     {
         SessionConfig::file($params);
+        $this->secureCookie();
     }
 
     /**
@@ -105,6 +107,7 @@ class Init
         $this->db($name);
 
         SessionConfig::model(['connection' => $name ?? 'default', 'install' => $install]);
+        $this->secureCookie();
     }
 
     /**
@@ -118,6 +121,7 @@ class Init
         $this->db($name);
 
         SessionConfig::mysql(Connection::get($name), $params);
+        $this->secureCookie();
     }
 
     /**
@@ -128,6 +132,7 @@ class Init
     public function redis(array $params = []): void
     {
         SessionConfig::redis(RedisConnection::make(), $params);
+        $this->secureCookie();
     }
 
     /**
@@ -138,5 +143,32 @@ class Init
     public function memcached(array $params = []): void
     {
         SessionConfig::memcached(MemcachedConnection::make(), $params);
+        $this->secureCookie();
+    }
+
+    ####################################################################
+    /*------------------------- INTERNAL API -------------------------*/
+    ####################################################################
+    /**
+     * Mark The Session Cookie Secure on HTTPS
+     *
+     * laika-session Only Sees $_SERVER['HTTPS'] & Port 443, So Behind a TLS
+     * Terminating Proxy (The Usual php-fpm Setup) The Session Cookie Went Out
+     * Without Secure. Url Honours trusted_proxies. This Only Ever Upgrades,
+     * & a Later SessionConfig::cookies() Call Still Wins.
+     * @return void
+     */
+    protected function secureCookie(): void
+    {
+        try {
+            $https = Url::isHttps();
+        } catch (Throwable) {
+            // No container yet (a CLI script that never booted). Keep the default.
+            return;
+        }
+
+        if ($https) {
+            SessionConfig::cookies(['secure' => true]);
+        }
     }
 }
