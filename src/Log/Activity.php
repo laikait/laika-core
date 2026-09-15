@@ -17,9 +17,9 @@ namespace Laika\Core\Log;
 defined('APP_PATH') || http_response_code(403) . die('403 Direct Access Denied!');
 
 use Laika\Model\Model;
-use Laika\Service\Init;
 use Laika\Service\Request;
 use Laika\Service\Visitor;
+use Laika\Core\Schema\ActivitySchema;
 use Laika\Core\Exceptions\LogException;
 
 final class Activity
@@ -33,9 +33,11 @@ final class Activity
     /** @var array Activities */
     protected array $activities;
 
+    /** @var bool Schema Ready */
+    private static bool $schemaReady = false;
+
     public function __construct(?string $connection = null)
     {
-        Init::db($connection);
         $this->reset();
     }
 
@@ -150,8 +152,13 @@ final class Activity
         // Return if No Activities Exists
         if (empty($this->activities)) return 0;
 
-        $model = new Model($connection);
         try {
+            $model = new Model($connection);
+            if (!self::$schemaReady) {
+                (new ActivitySchema())->up($connection);
+                self::$schemaReady = true;
+            }
+
             foreach($this->activities as $event => $logs) {
                 $model->transaction(function (Model $m) use ($logs) {
                     $m->table('activities')->insert($logs);
@@ -168,9 +175,9 @@ final class Activity
         return $effected;
     }
 
-    ####################################################################################
-    ################################### INTERNAL API ###################################
-    ####################################################################################
+    ##############################################################################
+    /*============================== INTERNAL API ==============================*/
+    ##############################################################################
 
     /**
      * Reset

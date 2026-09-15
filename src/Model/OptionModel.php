@@ -16,6 +16,7 @@ namespace Laika\Core\Model;
 defined('APP_PATH') || http_response_code(403).die('403 Direct Access Denied!');
 
 use Laika\Model\Model;
+use Laika\Core\Schema\OptionSchema;
 use Laika\Core\Exceptions\OptionException;
 
 class OptionModel
@@ -23,8 +24,8 @@ class OptionModel
     /** @var string Table Name */
     protected string $table = 'options';
 
-    /** @var Model Model */
-    protected Model $model;
+    /** @var ?Model Model */
+    private static ?Model $model = null;
 
     /** @var string Option Key Column */
     private string $key = 'op_key';
@@ -35,12 +36,41 @@ class OptionModel
     /** @var string Database Connection Name */
     protected string $connection = 'default';
 
-    /** @var array cached */
-    private array $cached = [];
+    /** @var bool Schema Ready */
+    private static bool $schemaReady = false;
 
-    public function __construct()
+    /** @var array cached */
+    private static array $cached = [];
+
+    public function __construct(?string $connection = null)
     {
-        $this->model = new Model();
+        // Set Connection Name
+        if (($connection !== null) && ($connection !== '')) {
+            $this->connection = $connection();
+        }
+        try {
+            self::$model ??= new Model($this->connection);
+        } catch (OptionException $e) {
+            throw new OptionException("Option Model Initialization Failed. {$e->getMessage()}", (int) $e->getCode(), $e);
+        }
+    }
+
+    /**
+     * Option Schema Install
+     * @param ?string $connection Defaault is null
+     * @return void
+     */
+    public function install(?string $connection = null): void
+    {
+        try {
+            self::$model ??= new Model($this->connection);
+            if (!self::$schemaReady) {
+                (new OptionSchema($this->connection))->up();
+                self::$schemaReady = true;
+            }
+        } catch (OptionException $e) {
+            throw new OptionException("Option Schema Install Failed. {$e->getMessage()}", (int) $e->getCode(), $e);
+        }
     }
 
     /**
@@ -57,15 +87,15 @@ class OptionModel
         if (empty($key)) return $default;
 
         // Check Already Cached
-        if (isset($this->cached[$key])) return $this->cached[$key];
+        if (isset(self::$cached[$key])) return self::$cached[$key];
 
         try {
-            $opt = $this->model->table($this->table)->where([$this->key => $key])->first();
-            $this->cached[$key] = $opt[$this->value] ?? $default;
+            $opt = self::$model->table($this->table)->where([$this->key => $key])->first();
+            self::$cached[$key] = $opt[$this->value] ?? $default;
         } catch (\Throwable $th) {
             return $default;
         }
-        return $this->cached[$key];
+        return self::$cached[$key];
     }
 
     /**
@@ -82,11 +112,11 @@ class OptionModel
         if (empty($key) || $this->single($key)) return false;
 
         try {
-            $this->model->transaction(function (Model $m) use ($key, $value) {
+            self::$model->transaction(function (Model $m) use ($key, $value) {
                 // Make String
                 $str = convert_to_string($value);
                 $m->table($this->table)->insert([$this->key => $key, $this->value => $str]);
-                $this->cached[$key] = $str;
+                self::$cached[$key] = $str;
             });
             return true;
         } catch (\Throwable $e) {
@@ -106,14 +136,14 @@ class OptionModel
         $key = trim($key);
 
         // Return if Key is Empty or Doesn't Exists
-        if (empty($key) || empty($this->model->table($this->table)->where([$this->key => $key])->first())) return false;
+        if (empty($key) || empty(self::$model->table($this->table)->where([$this->key => $key])->first())) return false;
 
         try {
-            $this->model->transaction(function (Model $m) use ($key, $value) {
+            self::$model->transaction(function (Model $m) use ($key, $value) {
                 // Make String
                 $str = convert_to_string($value);
                 $m->table($this->table)->where([$this->key => $key])->update([$this->value => $str]);
-                $this->cached[$key] = $str;
+                self::$cached[$key] = $str;
             });
             return true;
         } catch (\Throwable $e) {
