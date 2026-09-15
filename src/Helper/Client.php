@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Laika PHP MVC Framework
  * Author: Showket Ahmed
@@ -106,7 +107,7 @@ class Client
                 '5.1'  => 'Windows XP',
             ],
             '/Mac OS X ([\d_]+)/i'          => 'Mac OS X %s',
-            '/Linux/i'                      => 'Linux'
+            '/Linux/i'                      => 'Linux',
         ];
 
         foreach ($osPatterns as $pattern => $result) {
@@ -197,7 +198,7 @@ class Client
             'device'    => $this->deviceType(),
             'language'  => $this->language(),
             'agent'     => $this->userAgent(),
-            'isBot'     => $this->isBot()
+            'isBot'     => $this->isBot(),
         ];
     }
 

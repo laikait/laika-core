@@ -20,7 +20,7 @@ final class DirectoryTest extends TestCase
         $this->dir  = new Directory();
         $this->root = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'laika_dir_' . bin2hex(random_bytes(6));
 
-        mkdir($this->root, 0777, true);
+        mkdir($this->root, 0o777, true);
     }
 
     protected function tearDown(): void
@@ -41,7 +41,7 @@ final class DirectoryTest extends TestCase
      */
     public function testPopRemovesANestedTree(): void
     {
-        mkdir($this->root . '/template/92', 0777, true);
+        mkdir($this->root . '/template/92', 0o777, true);
         file_put_contents($this->root . '/template/92/compiled.php', '<?php');
         file_put_contents($this->root . '/template/root.php', '<?php');
 
@@ -51,7 +51,7 @@ final class DirectoryTest extends TestCase
 
     public function testEmptyClearsChildrenButKeepsTheDirectory(): void
     {
-        mkdir($this->root . '/cache/sub', 0777, true);
+        mkdir($this->root . '/cache/sub', 0o777, true);
         file_put_contents($this->root . '/cache/a.php', '<?php');
         file_put_contents($this->root . '/cache/sub/b.php', '<?php');
 
@@ -79,8 +79,8 @@ final class DirectoryTest extends TestCase
         $victim  = $this->root . DIRECTORY_SEPARATOR . 'victim';
         $link    = $victim . DIRECTORY_SEPARATOR . 'link';
 
-        mkdir($outside, 0777, true);
-        mkdir($victim, 0777, true);
+        mkdir($outside, 0o777, true);
+        mkdir($victim, 0o777, true);
         file_put_contents($outside . DIRECTORY_SEPARATOR . 'SENTINEL.txt', 'must survive');
 
         if (!$this->makeDirLink($outside, $link)) {
@@ -231,7 +231,7 @@ final class DirectoryTest extends TestCase
      */
     private function names(array $paths): array
     {
-        $names = array_map(static fn (string $p): string => basename($p), $paths);
+        $names = array_map(static fn(string $p): string => basename($p), $paths);
         sort($names);
         return $names;
     }

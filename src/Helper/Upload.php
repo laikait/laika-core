@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Laika PHP MVC Framework
  * Author: Showket Ahmed
@@ -82,7 +83,7 @@ class Upload
         }
 
         if (!is_dir($directory)) {
-            mkdir($directory, 0755, true);
+            mkdir($directory, 0o755, true);
         }
 
         $originalName = basename((string) $this->fields['name']);
@@ -98,8 +99,7 @@ class Upload
         $filename    = $extension !== '' ? "{$stem}.{$extension}" : $stem;
         $destination = rtrim($directory, '/\\') . DIRECTORY_SEPARATOR . $filename;
 
-        if (move_uploaded_file($this->fields['tmp_name'], $destination))
-        {
+        if (move_uploaded_file($this->fields['tmp_name'], $destination)) {
             $this->fields = [];
 
             if (isset($options['processimage']) && $options['processimage']) {
@@ -130,7 +130,7 @@ class Upload
         $processImage = $options['processimage'] ?? false;
 
         if (!is_dir($destinationDir)) {
-            mkdir($destinationDir, 0755, true);
+            mkdir($destinationDir, 0o755, true);
         }
 
         foreach ($files as $index => $file) {
@@ -157,7 +157,7 @@ class Upload
                 $results['errors'][$name] = $e->getMessage();
             }
 
-            $finalName   = $baseName ? "{$baseName}_{$index}"  : $slug;
+            $finalName   = $baseName ? "{$baseName}_{$index}" : $slug;
             $destination = rtrim($destinationDir, '/') . '/' . time() . "-{$finalName}.{$ext}";
 
             if (move_uploaded_file($tmp, $destination)) {

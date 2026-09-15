@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Laika PHP MVC Framework
  * Author: Showket Ahmed
@@ -11,6 +12,7 @@
 declare(strict_types=1);
 
 // Namespace
+
 namespace Laika\Core\Log;
 
 // Deny Direct Access
@@ -85,7 +87,7 @@ final class Activity
             'event'         =>  strtolower(trim($event)),
             'log'           =>  $this->log,
             'changes'       =>  serialize($changelog),
-            'from_ip'       =>  Visitor::ip()
+            'from_ip'       =>  Visitor::ip(),
         ];
 
         // Reset
@@ -123,7 +125,9 @@ final class Activity
     {
         $changelog = [];
         // Return if Empty
-        if (empty($existing)) return $changelog;
+        if (empty($existing)) {
+            return $changelog;
+        }
 
         $inputs = $inputs ?: Request::inputs();
 
@@ -132,7 +136,7 @@ final class Activity
             if (isset($inputs[$k]) && ($inputs[$k] != $v)) {
                 $changelog[$k] = [
                     'old'   =>  $v,
-                    'new'   =>  $inputs[$k]
+                    'new'   =>  $inputs[$k],
                 ];
             }
         }
@@ -151,7 +155,9 @@ final class Activity
         $effected = 0;
 
         // Return if No Activities Exists
-        if (empty($this->activities)) return 0;
+        if (empty($this->activities)) {
+            return 0;
+        }
 
         try {
             // Resolve The Name Once, So The Model & The Schema Target The Same Database
@@ -163,7 +169,7 @@ final class Activity
                 self::$installed[$name] = true;
             }
 
-            foreach($this->activities as $event => $logs) {
+            foreach ($this->activities as $event => $logs) {
                 $model->transaction(function (Model $m) use ($logs) {
                     $m->table('activities')->insert($logs);
                 });

@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Laika PHP MVC Framework
  * Author: Showket Ahmed
@@ -187,7 +188,7 @@ class Math
     {
         // The positive branch used to return $a untouched, which is a TypeError
         // under strict_types for any int or float input.
-        $scale = $scale ?? $this->scale;
+        $scale ??= $this->scale;
         $a     = (string) $a;
 
         return bccomp($a, '0', $scale) < 0

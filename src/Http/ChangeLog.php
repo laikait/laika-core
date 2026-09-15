@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Laika PHP MVC Framework
  * Author: Showket Ahmed
@@ -11,6 +12,7 @@
 declare(strict_types=1);
 
 // Namespace
+
 namespace Laika\Core\Http;
 
 // Deny Direct Access
@@ -66,7 +68,7 @@ class ChangeLog
         return [
             'new' => $this->new,
             'old' => $this->old,
-            'changes' => $this->check($this->old, $this->new)
+            'changes' => $this->check($this->old, $this->new),
         ];
     }
 

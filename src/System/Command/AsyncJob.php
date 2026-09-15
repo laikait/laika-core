@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Laika PHP MVC Framework
  * Author: Showket Ahmed
@@ -20,7 +21,8 @@ class AsyncJob
     /** @var string Command to Run */
     private string $command;
 
-    public function __construct(int $pid, string $command) {
+    public function __construct(int $pid, string $command)
+    {
         $this->pid = $pid;
         $this->command = trim($command);
     }

@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Laika Framework
  * Author: Showket Ahmed
@@ -13,7 +14,7 @@ declare(strict_types=1);
 namespace Laika\Core\Model;
 
 // Deny Direct Access
-defined('APP_PATH') || http_response_code(403).die('403 Direct Access Denied!');
+defined('APP_PATH') || http_response_code(403) . die('403 Direct Access Denied!');
 
 use Laika\Model\Model;
 use Laika\Core\Schema\OptionSchema;
@@ -72,7 +73,9 @@ class OptionModel
     {
         $connection = (($connection !== null) && ($connection !== '')) ? $connection : $this->connection;
 
-        if (self::$installed[$connection] ?? false) return;
+        if (self::$installed[$connection] ?? false) {
+            return;
+        }
 
         try {
             (new OptionSchema($connection))->up();
@@ -85,7 +88,9 @@ class OptionModel
                 $option->insert($k, $v);
             }
         } catch (\Throwable $e) {
-            if (DEBUG) throw new OptionException("Option Schema Install Failed. {$e->getMessage()}", (int) $e->getCode(), $e);
+            if (DEBUG) {
+                throw new OptionException("Option Schema Install Failed. {$e->getMessage()}", (int) $e->getCode(), $e);
+            }
         }
     }
 
@@ -100,7 +105,9 @@ class OptionModel
         $key = trim($key);
 
         // Return If Empty $key
-        if (empty($key)) return $default;
+        if (empty($key)) {
+            return $default;
+        }
 
         // Check Already Cached. A Cached null Means The Key is Missing
         if (array_key_exists($key, self::$cached[$this->connection] ?? [])) {
@@ -128,7 +135,9 @@ class OptionModel
         $key = trim($key);
 
         // Return if Empty Key or Already Exists. A Stored '' or '0' Still Exists
-        if (empty($key) || ($this->single($key) !== null)) return false;
+        if (empty($key) || ($this->single($key) !== null)) {
+            return false;
+        }
 
         try {
             $this->model()->transaction(function (Model $m) use ($key, $value) {
@@ -139,7 +148,9 @@ class OptionModel
             });
             return true;
         } catch (\Throwable $e) {
-            if (DEBUG) throw new OptionException("Option Insert Failed. {$e->getMessage()}", (int) $e->getCode(), $e);
+            if (DEBUG) {
+                throw new OptionException("Option Insert Failed. {$e->getMessage()}", (int) $e->getCode(), $e);
+            }
         }
         return false;
     }
@@ -155,7 +166,9 @@ class OptionModel
         $key = trim($key);
 
         // Return if Key is Empty or Doesn't Exists
-        if (empty($key) || empty($this->model()->table($this->table)->where([$this->key => $key])->first())) return false;
+        if (empty($key) || empty($this->model()->table($this->table)->where([$this->key => $key])->first())) {
+            return false;
+        }
 
         try {
             $this->model()->transaction(function (Model $m) use ($key, $value) {
@@ -166,7 +179,9 @@ class OptionModel
             });
             return true;
         } catch (\Throwable $e) {
-            if (DEBUG) throw new OptionException("Option Update Failed. {$e->getMessage()}", (int) $e->getCode(), $e);
+            if (DEBUG) {
+                throw new OptionException("Option Update Failed. {$e->getMessage()}", (int) $e->getCode(), $e);
+            }
         }
         return false;
     }

@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Laika PHP MVC Framework
  * Author: Showket Ahmed
@@ -44,7 +45,11 @@ class Handler
 
             if ($error && in_array($error['type'], [E_ERROR, E_PARSE, E_CORE_ERROR, E_COMPILE_ERROR])) {
                 (new Handler())->handle(new \ErrorException(
-                    $error['message'], 0, $error['type'], $error['file'], $error['line']
+                    $error['message'],
+                    0,
+                    $error['type'],
+                    $error['file'],
+                    $error['line']
                 ));
             }
         });
@@ -67,7 +72,9 @@ class Handler
      */
     protected function log(Throwable $e): void
     {
-        if (!DEBUG) return;
+        if (!DEBUG) {
+            return;
+        }
 
         $logDir = APP_PATH . '/lf-logs';
         // Create Directory If Not Exists
@@ -115,8 +122,8 @@ class Handler
 
     private function renderDebug(Throwable $e)
     {
-        $whoops = new \Whoops\Run;
-        $handler = new \Whoops\Handler\PrettyPageHandler;
+        $whoops = new \Whoops\Run();
+        $handler = new \Whoops\Handler\PrettyPageHandler();
         $handler->setPageTitle("Laika Application Error!");
         $whoops->prependHandler($handler);
         $whoops->handleException($e);

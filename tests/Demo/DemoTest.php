@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace Laika\Tests\Unit;
@@ -12,7 +13,7 @@ final class DemoTest extends TestCase
 {
     public function testRouter()
     {
-        Url::get('/', function() {
+        Url::get('/', function () {
             return 'Hello, World!';
         })->name('home');
         $path = Handler::namedUrl('home');

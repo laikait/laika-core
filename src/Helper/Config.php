@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Laika Framework
  * Author: Showket Ahmed
@@ -68,7 +69,7 @@ class Config
      * @return void
      * @throws RuntimeException
      */
-    public static function set(string $name, string $key, null|int|float|string|bool|array $value): void
+    public static function set(string $name, string $key, int|float|string|bool|array|null $value): void
     {
         // Initiate
         self::init();
@@ -227,12 +228,12 @@ class Config
      * @param null|int|float|string|bool $value Value to Export
      * @return string
      */
-    private static function exportValue(null|int|float|string|bool $value): string
+    private static function exportValue(int|float|string|bool|null $value): string
     {
         return match (true) {
             is_null($value)   => 'null',
             is_bool($value)   => $value ? 'true' : 'false',
-            is_int($value)    => (string)$value,
+            is_int($value)    => (string) $value,
             // var_export() keeps full precision and avoids the scientific
             // notation a plain (string) cast produces for large/small floats.
             is_float($value)  => var_export($value, true),

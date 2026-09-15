@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Laika PHP MVC Framework
  * Author: Showket Ahmed
@@ -170,7 +171,7 @@ class Runner
             $pid = null;
         } else {
             exec($command . ' > /dev/null 2>&1 & echo $!', $out);
-            $pid = (int)($out[0] ?? 0);
+            $pid = (int) ($out[0] ?? 0);
         }
 
         return new AsyncJob($pid, $command);

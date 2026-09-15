@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Laika PHP MVC Framework
  * Author: Showket Ahmed
@@ -51,11 +52,13 @@ class Init
      */
     public function db(?string $name = null): void
     {
-        $name  = $name ?? 'default';
+        $name ??= 'default';
         $cache = strtolower($name);
 
         // Skip If Already Booted
-        if (self::$connections[$cache] ?? false) return;
+        if (self::$connections[$cache] ?? false) {
+            return;
+        }
 
         // The flag used to be set only inside the branch below, so a connection
         // registered elsewhere never took this fast path.

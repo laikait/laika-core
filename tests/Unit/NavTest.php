@@ -69,7 +69,7 @@ final class NavTest extends TestCase
                 continue;
             }
 
-            Handler::get($uri, static fn (): mixed => null);
+            Handler::get($uri, static fn(): mixed => null);
             Handler::name($name, 'GET', $uri);
         }
     }
@@ -375,7 +375,7 @@ final class NavTest extends TestCase
     {
         $this->assertSame(
             $this->nav,
-            $this->nav->extend('services', static fn (Item $item): Item => $item)
+            $this->nav->extend('services', static fn(Item $item): Item => $item)
         );
     }
 
@@ -722,7 +722,7 @@ final class NavTest extends TestCase
             'blank'       => ['   '],
             'other tag'   => ['<span>x</span>'],
             'script'      => ['<script>alert(1)</script>'],
-            'svg-ish name'=> ['<svgfoo></svgfoo>'],
+            'svg-ish name' => ['<svgfoo></svgfoo>'],
         ];
     }
 

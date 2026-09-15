@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Laika PHP MVC Framework
  * Author: Showket Ahmed
@@ -21,8 +22,12 @@ final class MemoryManager
 
     public function __construct()
     {
-        if (!defined('MEMORY_LIMIT')) define('MEMORY_LIMIT', '256M');
-        if (!defined('CLI_MEMORY_LIMIT')) define('CLI_MEMORY_LIMIT', '256M');
+        if (!defined('MEMORY_LIMIT')) {
+            define('MEMORY_LIMIT', '256M');
+        }
+        if (!defined('CLI_MEMORY_LIMIT')) {
+            define('CLI_MEMORY_LIMIT', '256M');
+        }
     }
 
     /**

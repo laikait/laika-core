@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Laika PHP MVC Framework
  * Author: Showket Ahmed
@@ -11,6 +12,7 @@
 declare(strict_types=1);
 
 // Namespace
+
 namespace Laika\Core\Schema;
 
 // Deny Direct Access
@@ -69,7 +71,9 @@ class OptionSchema extends SchemaAbstract
                 Option::insert($k, $v);
             }
         } catch (\Throwable $e) {
-            if (DEBUG) throw new OptionException("Option Insert Failed. {$e->getMessage()}", (int) $e->getCode(), $e);
+            if (DEBUG) {
+                throw new OptionException("Option Insert Failed. {$e->getMessage()}", (int) $e->getCode(), $e);
+            }
         }
     }
 }

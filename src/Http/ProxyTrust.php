@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Laika PHP MVC Framework
  * Author: Showket Ahmed
@@ -56,8 +57,8 @@ final class ProxyTrust
         }
 
         return self::$ranges = array_values(array_filter(
-            array_map(static fn ($range): string => trim((string) $range), $configured),
-            static fn (string $range): bool => $range !== ''
+            array_map(static fn($range): string => trim((string) $range), $configured),
+            static fn(string $range): bool => $range !== ''
         ));
     }
 

@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Laika PHP MVC Framework
  * Author: Showket Ahmed
@@ -88,11 +89,11 @@ class Regex
     public function match(string $ruleName, string $input): ?array
     {
         $rule = $this->getRule($ruleName);
-        
+
         if (!$rule) {
             throw new InvalidArgumentException("Rule '{$ruleName}' not found");
         }
-        
+
         return $rule->match($input);
     }
 
@@ -105,11 +106,11 @@ class Regex
     public function checkRules(string $input): array
     {
         $results = [];
-        
+
         foreach (static::$rules as $name => $rule) {
             $results[$name] = $rule->validate($input);
         }
-        
+
         return $results;
     }
 
@@ -123,18 +124,18 @@ class Regex
     protected function discoverRules(): void
     {
         $rulesPath = __DIR__ . '/Rules';
-        
+
         if (!is_dir($rulesPath)) {
             return;
         }
 
         $files = scandir($rulesPath);
-        
+
         foreach ($files as $file) {
             if (pathinfo($file, PATHINFO_EXTENSION) === 'php') {
                 $className = pathinfo($file, PATHINFO_FILENAME);
                 $fullClassName = "Laika\\Core\\Regex\\Rules\\{$className}";
-                
+
                 if (class_exists($fullClassName)) {
                     $reflection = new ReflectionClass($fullClassName);
 

@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Laika Framework
  * Author: Showket Ahmed
@@ -91,7 +92,7 @@ Relay::setRegistry($registry);
 // package that already requires both. Pipelines, filters and controllers are built
 // through RelayRegistry::make() from here on, so their constructor dependencies are
 // auto-wired; without this call the router falls back to a plain `new`.
-Invoke::setResolver(static fn (string $class): object => $registry->make($class));
+Invoke::setResolver(static fn(string $class): object => $registry->make($class));
 
 // Boot Providers
 $providers->boot();

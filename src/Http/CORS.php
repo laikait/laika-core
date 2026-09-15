@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Laika PHP Framework
  * Author: Showket Ahmed
@@ -27,7 +28,7 @@ class CORS
         "Referrer-Policy"           => "strict-origin-when-cross-origin",
         "X-Frame-Options"           => "sameorigin",
         "Content-Security-Policy"   => "frame-ancestors 'self'",
-        "X-Powered-By"              =>  "Laika Framework"
+        "X-Powered-By"              =>  "Laika Framework",
     ];
 
     ####################################################################################

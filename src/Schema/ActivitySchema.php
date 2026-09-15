@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Laika PHP MVC Framework
  * Author: Showket Ahmed
@@ -11,6 +12,7 @@
 declare(strict_types=1);
 
 // Namespace
+
 namespace Laika\Core\Schema;
 
 // Deny Direct Access
@@ -39,7 +41,7 @@ class ActivitySchema extends SchemaAbstract
             $t->serialize('changes')->comment('Serialized Changed Data');
             $t->string('from_ip', 40);
             $t->timestamp('created_at');
-            
+
             $t->index(['author_type', 'author_id'], 'author');
             $t->index('event');
             $t->index('created_at');

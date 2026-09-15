@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Laika PHP MVC Framework
  * Author: Showket Ahmed
@@ -240,7 +241,7 @@ class Url
     {
         $key = strtolower($key ?: 'page');
         $queries = $this->queries();
-        $queries[$key] = max(1, ((int) ($queries[$key] ?? 1)) -1);
+        $queries[$key] = max(1, ((int) ($queries[$key] ?? 1)) - 1);
 
         return $this->base() . $this->path() . '?' . http_build_query($queries);
     }
@@ -379,7 +380,7 @@ class Url
         $candidates = [
             $this->forwarded('HTTP_X_FORWARDED_HOST'),
             $this->server('HTTP_HOST'),
-            $this->server('SERVER_NAME')
+            $this->server('SERVER_NAME'),
         ];
 
         foreach ($candidates as $candidate) {
