@@ -59,7 +59,7 @@ class Template
         $this->loader = new Engine($this->templateDirectory);
         $this->twig = new Environment($this->loader, [
             'debug' =>  DEBUG,
-            'cache' =>  $this->cacheDirectory
+            'cache' =>  $this->cacheDirectory,
         ]);
 
         // Twig's debug option on its own does not define dump(). The extension does.
@@ -400,11 +400,15 @@ class Template
         // Decode Html Special Characters
         $this->addFilter('decode', 'htmlspecialchars_decode');
         // Register Slugs
-        $this->addFilter('slug', function (int $index){ return Url::segment($index); });
+        $this->addFilter('slug', function (int $index) {
+            return Url::segment($index);
+        });
         // Register Queries
-        $this->addFilter('query', function (string $key) { return Url::query($key); });
+        $this->addFilter('query', function (string $key) {
+            return Url::query($key);
+        });
         // Register Named
-        $this->addFilter('named', function(string $name, array $params = []){
+        $this->addFilter('named', function (string $name, array $params = []) {
             return named($name, $params);
         });
         // Register Asset

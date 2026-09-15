@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Laika PHP MVC Framework
  * Author: Showket Ahmed
@@ -76,7 +77,7 @@ class Token
             'iat'   =>  $this->time,
             'nbf'   =>  $this->time,
             'exp'   =>  $this->time + $this->ttl,
-            'data'  =>  $user
+            'data'  =>  $user,
         ];
 
         return Vault::encrypt(JWT::encode($payload, $this->secret, $this->algorithm));

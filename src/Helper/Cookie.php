@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Laika PHP MVC Framework
  * Author: Showket Ahmed
@@ -110,7 +111,7 @@ class Cookie
             'path'     => $this->path,
             'secure'   => Url::isHttps(),
             'httponly' => $this->httponly,
-            'samesite' => $this->samesite
+            'samesite' => $this->samesite,
         ]);
         $this->reset();
         return $result;
@@ -155,7 +156,7 @@ class Cookie
             'path'     => $this->path,
             'secure'   => Url::isHttps(),
             'httponly' => $this->httponly,
-            'samesite' => $this->samesite
+            'samesite' => $this->samesite,
         ]);
         unset($_COOKIE[$name]);
 

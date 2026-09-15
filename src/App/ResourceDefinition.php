@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Laika Framework
  * Author: Showket Ahmed
@@ -33,8 +34,7 @@ final class ResourceDefinition
         public readonly ?string $namespace = null,
         public readonly ?string $contract = null,
         public readonly string $source = 'runtime'
-    ) {
-    }
+    ) {}
 
     /**
      * Identity Used To De-duplicate Definitions
@@ -74,7 +74,7 @@ final class ResourceDefinition
             'path'      =>  $this->path,
             'namespace' =>  $this->namespace,
             'contract'  =>  $this->contract,
-            'source'    =>  $this->source
+            'source'    =>  $this->source,
         ];
     }
 

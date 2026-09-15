@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Laika Framework
  * Author: Showket Ahmed
@@ -43,11 +44,13 @@ class Key
     {
         $base64 = $this->generateBase64($byte);
         try {
-            if (!File::exists($this->file)) File::touch($this->file);
+            if (!File::exists($this->file)) {
+                File::touch($this->file);
+            }
             File::write($base64, $this->file);
-            setPermission($this->file, 0600);
+            setPermission($this->file, 0o600);
         } catch (\Throwable $th) {
-            throw new AppKeyException("Key generate failed! {$th->getMessage()}", previous:$th);
+            throw new AppKeyException("Key generate failed! {$th->getMessage()}", previous: $th);
         }
     }
 
@@ -58,7 +61,9 @@ class Key
      */
     public function get(): string
     {
-        if (self::$key !== null) return self::$key;
+        if (self::$key !== null) {
+            return self::$key;
+        }
 
         if (!File::exists($this->file)) {
             throw new AppKeyException("App key not found! Please run `php laika secret:generate`");
@@ -100,7 +105,7 @@ class Key
                 throw new AppKeyException("Invalid app key byte. Please run `php laika secret:fix --byte=32`");
             }
         } catch (\Throwable $th) {
-            throw new AppKeyException($th->getMessage(), previous:$th);
+            throw new AppKeyException($th->getMessage(), previous: $th);
         }
         return true;
     }
@@ -119,15 +124,17 @@ class Key
             $isValid = false;
         }
 
-        if ($isValid) return;
+        if ($isValid) {
+            return;
+        }
 
         try {
             $base64 = $this->generateBase64($byte);
-            setPermission($this->file, 0640);
+            setPermission($this->file, 0o640);
             File::write($base64, $this->file);
-            setPermission($this->file, 0600);
+            setPermission($this->file, 0o600);
         } catch (\Throwable $th) {
-            throw new AppKeyException("Unable to fix app key! {$th->getMessage()}", previous:$th);
+            throw new AppKeyException("Unable to fix app key! {$th->getMessage()}", previous: $th);
         }
     }
 

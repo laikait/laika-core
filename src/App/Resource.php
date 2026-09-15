@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Laika Framework
  * Author: Showket Ahmed
@@ -164,7 +165,7 @@ final class Resource
         }
 
         $classes = self::resolve($name);
-        $contract = $contract ?? self::contract($name);
+        $contract ??= self::contract($name);
 
         foreach ($classes as $class) {
             if (!class_exists($class)) {
@@ -303,7 +304,7 @@ final class Resource
 
         return [
             'definitions'   =>  $definitions,
-            'resources'     =>  self::getResources()
+            'resources'     =>  self::getResources(),
         ];
     }
 
@@ -315,12 +316,12 @@ final class Resource
      */
     public static function cache(?string $file = null): string
     {
-        $file = $file ?? self::manifestPath();
+        $file ??= self::manifestPath();
         $data = self::compile();
         $directory = dirname($file);
 
         if (!is_dir($directory)) {
-            mkdir($directory, 0755, true);
+            mkdir($directory, 0o755, true);
         }
 
         $export = var_export($data, true);
@@ -339,7 +340,7 @@ final class Resource
      */
     public static function loadManifest(?string $file = null): bool
     {
-        $file = $file ?? self::manifestPath();
+        $file ??= self::manifestPath();
 
         if (!is_file($file)) {
             return false;
@@ -582,45 +583,45 @@ final class Resource
         return [
             'models'        =>  [
                 'path' => 'lf-app/Model',
-                'namespace' => 'App\\Model'
+                'namespace' => 'App\\Model',
             ],
             'schemas'       =>  [
                 'path' => 'lf-app/Schema',
                 'namespace' => 'App\\Schema',
-                'contract' => SchemaAbstract::class
+                'contract' => SchemaAbstract::class,
             ],
             'controllers'   =>  [
                 'path' => 'lf-app/Controller',
-                'namespace' => 'App\\Controller'
+                'namespace' => 'App\\Controller',
             ],
             'jobs'          =>  [
                 'path' => 'lf-app/Job',
                 'namespace' => 'App\\Job',
-                'contract' => Job::class
+                'contract' => Job::class,
             ],
             'pipelines'     =>  [
                 'path' => 'lf-app/Pipeline',
                 'namespace' => 'App\\Pipeline',
-                'contract' => PipelineInterface::class
+                'contract' => PipelineInterface::class,
             ],
             'filters'       =>  [
                 'path' => 'lf-app/Filter',
                 'namespace' => 'App\\Filter',
-                'contract' => FilterInterface::class
+                'contract' => FilterInterface::class,
             ],
             'commands'      =>  [
                 'path' => 'lf-app/Command',
                 'namespace' => 'App\\Command',
-                'contract' => CommandInterface::class
+                'contract' => CommandInterface::class,
             ],
             // Relay providers, not the bound accessors Infra::getRelayClasses() reports
             'relays'        =>  [
                 'path' => 'lf-app/Relay',
                 'namespace' => 'App\\Relay',
-                'contract' => RelayProvider::class
+                'contract' => RelayProvider::class,
             ],
             'routes'        =>  ['path' => 'lf-routes'],
-            'hooks'         =>  ['path' => 'lf-hooks']
+            'hooks'         =>  ['path' => 'lf-hooks'],
         ];
     }
 
@@ -700,7 +701,7 @@ final class Resource
      */
     private static function seed(array $resources, string $source, ?string $base = null): void
     {
-        $base = $base ?? APP_PATH;
+        $base ??= APP_PATH;
 
         foreach ($resources as $name => $declaration) {
             // A bare string is shorthand for ['path' => '...']

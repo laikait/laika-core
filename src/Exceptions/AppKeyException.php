@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Laika PHP Framework
  * Author: Showket Ahmed

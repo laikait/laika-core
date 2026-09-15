@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Laika PHP MVC Framework
  * Author: Showket Ahmed
@@ -36,7 +37,7 @@ class File
      * @param string $file
      * @return bool
      */
-    public function readable( string $file): bool
+    public function readable(string $file): bool
     {
         return is_readable($file);
     }

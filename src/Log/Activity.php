@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Laika PHP MVC Framework
  * Author: Showket Ahmed
@@ -11,12 +12,14 @@
 declare(strict_types=1);
 
 // Namespace
+
 namespace Laika\Core\Log;
 
 // Deny Direct Access
 defined('APP_PATH') || http_response_code(403) . die('403 Direct Access Denied!');
 
 use Laika\Model\Model;
+use Laika\Model\Connection;
 use Laika\Service\Request;
 use Laika\Service\Visitor;
 use Laika\Core\Schema\ActivitySchema;
@@ -33,8 +36,8 @@ final class Activity
     /** @var array Activities */
     protected array $activities;
 
-    /** @var bool Schema Ready */
-    private static bool $schemaReady = false;
+    /** @var array<string,bool> Connections Whose Schema Was Installed This Process */
+    private static array $installed = [];
 
     public function __construct(?string $connection = null)
     {
@@ -84,7 +87,7 @@ final class Activity
             'event'         =>  strtolower(trim($event)),
             'log'           =>  $this->log,
             'changes'       =>  serialize($changelog),
-            'from_ip'       =>  Visitor::ip()
+            'from_ip'       =>  Visitor::ip(),
         ];
 
         // Reset
@@ -122,7 +125,9 @@ final class Activity
     {
         $changelog = [];
         // Return if Empty
-        if (empty($existing)) return $changelog;
+        if (empty($existing)) {
+            return $changelog;
+        }
 
         $inputs = $inputs ?: Request::inputs();
 
@@ -131,7 +136,7 @@ final class Activity
             if (isset($inputs[$k]) && ($inputs[$k] != $v)) {
                 $changelog[$k] = [
                     'old'   =>  $v,
-                    'new'   =>  $inputs[$k]
+                    'new'   =>  $inputs[$k],
                 ];
             }
         }
@@ -150,16 +155,21 @@ final class Activity
         $effected = 0;
 
         // Return if No Activities Exists
-        if (empty($this->activities)) return 0;
+        if (empty($this->activities)) {
+            return 0;
+        }
 
         try {
-            $model = new Model($connection);
-            if (!self::$schemaReady) {
-                (new ActivitySchema())->up($connection);
-                self::$schemaReady = true;
+            // Resolve The Name Once, So The Model & The Schema Target The Same Database
+            $name = ($connection !== null && $connection !== '') ? $connection : Connection::getDefault();
+
+            $model = new Model($name);
+            if (!(self::$installed[$name] ?? false)) {
+                (new ActivitySchema($name))->up();
+                self::$installed[$name] = true;
             }
 
-            foreach($this->activities as $event => $logs) {
+            foreach ($this->activities as $event => $logs) {
                 $model->transaction(function (Model $m) use ($logs) {
                     $m->table('activities')->insert($logs);
                 });

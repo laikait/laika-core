@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Laika PHP MVC Framework
  * Author: Showket Ahmed
@@ -91,7 +92,7 @@ class Directory
      * @return bool
      * @throws RuntimeException
      */
-    public function make(string $path, int $permissions = 0755, bool $recursive = true): bool
+    public function make(string $path, int $permissions = 0o755, bool $recursive = true): bool
     {
         if (is_dir($path)) {
             return true;

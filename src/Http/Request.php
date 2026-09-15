@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Laika PHP MVC Framework
  * Author: Showket Ahmed
@@ -14,7 +15,6 @@ namespace Laika\Core\Http;
 
 use Laika\Core\Contracts\SanitizerInterface;
 use Laika\Core\Sanitizer\InputSanitizer;
-
 
 class Request
 {
@@ -77,7 +77,9 @@ class Request
      */
     public function headers(): array
     {
-        if ($this->cachedHeaders !== null) return $this->cachedHeaders;
+        if ($this->cachedHeaders !== null) {
+            return $this->cachedHeaders;
+        }
 
         $this->cachedHeaders = [];
 
@@ -119,23 +121,27 @@ class Request
     public function header(string $name): ?string
     {
         $normalized = $this->normalizeHeaderName($name);
-    
+
         // Fast path: direct $_SERVER lookup
         $key = strtoupper(str_replace('-', '_', $normalized));
         if (str_starts_with($key, 'CONTENT_')) {
-            if (isset($_SERVER[$key])) return $_SERVER[$key];
+            if (isset($_SERVER[$key])) {
+                return $_SERVER[$key];
+            }
         } else {
             $httpKey = 'HTTP_' . $key;
-            if (isset($_SERVER[$httpKey])) return $_SERVER[$httpKey];
+            if (isset($_SERVER[$httpKey])) {
+                return $_SERVER[$httpKey];
+            }
         }
-        
+
         // Fallback: case-insensitive search
         foreach ($this->headers() as $k => $v) {
             if ($this->normalizeHeaderName($k) === $normalized) {
                 return $v;
             }
         }
-        
+
         return null;
     }
 
@@ -201,9 +207,15 @@ class Request
      */
     public function input(string $key, mixed $default = null): mixed
     {
-        if (array_key_exists($key, $this->json)) return $this->json[$key];
-        if (array_key_exists($key, $this->post)) return $this->post[$key];
-        if (array_key_exists($key, $this->get)) return $this->get[$key];
+        if (array_key_exists($key, $this->json)) {
+            return $this->json[$key];
+        }
+        if (array_key_exists($key, $this->post)) {
+            return $this->post[$key];
+        }
+        if (array_key_exists($key, $this->get)) {
+            return $this->get[$key];
+        }
         return $default;
     }
 

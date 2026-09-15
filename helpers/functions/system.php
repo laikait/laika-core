@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Laika Framework
  * Author: Showket Ahmed
@@ -35,7 +36,9 @@ function dd(mixed $data, bool $die = false): void
     echo '<pre style="background-color:#000;color:#fff;">';
     var_dump($data);
     echo '</pre>';
-    if ($die) die();
+    if ($die) {
+        die();
+    }
 }
 
 /**
@@ -49,7 +52,9 @@ function show(mixed $data, bool $die = false): void
     echo '<pre style="background-color:#000;color:#fff;">';
     print_r($data);
     echo '</pre>';
-    if ($die) die();
+    if ($die) {
+        die();
+    }
 }
 
 /**
@@ -62,7 +67,7 @@ function purify(array $data): array
     if (empty($data)) {
         return $data;
     }
-    return array_map(function($val){
+    return array_map(function ($val) {
         return match (true) {
             is_array($val) => purify($val),
             is_string($val) => trim((string) $val),
@@ -204,14 +209,14 @@ function repo_dir(string $name): string
  * @param int $mode Permission Mode. Default is 0755
  * @return bool
  */
-function setPermission(string $path, int $mode = 0755): bool
+function setPermission(string $path, int $mode = 0o755): bool
 {
     if (!file_exists($path)) {
         return false;
     }
 
     if (stripos(PHP_OS, 'WIN') === 0) {
-        $readonly = !($mode & 0200);
+        $readonly = !($mode & 0o200);
         exec('attrib ' . ($readonly ? '+R' : '-R') . ' ' . escapeshellarg($path));
         return true;
     }
@@ -226,7 +231,7 @@ function setPermission(string $path, int $mode = 0755): bool
  * @param int $fileMode File Permission Mode. Default is 0644
  * @return bool
  */
-function setPermissionRecursive(string $path, int $dirMode = 0755, int $fileMode = 0644): bool
+function setPermissionRecursive(string $path, int $dirMode = 0o755, int $fileMode = 0o644): bool
 {
     if (!file_exists($path)) {
         return false;
@@ -235,7 +240,9 @@ function setPermissionRecursive(string $path, int $dirMode = 0755, int $fileMode
     if (is_dir($path)) {
         setPermission($path, $dirMode);
         foreach (scandir($path) as $item) {
-            if ($item === '.' || $item === '..') continue;
+            if ($item === '.' || $item === '..') {
+                continue;
+            }
             setPermissionRecursive($path . DIRECTORY_SEPARATOR . $item, $dirMode, $fileMode);
         }
     } else {
@@ -254,10 +261,12 @@ function setPermissionRecursive(string $path, int $dirMode = 0755, int $fileMode
  * @param null|string|int $default
  * @return ?string
  */
-function option(string $key, null|string|int $default = null): ?string
+function option(string $key, string|int|null $default = null): ?string
 {
     static $options = [];
-    if (!isset($options[$key])) $options[$key] = Option::single($key, $default ? (string) $default : null);
+    if (!isset($options[$key])) {
+        $options[$key] = Option::single($key, $default ? (string) $default : null);
+    }
     return $options[$key];
 }
 
@@ -280,7 +289,9 @@ function option_bool(string $key): bool
 function option_int(string $key, int $default = 0): int
 {
     $v = option($key, (string) $default);
-    if (is_numeric($v)) return (int) $v;
+    if (is_numeric($v)) {
+        return (int) $v;
+    }
     return $default;
 }
 
@@ -295,8 +306,11 @@ function option_array(string $key, array $default = []): array
     $str = option($key, "");
     try {
         $arr = json_decode($str, true, 512, JSON_THROW_ON_ERROR);
-        if (is_array($arr)) return $arr;
-    } catch (\Throwable $th) {}
+        if (is_array($arr)) {
+            return $arr;
+        }
+    } catch (\Throwable $th) {
+    }
     return $default;
 }
 
@@ -336,7 +350,7 @@ function request_is(string $method): bool
         'get'   =>  Request::isGet(),
         'put'   =>  Request::isPut(),
         'patch' =>  Request::isPatch(),
-        'delete'=>  Request::isDelete(),
+        'delete' =>  Request::isDelete(),
         'ajax'  =>  Request::isAjax(),
         default =>  false
     };
@@ -427,7 +441,7 @@ function page_number(): int
  */
 function asset(string $path): string
 {
-    if(parse_url($path, PHP_URL_HOST)){
+    if (parse_url($path, PHP_URL_HOST)) {
         return $path;
     }
     $path = trim($path, '/.');
@@ -563,7 +577,7 @@ function csrf_field(): void
 function local(string $property, ...$args): string
 {
     // Return if Class Doesn't Exists
-    if(!class_exists('LANG')) {
+    if (!class_exists('LANG')) {
         throw new RuntimeException("'LANG' Class Doesn't Exists!");
     }
     // Return if Class Exists
@@ -604,6 +618,6 @@ function response(bool $status, int|string $message, array $data = []): array
     return [
         'status' => $status,
         'message' => $message,
-        'data' => $data
+        'data' => $data,
     ];
 }

@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Laika PHP MVC Framework
  * Author: Showket Ahmed
@@ -47,19 +48,52 @@ class Item extends Node
     /**
      * @internal Items are Only Legitimate Through Builder::add() or Item::child().
      */
-    public function __construct(protected string $title, protected string $url, protected Node $parent
+    public function __construct(
+        protected string $title,
+        protected string $url,
+        protected Node $parent
     ) {}
 
-    public function getTitle(): string        { return $this->title; }
-    public function getUrl(): string          { return $this->url; }
-    public function getChildren(): array      { return $this->items; }
-    public function hasChildren(): bool       { return !empty($this->items); }
-    public function getClasses(): array       { return $this->classes; }
-    public function getAttributes(): array    { return $this->attributes; }
-    public function getIcon(): ?string        { return $this->icon; }
-    public function getSvg(): ?string         { return $this->svg; }
-    public function getActive(): ?bool        { return $this->active; }
-    public function getName(): ?string        { return $this->name; }
+    public function getTitle(): string
+    {
+        return $this->title;
+    }
+    public function getUrl(): string
+    {
+        return $this->url;
+    }
+    public function getChildren(): array
+    {
+        return $this->items;
+    }
+    public function hasChildren(): bool
+    {
+        return !empty($this->items);
+    }
+    public function getClasses(): array
+    {
+        return $this->classes;
+    }
+    public function getAttributes(): array
+    {
+        return $this->attributes;
+    }
+    public function getIcon(): ?string
+    {
+        return $this->icon;
+    }
+    public function getSvg(): ?string
+    {
+        return $this->svg;
+    }
+    public function getActive(): ?bool
+    {
+        return $this->active;
+    }
+    public function getName(): ?string
+    {
+        return $this->name;
+    }
 
     /**
      * Get the Node This Item Hangs Under

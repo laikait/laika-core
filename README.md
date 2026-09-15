@@ -1,6 +1,8 @@
 # Laika Framework Core
 Laika PHP Framework Core for [Laika PHP MVC Framework](https://github.com/laikait/laika-framework).
 
+**Documentation:** [docs/](docs/README.md). It covers HTTP, configuration, templates, security, files and storage, utilities, options and the activity log, error handling, every helper function, and upgrade notes.
+
 [![Tests](https://github.com/laikait/laika-core/actions/workflows/test.yml/badge.svg)](https://github.com/laikait/laika-core/actions/workflows/test.yml)
 [![PHP](https://img.shields.io/badge/PHP-8.1%2B-blue.svg)](https://php.net)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)

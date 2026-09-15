@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Laika PHP MVC Framework
  * Author: Showket Ahmed
@@ -94,7 +95,9 @@ class Date
                 $dt = new DateTime($time, $tz);
             } catch (\Exception $e) {
                 throw new \InvalidArgumentException(
-                    "Unable to parse [{$time}] with format [{$format}].", 0, $e
+                    "Unable to parse [{$time}] with format [{$format}].",
+                    0,
+                    $e
                 );
             }
         }

@@ -146,14 +146,14 @@ class IPv6
         return match (true) {
             str_starts_with($net, '::1')         => 'Loopback',
             str_starts_with($net, 'fe80:')       => 'Link-Local',
-            str_starts_with($net, 'fc') ||
-            str_starts_with($net, 'fd')          => 'Unique Local (ULA)',
+            str_starts_with($net, 'fc')
+            || str_starts_with($net, 'fd')          => 'Unique Local (ULA)',
             str_starts_with($net, 'ff')          => 'Multicast',
             str_starts_with($net, '2002:')       => '6to4',
             str_starts_with($net, '2001:db8:')   => 'Documentation',
             str_starts_with($net, '2001:')       => 'Global Unicast (Teredo/etc)',
-            str_starts_with($net, '2') ||
-            str_starts_with($net, '3')           => 'Global Unicast',
+            str_starts_with($net, '2')
+            || str_starts_with($net, '3')           => 'Global Unicast',
             $net === '::'                        => 'Unspecified',
             default                              => 'Other',
         };

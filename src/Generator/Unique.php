@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Laika PHP Micro Framework
  * Author: Showket Ahmed
@@ -11,6 +12,7 @@
 declare(strict_types=1);
 
 // Namespace
+
 namespace Laika\Core\Generator;
 
 use InvalidArgumentException;
@@ -95,7 +97,8 @@ class Unique
 
         if ($count < $minTokens) {
             $tokens = join(', ', $this->tokens);
-            throw new InvalidArgumentException("Pattern [{$pattern}] contains only {$count} identifier(s). A minimum of {$minTokens} identifiers is required. Available tokens: [{$tokens}].");}
+            throw new InvalidArgumentException("Pattern [{$pattern}] contains only {$count} identifier(s). A minimum of {$minTokens} identifiers is required. Available tokens: [{$tokens}].");
+        }
 
         return $pattern;
     }

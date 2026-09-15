@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Laika PHP MVC Framework
  * Author: Showket Ahmed
@@ -59,9 +60,9 @@ final class PhpMetadataParser
 
         foreach ($tokens as $token) {
             if (
-                is_array($token) &&
-                isset($token[0], $token[1]) &&
-                $token[0] === T_DOC_COMMENT
+                is_array($token)
+                && isset($token[0], $token[1])
+                && $token[0] === T_DOC_COMMENT
             ) {
                 $lines = preg_split('/\R/', $token[1]) ?: [];
 

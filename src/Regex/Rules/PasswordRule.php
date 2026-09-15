@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Laika PHP MVC Framework
  * Author: Showket Ahmed
@@ -78,7 +79,7 @@ class PasswordRule extends Rule
         }
 
         $lookaheadStr = implode('', $lookaheads);
-        
+
         return $charClass ? "/^{$lookaheadStr}[{$charClass}]{{$this->min},}$/" : "/^.{{$this->min},}$/";
     }
 }

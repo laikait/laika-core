@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Laika PHP MVC Framework
  * Author: Showket Ahmed
@@ -225,7 +226,7 @@ class Cron
             // shell - was silently rewritten.
             $existing = preg_replace_callback(
                 '/# \[LAIKA-CRON-START\].*?# \[LAIKA-CRON-END\]/s',
-                static fn (): string => $block,
+                static fn(): string => $block,
                 $existing
             );
         } else {
@@ -277,10 +278,14 @@ class Cron
 
         foreach (explode("\n", trim($match[1])) as $line) {
             $line = trim($line);
-            if ($line === '' || str_starts_with($line, '#')) continue;
+            if ($line === '' || str_starts_with($line, '#')) {
+                continue;
+            }
 
             $parts = preg_split('/\s+/', $line, 6);
-            if ($parts === false || count($parts) < 6) continue;
+            if ($parts === false || count($parts) < 6) {
+                continue;
+            }
 
             // buildBlock() appends " # label", so recover it here.
             [$command, $label] = array_pad(explode(' # ', $parts[5], 2), 2, null);

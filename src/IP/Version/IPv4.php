@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Laika PHP MVC Framework
  * Author: Showket Ahmed
@@ -263,7 +264,7 @@ class IPv4
      */
     public function generateIPs(int $limit = 0): \Generator
     {
-        $start = $this->prefix >= 31 ? $this->networkInt  : $this->networkInt  + 1;
+        $start = $this->prefix >= 31 ? $this->networkInt : $this->networkInt  + 1;
         $end   = $this->prefix >= 31 ? $this->broadcastInt : $this->broadcastInt - 1;
 
         $count = 0;

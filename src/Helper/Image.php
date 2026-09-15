@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Laika PHP MVC Framework
  * Author: Showket Ahmed
@@ -129,7 +130,7 @@ class Image
             'x' => $x,
             'y' => $y,
             'width' => $width,
-            'height' => $height
+            'height' => $height,
         ]);
 
         if ($cropped === false) {
@@ -447,7 +448,7 @@ class Image
         return [
             'width'  => $this->width,
             'height' => $this->height,
-            'mime'   => $this->mime
+            'mime'   => $this->mime,
         ];
     }
 

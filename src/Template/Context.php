@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Laika PHP MVC Framework
  * Author: Showket Ahmed
@@ -43,7 +44,9 @@ class Context
      */
     public static function get(?string $key = null, mixed $default = null): mixed
     {
-        if ($key === null) return self::$context;
+        if ($key === null) {
+            return self::$context;
+        }
 
         // Validate the key
         self::validateKey($key);

@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Laika PHP MVC Framework
  * Author: Showket Ahmed
@@ -11,6 +12,7 @@
 declare(strict_types=1);
 
 // Namespace
+
 namespace Laika\Core\Schema;
 
 // Deny Direct Access
@@ -42,26 +44,36 @@ class OptionSchema extends SchemaAbstract
         });
     }
 
+    /**
+     * Default Options
+     * Shared by seed() & OptionModel::install(), Which Seeds Them on Its Own Connection
+     * @return array<string,string|int>
+     */
+    public static function defaults(): array
+    {
+        return [
+            'app_icon'          =>  'icon.png',
+            'app_logo'          =>  'logo.png',
+            'app_name'          =>  'Laika Framework',
+            'app_path'          =>  APP_PATH,
+            'data_limit'        =>  20,
+            'datetime_format'   =>  'Y-M-d H:i:s',
+            'date_format'       =>  'Y-M-d',
+            'time_format'       =>  'H:i:s',
+            'time_zone'         =>  date_default_timezone_get(),
+        ];
+    }
+
     public function seed(): void
     {
         try {
-            $opts = [
-                'app_icon'          =>  'icon.png',
-                'app_logo'          =>  'logo.png',
-                'app_name'          =>  'Laika Framework',
-                'app_path'          =>  APP_PATH,
-                'data_limit'        =>  20,
-                'datetime_format'   =>  'Y-M-d H:i:s',
-                'date_format'       =>  'Y-M-d',
-                'time_format'       =>  'H:i:s',
-                'time_zone'         =>  date_default_timezone_get(),
-            ];
-
-            foreach ($opts as $k => $v) {
+            foreach (static::defaults() as $k => $v) {
                 Option::insert($k, $v);
             }
         } catch (\Throwable $e) {
-            if (DEBUG) throw new OptionException("Option Insert Failed. {$e->getMessage()}", (int) $e->getCode(), $e);
+            if (DEBUG) {
+                throw new OptionException("Option Insert Failed. {$e->getMessage()}", (int) $e->getCode(), $e);
+            }
         }
     }
 }

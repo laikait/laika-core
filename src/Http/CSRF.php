@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Laika PHP Framework
  * Author: Showket Ahmed
@@ -11,6 +12,7 @@
 declare(strict_types=1);
 
 namespace Laika\Core\Http;
+
 use Laika\Service\Cookie;
 use Laika\Service\Visitor;
 use Laika\Service\AppKey;
@@ -155,7 +157,9 @@ class CSRF
     protected function b64urlDecode(string $string): string
     {
         $pad = strlen($string) % 4;
-        if ($pad) $string .= str_repeat('=', 4 - $pad);
+        if ($pad) {
+            $string .= str_repeat('=', 4 - $pad);
+        }
         return base64_decode(strtr($string, '-_', '+/'));
     }
 
@@ -179,7 +183,9 @@ class CSRF
      */
     protected function checkAndBurnToken(string $token, int $exp): bool
     {
-        if ($token === '') return false;
+        if ($token === '') {
+            return false;
+        }
 
         $usedArr = Cookie::get($this->usedCookieName, []) ?: [];
 
@@ -189,7 +195,9 @@ class CSRF
             }
         }
 
-        if (isset($usedArr[$token])) return false;
+        if (isset($usedArr[$token])) {
+            return false;
+        }
 
         $usedArr[$token] = $exp;
         // cap size to prevent unbounded cookie growth
