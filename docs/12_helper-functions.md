@@ -1,5 +1,7 @@
 # Helper Functions
 
+<!-- {% raw %} -->
+
 laika-core ships global functions in `helpers/functions/system.php`, and registers many of them as hooks in `helpers/hooks/system.php`. Both files are declared as `functions` and `hooks` [resources](05_config-and-app.md#resources) in laika-core's `composer.json`, and `lf-boot/app.php` requires every function file and then every hook file before routing starts.
 
 ## Debugging
@@ -148,3 +150,5 @@ These print tags into a template. They're usually called from Twig through the `
 ```
 
 Hooks such as `csrf_field` and `lf_header` echo their markup while the template renders, and return nothing. See [Templates](06_templates.md#twig-filters) for the other filters.
+
+<!-- {% endraw %} -->
