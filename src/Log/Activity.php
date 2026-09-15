@@ -17,6 +17,7 @@ namespace Laika\Core\Log;
 defined('APP_PATH') || http_response_code(403) . die('403 Direct Access Denied!');
 
 use Laika\Model\Model;
+use Laika\Model\Connection;
 use Laika\Service\Request;
 use Laika\Service\Visitor;
 use Laika\Core\Schema\ActivitySchema;
@@ -33,8 +34,8 @@ final class Activity
     /** @var array Activities */
     protected array $activities;
 
-    /** @var bool Schema Ready */
-    private static bool $schemaReady = false;
+    /** @var array<string,bool> Connections Whose Schema Was Installed This Process */
+    private static array $installed = [];
 
     public function __construct(?string $connection = null)
     {
@@ -153,10 +154,13 @@ final class Activity
         if (empty($this->activities)) return 0;
 
         try {
-            $model = new Model($connection);
-            if (!self::$schemaReady) {
-                (new ActivitySchema())->up($connection);
-                self::$schemaReady = true;
+            // Resolve The Name Once, So The Model & The Schema Target The Same Database
+            $name = ($connection !== null && $connection !== '') ? $connection : Connection::getDefault();
+
+            $model = new Model($name);
+            if (!(self::$installed[$name] ?? false)) {
+                (new ActivitySchema($name))->up();
+                self::$installed[$name] = true;
             }
 
             foreach($this->activities as $event => $logs) {

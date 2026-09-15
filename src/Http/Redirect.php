@@ -12,6 +12,7 @@ declare(strict_types=1);
 
 namespace Laika\Core\Http;
 
+use Laika\Service\Url;
 use Laika\Session\Session;
 use Laika\Core\Exceptions\HttpException;
 
@@ -42,23 +43,7 @@ class Redirect
      */
     public function back(int $code = 302): void
     {
-        $to = $_SERVER['HTTP_REFERER'] ?? '/';
-        if (strpbrk($to, "\r\n") !== false) {
-            $to = '/';
-        } else {
-            $parts = parse_url($to);
-            $host  = $parts['host'] ?? null;
-            // Accept same-host referers, rebuild as path; reject external hosts
-            if ($host === null) {
-                $to = '/'; // not a valid absolute URL — fail safe
-            } elseif ($host !== ($_SERVER['HTTP_HOST'] ?? '')) {
-                $to = '/';
-            } else {
-                $to = ($parts['path'] ?? '/') . (isset($parts['query']) ? "?{$parts['query']}" : '');
-            }
-        }
-
-        $this->send($to, $code);
+        $this->send($this->backTarget($_SERVER['HTTP_REFERER'] ?? null, Url::host()), $code);
     }
 
     /**
@@ -77,6 +62,35 @@ class Redirect
     ####################################################################
     /*------------------------- INTERNAL API -------------------------*/
     ####################################################################
+
+    /**
+     * Same-Host Path to Return to
+     *
+     * The referer is client controlled, so it is only followed when it points
+     * at this host, and then only as a path. Hosts are compared without the
+     * port: HTTP_HOST carries one ("localhost:8000") and parse_url()'s host
+     * does not, so comparing the raw header rejected every referer on a
+     * non-standard port. Leading slashes and backslashes are collapsed because
+     * "Location: //evil.com" and "/\evil.com" both leave the site.
+     *
+     * @param ?string $referer Raw Referer Header
+     * @param string $host This Request's Host, Without Port
+     * @return string Local Path (& Query), or '/' When The Referer Can't be Trusted
+     */
+    protected function backTarget(?string $referer, string $host): string
+    {
+        if ($referer === null || $referer === '' || strpbrk($referer, "\r\n") !== false) {
+            return '/';
+        }
+
+        $parts = parse_url($referer);
+        if (!is_array($parts) || !isset($parts['host']) || strtolower($parts['host']) !== strtolower($host)) {
+            return '/';
+        }
+
+        $path = '/' . ltrim($parts['path'] ?? '', '/\\');
+        return $path . (isset($parts['query']) ? "?{$parts['query']}" : '');
+    }
 
     /**
      * Redirect
