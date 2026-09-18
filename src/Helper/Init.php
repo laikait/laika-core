@@ -76,7 +76,9 @@ class Init
         }
 
         try {
-            Connection::add($config);
+            // Named: an unnamed add() registers under the default name, so any
+            // connection other than 'default' used to overwrite 'default'.
+            Connection::add($config, $name);
         } catch (Throwable $e) {
             // Not just PDOException: a bad DSN raises InvalidArgumentException
             // or TypeError, neither of which the old clause caught.

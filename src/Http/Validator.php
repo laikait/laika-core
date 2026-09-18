@@ -180,8 +180,12 @@ class Validator
 
                     case 'min':
                         $min = (int) ($params[0] ?? 0);
-                        if (is_numeric($value) && (float) $value < $min) {
-                            $errors[$field][] = $customMessage ?? "The [{$field}] must be at least {$min}.";
+                        // Numbers, numeric strings included, compare by value only. The
+                        // length check used to run as well, so "25" failed min:18.
+                        if (is_numeric($value)) {
+                            if ((float) $value < $min) {
+                                $errors[$field][] = $customMessage ?? "The [{$field}] must be at least {$min}.";
+                            }
                         } elseif (is_string($value) && mb_strlen($value) < $min) {
                             $errors[$field][] = $customMessage ?? "The [{$field}] must be at least {$min} characters.";
                         } elseif (is_array($value) && count($value) < $min) {
@@ -191,8 +195,10 @@ class Validator
 
                     case 'max':
                         $max = (int) ($params[0] ?? 0);
-                        if (is_numeric($value) && (float) $value > $max) {
-                            $errors[$field][] = $customMessage ?? "The [{$field}] may not be greater than {$max}.";
+                        if (is_numeric($value)) {
+                            if ((float) $value > $max) {
+                                $errors[$field][] = $customMessage ?? "The [{$field}] may not be greater than {$max}.";
+                            }
                         } elseif (is_string($value) && mb_strlen($value) > $max) {
                             $errors[$field][] = $customMessage ?? "The [{$field}] may not be greater than {$max} characters.";
                         } elseif (is_array($value) && count($value) > $max) {
@@ -204,8 +210,10 @@ class Validator
                         // between:2,10 — value/length/count must fall inside the inclusive range
                         $lo = (int) ($params[0] ?? 0);
                         $hi = (int) ($params[1] ?? 0);
-                        if (is_numeric($value) && ((float) $value < $lo || (float) $value > $hi)) {
-                            $errors[$field][] = $customMessage ?? "The [{$field}] must be between {$lo} and {$hi}.";
+                        if (is_numeric($value)) {
+                            if ((float) $value < $lo || (float) $value > $hi) {
+                                $errors[$field][] = $customMessage ?? "The [{$field}] must be between {$lo} and {$hi}.";
+                            }
                         } elseif (is_string($value) && (mb_strlen($value) < $lo || mb_strlen($value) > $hi)) {
                             $errors[$field][] = $customMessage ?? "The [{$field}] must be between {$lo} and {$hi} characters.";
                         } elseif (is_array($value) && (count($value) < $lo || count($value) > $hi)) {
@@ -216,8 +224,10 @@ class Validator
                     case 'size':
                         // Exact size: size:10 — characters for strings, count for arrays, value for numbers
                         $size = (int) ($params[0] ?? 0);
-                        if (is_numeric($value) && (float) $value !== (float) $size) {
-                            $errors[$field][] = $customMessage ?? "The [{$field}] must equal {$size}.";
+                        if (is_numeric($value)) {
+                            if ((float) $value !== (float) $size) {
+                                $errors[$field][] = $customMessage ?? "The [{$field}] must equal {$size}.";
+                            }
                         } elseif (is_string($value) && mb_strlen($value) !== $size) {
                             $errors[$field][] = $customMessage ?? "The [{$field}] must be exactly {$size} characters.";
                         } elseif (is_array($value) && count($value) !== $size) {

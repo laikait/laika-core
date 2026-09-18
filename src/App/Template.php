@@ -18,6 +18,7 @@ use Twig\Environment;
 use Twig\Extension\DebugExtension;
 use Twig\Loader\FilesystemLoader as Engine;
 use Laika\Core\Exceptions\PathException;
+use Laika\Core\Template\Twig\CacheTokenParser;
 use Laika\Service\{Directory, Visitor, Request, Local, File, Page, Url, Context};
 
 class Template
@@ -66,6 +67,9 @@ class Template
         if (DEBUG) {
             $this->twig->addExtension(new DebugExtension());
         }
+
+        // {% cache 'key' ttl %}...{% endcache %}: see Template\Twig\CacheNode
+        $this->twig->addTokenParser(new CacheTokenParser());
 
         // Assign Template Default Filters
         $this->defaultFilters();

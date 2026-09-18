@@ -17,9 +17,13 @@ use Laika\Service\CSRF;
 use Laika\Service\Meta;
 use Laika\Route\Handler;
 use Laika\Service\Asset;
+// The concrete class, not the relay: version() and appendVersion() are pure
+// statics, so they need no container and no instance resolution.
+use Laika\Core\Template\Asset as AssetFile;
 use Laika\Service\AppKey;
 use Laika\Service\Option;
 use Laika\Service\Config;
+use Laika\Service\Cache;
 use Laika\Service\Request;
 use Laika\Service\Context;
 use Laika\Session\Session;
@@ -253,6 +257,64 @@ function setPermissionRecursive(string $path, int $dirMode = 0o755, int $fileMod
 }
 
 #######################################################################################
+/*================================== CACHE HANDLE ===================================*/
+#######################################################################################
+/**
+ * Get Cached Value
+ * @param string $key Cache Key
+ * @param mixed $default Returned only when the key is absent or expired. A stored null is returned as null.
+ * @return mixed
+ */
+function cache(string $key, mixed $default = null): mixed
+{
+    return Cache::get($key, $default);
+}
+
+/**
+ * Store Value in Cache
+ * @param string $key Cache Key
+ * @param mixed $value Value to Store
+ * @param ?int $ttl Seconds. null uses lf-config/cache.php 'ttl', 0 never expires.
+ * @return bool
+ */
+function cache_set(string $key, mixed $value, ?int $ttl = null): bool
+{
+    return Cache::set($key, $value, $ttl);
+}
+
+/**
+ * Get Cached Value or Compute and Store it
+ * @param string $key Cache Key
+ * @param ?int $ttl Seconds. null uses lf-config/cache.php 'ttl'.
+ * @param callable $callback Runs only on a miss, even when it returns null
+ * @return mixed
+ */
+function cache_remember(string $key, ?int $ttl, callable $callback): mixed
+{
+    return Cache::remember($key, $ttl, $callback);
+}
+
+/**
+ * Check Cache Key Exists
+ * @param string $key Cache Key
+ * @return bool True when present, whatever the value
+ */
+function cache_has(string $key): bool
+{
+    return Cache::has($key);
+}
+
+/**
+ * Remove Cached Value
+ * @param string $key Cache Key
+ * @return bool
+ */
+function cache_pop(string $key): bool
+{
+    return Cache::pop($key);
+}
+
+#######################################################################################
 /*================================== OPTION HANDLE ==================================*/
 #######################################################################################
 /**
@@ -263,11 +325,11 @@ function setPermissionRecursive(string $path, int $dirMode = 0o755, int $fileMod
  */
 function option(string $key, string|int|null $default = null): ?string
 {
-    static $options = [];
-    if (!isset($options[$key])) {
-        $options[$key] = Option::single($key, $default ? (string) $default : null);
-    }
-    return $options[$key];
+    // No memo of its own: OptionModel already caches per process, and it is the
+    // cache insert() and update() keep current. A second one here returned the
+    // old value after option_update(), cached the default of whichever caller
+    // came first, and re-queried a missing key on every call.
+    return Option::single($key, $default === null ? null : (string) $default);
 }
 
 /**
@@ -436,6 +498,11 @@ function page_number(): int
 ######################################################################################
 /**
  * Load Template Asset
+ *
+ * The returned URL carries "?v={hex mtime}" when the file is on disk, which
+ * is what lets it be served immutable instead of revalidated on every load.
+ * A path with a host is an external URL and is returned untouched.
+ *
  * @param string $path
  * @return string
  */
@@ -444,8 +511,12 @@ function asset(string $path): string
     if (parse_url($path, PHP_URL_HOST)) {
         return $path;
     }
+
+    // Resolved from the path as written, before the trim below rewrites it
+    $version = AssetFile::version($path);
     $path = trim($path, '/.');
-    return Url::base() . $path;
+
+    return AssetFile::appendVersion(Url::base() . $path, $version);
 }
 
 /**
@@ -486,11 +557,11 @@ function enqueue_meta(string $name, string $content, string $type = 'name'): voi
  * Enqueue Style
  * @param string $handle
  * @param string $src
- * @param string $version
+ * @param string $version Empty derives it from the file's mtime
  * @param string $media
  * @return void
  */
-function enqueue_style(string $handle, string $src, string $version = '1.0.0', string $media = 'all'): void
+function enqueue_style(string $handle, string $src, string $version = '', string $media = 'all'): void
 {
     Asset::addStyle($handle, $src, $version, $media);
 }
@@ -508,11 +579,11 @@ function print_styles(): void
  * Enqueue Script
  * @param string $handle
  * @param string $src
- * @param string $version
+ * @param string $version Empty derives it from the file's mtime
  * @param bool $defer
  * @return void
  */
-function enqueue_script(string $handle, string $src, string $version = '1.0.0', bool $defer = false): void
+function enqueue_script(string $handle, string $src, string $version = '', bool $defer = false): void
 {
     Asset::addScript($handle, $src, $version, $defer);
 }

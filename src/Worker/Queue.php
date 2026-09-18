@@ -44,7 +44,7 @@ class Queue
             return new JsonDriver();
         }
 
-        Connection::add(config('database', $connection));
+        self::connect($connection);
         $driver = new DatabaseDriver($connection);
         return $driver;
     }
@@ -65,10 +65,31 @@ class Queue
         if ($failedDriverName === 'database') {
             // Tables come from `php laika app:migrate` — the schemas are
             // registered under extra.laika.resources in laika-queue's composer.json
-            Connection::add(config('database', $connection));
+            self::connect($connection);
             return new DatabaseFailedJobProvider($connection);
         }
 
         return new JsonFailedJobProvider();
+    }
+
+    /**
+     * Register the queue's database connection under its own name
+     *
+     * An unnamed Connection::add() registers under the default name, so a
+     * queue.connection other than 'default' used to overwrite 'default'.
+     */
+    private static function connect(string $connection): void
+    {
+        if (Connection::has($connection)) {
+            return;
+        }
+
+        $config = config('database', $connection);
+
+        if (!is_array($config) || $config === []) {
+            throw new \RuntimeException("Database connection [{$connection}] is not defined in lf-config/database.php.");
+        }
+
+        Connection::add($config, $connection);
     }
 }

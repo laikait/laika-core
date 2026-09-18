@@ -155,6 +155,8 @@ class Upload
                 $this->validate($file, $options);
             } catch (RuntimeException $e) {
                 $results['errors'][$name] = $e->getMessage();
+                // Without this the rejected file was still moved into place
+                continue;
             }
 
             $finalName   = $baseName ? "{$baseName}_{$index}" : $slug;

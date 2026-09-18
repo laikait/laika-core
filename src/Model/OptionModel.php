@@ -43,6 +43,9 @@ class OptionModel
     /** @var array<string,array<string,?string>> Cached Values by Connection Name. null Means Missing */
     private static array $cached = [];
 
+    /** @var array<string,bool> Connections Whose Whole Table Was Loaded Into $cached This Process */
+    private static array $warmed = [];
+
     public function __construct(?string $connection = null)
     {
         // Set Connection Name
@@ -109,19 +112,82 @@ class OptionModel
             return $default;
         }
 
+        // One Query Loads Every Option, Rather Than One Round Trip Per Key
+        $this->warm();
+
         // Check Already Cached. A Cached null Means The Key is Missing
         if (array_key_exists($key, self::$cached[$this->connection] ?? [])) {
             return self::$cached[$this->connection][$key] ?? $default;
         }
 
+        // Warmed Means Every Stored Key is Already Cached, So This One is Absent
+        if (self::$warmed[$this->connection] ?? false) {
+            self::$cached[$this->connection][$key] = null;
+            return $default;
+        }
+
         try {
             $opt = $this->model()->table($this->table)->where([$this->key => $key])->first();
             // Cache The Stored Value, Not The Default: The Next Caller May Pass a Different One
-            self::$cached[$this->connection][$key] = isset($opt[$this->value]) ? (string) $opt[$this->value] : null;
+            self::$cached[$this->connection][$key] = $this->column($opt, $this->value);
         } catch (\Throwable $th) {
             return $default;
         }
         return self::$cached[$this->connection][$key] ?? $default;
+    }
+
+    /**
+     * Load Every Option Into The Process Cache
+     *
+     * Once per process per connection. Options are read on nearly every page and
+     * the table is small, so one SELECT replaces a round trip per key. A failure
+     * leaves the connection unwarmed and single() falls back to per-key queries.
+     *
+     * @return void
+     */
+    public function warm(): void
+    {
+        if (self::$warmed[$this->connection] ?? false) {
+            return;
+        }
+
+        try {
+            $rows = $this->model()->table($this->table)->select([$this->key, $this->value])->get();
+        } catch (\Throwable) {
+            return;
+        }
+
+        foreach ($rows as $row) {
+            $k = $this->column($row, $this->key);
+
+            if ($k !== null) {
+                // A value written earlier this process is newer than the table read
+                self::$cached[$this->connection][$k] ??= $this->column($row, $this->value);
+            }
+        }
+
+        self::$warmed[$this->connection] = true;
+    }
+
+    /**
+     * Drop The Process Cache
+     *
+     * Under FPM a process is one request and this is never needed. A worker that
+     * runs many jobs in one process must call it between them, or an option
+     * changed elsewhere is never seen for the life of the worker.
+     *
+     * @param ?string $connection Null clears every connection
+     * @return void
+     */
+    public static function flush(?string $connection = null): void
+    {
+        if ($connection === null) {
+            self::$cached = [];
+            self::$warmed = [];
+            return;
+        }
+
+        unset(self::$cached[$connection], self::$warmed[$connection]);
     }
 
     /**
@@ -140,12 +206,14 @@ class OptionModel
         }
 
         try {
-            $this->model()->transaction(function (Model $m) use ($key, $value) {
-                // Make String
-                $str = convert_to_string($value);
+            // Make String
+            $str = convert_to_string($value);
+            $this->model()->transaction(function (Model $m) use ($key, $str) {
                 $m->table($this->table)->insert([$this->key => $key, $this->value => $str]);
-                self::$cached[$this->connection][$key] = $str;
             });
+            // Only Once Committed: Cached Inside The Transaction, a Rollback Left a
+            // Value in The Cache That Was Never Stored
+            self::$cached[$this->connection][$key] = $str;
             return true;
         } catch (\Throwable $e) {
             if (DEBUG) {
@@ -171,12 +239,13 @@ class OptionModel
         }
 
         try {
-            $this->model()->transaction(function (Model $m) use ($key, $value) {
-                // Make String
-                $str = convert_to_string($value);
+            // Make String
+            $str = convert_to_string($value);
+            $this->model()->transaction(function (Model $m) use ($key, $str) {
                 $m->table($this->table)->where([$this->key => $key])->update([$this->value => $str]);
-                self::$cached[$this->connection][$key] = $str;
             });
+            // Only Once Committed, as in insert()
+            self::$cached[$this->connection][$key] = $str;
             return true;
         } catch (\Throwable $e) {
             if (DEBUG) {
@@ -217,5 +286,27 @@ class OptionModel
     private function model(): Model
     {
         return self::$models[$this->connection];
+    }
+
+    /**
+     * Read a Column From a Row of Either Shape
+     *
+     * Rows are arrays or stdClass depending on the connection's
+     * PDO::ATTR_DEFAULT_FETCH_MODE. Reading $row[$column] off an object quietly
+     * gave null, which cached every option on that connection as missing.
+     *
+     * @param mixed $row
+     * @param string $column
+     * @return ?string
+     */
+    private function column(mixed $row, string $column): ?string
+    {
+        $value = match (true) {
+            is_array($row) => $row[$column] ?? null,
+            is_object($row) => $row->$column ?? null,
+            default => null,
+        };
+
+        return $value === null ? null : (string) $value;
     }
 }

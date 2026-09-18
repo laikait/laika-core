@@ -72,6 +72,21 @@ class Request
     }
 
     /**
+     * Forget The Cached Headers
+     *
+     * The request is a container singleton, so its header cache outlives one
+     * request wherever a process serves several. Call between them.
+     *
+     * @return static
+     */
+    public function flushHeaders(): static
+    {
+        $this->cachedHeaders = null;
+
+        return $this;
+    }
+
+    /**
      * Get Request Headers
      * @return array
      */

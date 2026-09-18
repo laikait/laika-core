@@ -166,12 +166,30 @@ class Runner
 
     private function runAsync(string $command): AsyncJob
     {
+        // proc_open() on both platforms, so cwd() and env() apply to async runs too
         if (PHP_OS_FAMILY === 'Windows') {
-            $process = popen("start /B " . $command, 'r');
-            $pid = null;
+            // `start /B` through popen() gave no PID, and AsyncJob's int $pid
+            // then threw a TypeError. Output goes to NUL so the child can never
+            // block on a full pipe. The PID is the cmd.exe wrapper's, which
+            // lives exactly as long as the command; the handle isn't waited on.
+            $null = ['file', 'NUL', 'w'];
+            $process = proc_open($command, [0 => ['file', 'NUL', 'r'], 1 => $null, 2 => $null], $pipes, $this->cwd, $this->env ?: null);
+
+            if (!is_resource($process)) {
+                throw new \RuntimeException('Process start failed.');
+            }
+
+            $pid = (int) (proc_get_status($process)['pid'] ?? 0);
         } else {
-            exec($command . ' > /dev/null 2>&1 & echo $!', $out);
-            $pid = (int) ($out[0] ?? 0);
+            $process = proc_open($command . ' > /dev/null 2>&1 & echo $!', [1 => ['pipe', 'w']], $pipes, $this->cwd, $this->env ?: null);
+
+            if (!is_resource($process)) {
+                throw new \RuntimeException('Process start failed.');
+            }
+
+            $pid = (int) trim((string) stream_get_contents($pipes[1]));
+            fclose($pipes[1]);
+            proc_close($process);
         }
 
         return new AsyncJob($pid, $command);
