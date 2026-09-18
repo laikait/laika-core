@@ -70,18 +70,18 @@ final class ProcessState
     private static function resets(): array
     {
         return [
-            'cache'          => static fn () => Cache::resetProcess(),
-            'config'         => static fn () => Config::flush(),
-            'options'        => static fn () => OptionModel::flush(),
-            'asset rules'    => static fn () => Asset::flushRules(),
-            'cors headers'   => static fn () => Dispatcher::flushHeaders(),
-            'trusted proxies'=> static fn () => ProxyTrust::flush(),
-            'request headers'=> static fn () => Request::flushHeaders(),
-            'visitor'        => static fn () => Visitor::refresh(),
-            'shield input'   => static fn () => RequestHelper::flush(),
+            'cache'          => static fn() => Cache::resetProcess(),
+            'config'         => static fn() => Config::flush(),
+            'options'        => static fn() => OptionModel::flush(),
+            'asset rules'    => static fn() => Asset::flushRules(),
+            'cors headers'   => static fn() => Dispatcher::flushHeaders(),
+            'trusted proxies' => static fn() => ProxyTrust::flush(),
+            'request headers' => static fn() => Request::flushHeaders(),
+            'visitor'        => static fn() => Visitor::refresh(),
+            'shield input'   => static fn() => RequestHelper::flush(),
             // Last, and not optional: add() appends forever and would otherwise
             // grow until the worker's memory guard stops it
-            'query log'      => static fn () => Log::flush(),
+            'query log'      => static fn() => Log::flush(),
         ];
     }
 }
