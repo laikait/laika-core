@@ -17,6 +17,7 @@ use Laika\Relay\CoreProviders;
 use Laika\Relay\ProviderRegistry;
 use Laika\Relay\RelayProvider;
 use Laika\Core\App\Resource;
+use Laika\Core\System\MemoryManager;
 use Laika\Route\Invoke;
 
 // Define APP Path
@@ -43,6 +44,11 @@ defined('CONFIG_PATH') || define('CONFIG_PATH', APP_PATH . DS . 'lf-config');
 // Define Language Path
 defined('LANG_PATH') || define('LANG_PATH', APP_PATH . DS . 'lf-lang');
 
+// Apply lf-inc/const.php's MEMORY_LIMIT (web) or CLI_MEMORY_LIMIT (CLI). It only
+// ever lowers memory_limit. Only the queue worker used to apply it, so
+// MEMORY_LIMIT had no effect on web requests.
+(new MemoryManager())->apply();
+
 ####################################################################################
 /*--------------------------------- RELAY LOADER ---------------------------------*/
 ####################################################################################
@@ -53,6 +59,17 @@ $providers = new ProviderRegistry($registry);
 
 // Register Core Services
 $providers->register(CoreProviders::class);
+
+// Register The Cache
+//
+// laika-cache ships its own provider and declares it as a `relays` resource, so
+// once installed through Composer auto-discovery below finds it too. Registering
+// it here as well makes the cache a core service regardless of discovery, and is
+// harmless alongside it: ProviderRegistry de-duplicates by class name. It comes
+// before discovery so an application provider binding 'cache' still wins.
+if (class_exists(\Laika\Cache\Relay\CacheRelay::class)) {
+    $providers->register(\Laika\Cache\Relay\CacheRelay::class);
+}
 
 // Auto Discover Relay Providers
 //
@@ -93,6 +110,44 @@ Relay::setRegistry($registry);
 // through RelayRegistry::make() from here on, so their constructor dependencies are
 // auto-wired; without this call the router falls back to a plain `new`.
 Invoke::setResolver(static fn(string $class): object => $registry->make($class));
+
+// Query Result Caching
+//
+// Off unless lf-config/cache.php turns it on, and even then a query is only
+// cached when it calls ->remember(). laika-model does not require laika-cache,
+// so the store is handed over as a resolver: nothing is built or connected
+// until a remembered query runs. Guarded like the worker hook below, so an
+// older laika-model without the method cannot take the site down.
+try {
+    $queryCache = (array) (\Laika\Core\Helper\Config::get('cache', 'query') ?? []);
+} catch (\Throwable) {
+    $queryCache = [];
+}
+
+if (!empty($queryCache['enabled']) && method_exists(\Laika\Model\Model::class, 'setQueryCache')) {
+    \Laika\Model\Model::setQueryCache(
+        static fn (): object => \Laika\Service\Cache::driver(),
+        (int) ($queryCache['ttl'] ?? 60)
+    );
+}
+unset($queryCache);
+
+// Reset Per-Process State Between Queue Jobs
+//
+// The same shape as the line above: laika-queue requires nothing, so it cannot
+// know what the framework memoises. Without pcntl it runs every job in one
+// long-lived process, and config, options and the rest would otherwise stay as
+// the first job left them for the life of the worker.
+//
+// Guarded: this file runs on every request, and a laika-queue older than the
+// hook would otherwise turn the whole site into a fatal error.
+if (method_exists(\Laika\Queue\Worker::class, 'beforeJob')) {
+    \Laika\Queue\Worker::beforeJob(static function (): void {
+        foreach (\Laika\Core\System\ProcessState::reset() as $failure) {
+            fwrite(STDERR, "[laika] process reset: {$failure}\n");
+        }
+    });
+}
 
 // Boot Providers
 $providers->boot();

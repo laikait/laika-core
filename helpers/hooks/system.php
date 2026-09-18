@@ -82,6 +82,13 @@ add_hook('lf_header', 'lf_header', 1000);
 // Print All Footer Scripts In Template Footer (Before </body>)
 add_hook('lf_footer', 'lf_footer', 1000);
 
+/*================================== CACHE HOOKS ===================================*/
+/** Get Cached Value */
+add_hook('cache', 'cache', 1000);
+
+/** Get Cached Value or Compute and Store it */
+add_hook('cache_remember', 'cache_remember', 1000);
+
 /*================================== COMMON HOOKS ==================================*/
 /** Get All Timezones */
 add_hook('time_zones', 'time_zones', 1000);

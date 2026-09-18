@@ -29,6 +29,20 @@ class Config
     ##########################################################################
 
     /**
+     * Forget The Loaded Config Files
+     *
+     * Every lf-config file is read once per process. A worker that runs many
+     * jobs in one process must call this between them, or a config change is
+     * never seen for the life of the worker. The next read loads them again.
+     *
+     * @return void
+     */
+    public static function flush(): void
+    {
+        self::$config = [];
+    }
+
+    /**
      * Get Config Value
      * @param string $name Config file name (without extension)
      * @param ?string $key Config key (optional)

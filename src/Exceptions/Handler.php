@@ -15,7 +15,7 @@ namespace Laika\Core\Exceptions;
 
 use Throwable;
 use RuntimeException;
-use Laika\Service\{Response, Directory};
+use Laika\Service\Directory;
 
 class Handler
 {
@@ -103,7 +103,12 @@ class Handler
     protected function render(Throwable $e): void
     {
         if ($this->wantsJson()) {
-            Response::contentType('application/json');
+            // Sent directly: renderJson() echoes rather than going through the
+            // Response relay, and Response::contentType() never existed, so
+            // this line used to turn every JSON error into a fatal.
+            if (!headers_sent()) {
+                header('Content-Type: application/json; charset=UTF-8');
+            }
             $this->renderJson($e);
         } else {
             $this->renderHtml($e);

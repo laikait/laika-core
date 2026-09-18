@@ -26,6 +26,7 @@ final class MimeType
         'xml'   => 'text/xml',
         'js'    => 'application/javascript',
         'json'  => 'application/json',
+        'map'   => 'application/json',
         'pdf'   => 'application/pdf',
         'zip'   => 'application/zip',
         'gz'    => 'application/gzip',
@@ -74,27 +75,45 @@ final class MimeType
         'pptx'  => 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
     ];
 
+    /**
+     * @var string[] Extensions whose type needs an explicit charset.
+     * Without one the browser decodes the file with its own locale default,
+     * so a UTF-8 stylesheet or caption file renders as mojibake. The charset
+     * is not baked into the table above because fromFile(), fromContent() and
+     * File::download() hand their result to callers that compare exact types.
+     */
+    private const CHARSET_TYPES = ['html', 'htm', 'css', 'csv', 'txt', 'xml', 'js', 'json', 'map', 'svg'];
+
     ##########################################################################
     /*============================ EXTERNAL API ============================*/
     ##########################################################################
     /**
      * Get Mime Type From Extension
      * @param string $extension Example: css, html, jpg
+     * @param bool $withCharset Append "; charset=utf-8" to a text type
      * @return string
      */
-    public static function fromExtension(string $extension): string
+    public static function fromExtension(string $extension, bool $withCharset = false): string
     {
-        return static::$types[strtolower($extension)] ?? 'application/octet-stream';
+        $extension = strtolower($extension);
+        $type = static::$types[$extension] ?? 'application/octet-stream';
+
+        if ($withCharset && in_array($extension, static::CHARSET_TYPES, true)) {
+            $type .= '; charset=utf-8';
+        }
+
+        return $type;
     }
 
     /**
      * Get Mime Type From File
      * @param string $filename Example: style.css, index.html, image.jpg
+     * @param bool $withCharset Append "; charset=utf-8" to a text type
      * @return string
      */
-    public static function fromFile(string $filename): string
+    public static function fromFile(string $filename, bool $withCharset = false): string
     {
-        return static::fromExtension(pathinfo($filename, PATHINFO_EXTENSION));
+        return static::fromExtension(pathinfo($filename, PATHINFO_EXTENSION), $withCharset);
     }
 
     /**
