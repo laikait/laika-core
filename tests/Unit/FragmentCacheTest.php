@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Laika\Tests\Unit;
 
 use Laika\Cache\Cache as CacheManager;
+use Laika\Core\Http\CSRF as CsrfObject;
 use Laika\Core\Template\Twig\CacheTokenParser;
 use Laika\Service\CSRF;
 use Laika\Service\Cache;
@@ -32,12 +33,30 @@ final class FragmentCacheTest extends TestCase
         }
 
         Cache::swap(new CacheManager(['driver' => 'array']));
+        CSRF::swap(self::countingCsrf());
         $this->runs = [];
     }
 
     protected function tearDown(): void
     {
         Cache::clearResolvedInstance();
+        CSRF::clearResolvedInstance();
+    }
+
+    /**
+     * Counts tokens the way the real one does, but does not sign them: signing
+     * needs lf-storage/keys/app.key, which a standalone checkout does not have.
+     * The cache reads only issued(), so the signature is irrelevant here.
+     */
+    private static function countingCsrf(): CsrfObject
+    {
+        return new class () extends CsrfObject {
+            public function generate(): string
+            {
+                $this->issued++;
+                return bin2hex(random_bytes(16));
+            }
+        };
     }
 
     public static function modes(): array

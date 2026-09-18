@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Laika\Tests\Unit;
 
 use Laika\Cache\Cache as CacheManager;
+use Laika\Core\Http\CSRF as CsrfObject;
 use Laika\Core\Http\Response as ResponseObject;
 use Laika\Core\Pipeline\CachePipeline;
 use Laika\Route\Handler;
@@ -45,6 +46,7 @@ final class CachePipelineTest extends TestCase
         // In memory, so nothing is written to the application's storage
         Cache::swap(new CacheManager(['driver' => 'array']));
         Response::swap(new ResponseObject());
+        CSRF::swap(self::countingCsrf());
 
         $this->runs = 0;
     }
@@ -55,6 +57,23 @@ final class CachePipelineTest extends TestCase
         $_COOKIE = [];
         Cache::clearResolvedInstance();
         Response::clearResolvedInstance();
+        CSRF::clearResolvedInstance();
+    }
+
+    /**
+     * Counts tokens the way the real one does, but does not sign them: signing
+     * needs lf-storage/keys/app.key, which a standalone checkout does not have.
+     * The pipeline reads only issued(), so the signature is irrelevant here.
+     */
+    private static function countingCsrf(): CsrfObject
+    {
+        return new class () extends CsrfObject {
+            public function generate(): string
+            {
+                $this->issued++;
+                return bin2hex(random_bytes(16));
+            }
+        };
     }
 
     /** Run the pipeline once with a controller that counts its calls */
