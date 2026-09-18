@@ -63,8 +63,7 @@ class Queue
         ));
 
         if ($failedDriverName === 'database') {
-            // Tables come from `php laika app:migrate` — the schemas are
-            // registered under extra.laika.resources in laika-queue's composer.json
+            // The table is not created here: see FailedJobModelSchema::up()
             self::connect($connection);
             return new DatabaseFailedJobProvider($connection);
         }
